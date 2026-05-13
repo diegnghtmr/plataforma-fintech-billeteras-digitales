@@ -235,12 +235,16 @@ function MovementBarChart({
 
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+      <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 56 }}>
         <XAxis
           dataKey="name"
           tick={{ fontSize: 11, fill: '#8d969e' }}
           tickLine={false}
           axisLine={false}
+          interval={0}
+          angle={-22}
+          textAnchor="end"
+          height={64}
         />
         <YAxis
           tick={{ fontSize: 11, fill: '#8d969e' }}
