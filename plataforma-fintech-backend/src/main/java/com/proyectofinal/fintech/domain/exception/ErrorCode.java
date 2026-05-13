@@ -1,0 +1,14 @@
+package com.proyectofinal.fintech.domain.exception;
+
+public enum ErrorCode {
+    VALIDATION_ERROR,
+    USER_NOT_FOUND,
+    WALLET_NOT_FOUND,
+    DUPLICATED_RESOURCE,
+    INSUFFICIENT_FUNDS,
+    TRANSACTION_NOT_REVERSIBLE,
+    TRANSACTION_NOT_FOUND,
+    OPERATION_NOT_FOUND,
+    NOTIFICATION_NOT_FOUND,
+    INTERNAL_ERROR
+}

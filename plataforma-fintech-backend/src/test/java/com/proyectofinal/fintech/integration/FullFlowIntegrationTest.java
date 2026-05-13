@@ -1,0 +1,361 @@
+package com.proyectofinal.fintech.integration;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * End-to-end integration test validating the full 10-step PRD flow.
+ * Uses RANDOM_PORT + TestRestTemplate against the real Spring Boot context
+ * with in-memory adapters (no external DB or messaging dependencies).
+ *
+ * ADR-10.1: Single @Test method — steps share sequential state via captured IDs.
+ * ADR-10.2: Explicit URL construction with /api/v1 context-path prefix.
+ * ADR-10.3: Inline private records, field-minimal per asserted fields only.
+ * ADR-10.5: Reverse txIdWithdraw (NOT txIdRecharge) — safe reversal path.
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class FullFlowIntegrationTest {
+
+    @LocalServerPort
+    private int port;
+
+    @Autowired
+    private TestRestTemplate rest;
+
+    // ---------------------------------------------------------------------------
+    // Inline private DTO records — minimal fields (Jackson ignores unknown fields)
+    // ---------------------------------------------------------------------------
+    private record UserR(String id, String name, String email) {}
+    private record WalletR(String code, double balance) {}
+    private record TxR(String id, String type, String status, double amount) {}
+    private record ExternalTxR(TxR outgoingTransaction, TxR incomingTransaction) {}
+    private record PointsR(String userId, double points, String loyaltyLevel) {}
+    private record AnalyticsSummaryR(long totalUsers, long totalTransactions, long fraudEventCount) {}
+    private record FraudEventR(String id, String severity, String type) {}
+
+    // ---------------------------------------------------------------------------
+    // Helper: build an HttpEntity with Content-Type: application/json
+    // ---------------------------------------------------------------------------
+    private <T> HttpEntity<T> jsonEntity(T body) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(body, headers);
+    }
+
+    @Test
+    void executesFullFlow() {
+
+        String base = "http://localhost:" + port + "/api/v1";
+
+        // -----------------------------------------------------------------------
+        // S1 — Create user USR-E2E
+        // -----------------------------------------------------------------------
+        Map<String, String> createUserBody = Map.of(
+                "id", "USR-E2E",
+                "name", "E2E User",
+                "email", "e2e@example.com"
+        );
+        ResponseEntity<UserR> s1 = rest.exchange(
+                base + "/users",
+                HttpMethod.POST,
+                jsonEntity(createUserBody),
+                UserR.class
+        );
+        assertThat(s1.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(s1.getBody()).isNotNull();
+        assertThat(s1.getBody().id()).isEqualTo("USR-E2E");
+        assertThat(s1.getBody().name()).isEqualTo("E2E User");
+        assertThat(s1.getBody().email()).isEqualTo("e2e@example.com");
+
+        // -----------------------------------------------------------------------
+        // S2 — Create wallet W-E2E-01 for USR-E2E
+        // -----------------------------------------------------------------------
+        Map<String, String> createWallet01Body = Map.of(
+                "code", "W-E2E-01",
+                "name", "Main Wallet",
+                "type", "SAVINGS"
+        );
+        ResponseEntity<WalletR> s2 = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.POST,
+                jsonEntity(createWallet01Body),
+                WalletR.class
+        );
+        assertThat(s2.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(s2.getBody()).isNotNull();
+        assertThat(s2.getBody().code()).isEqualTo("W-E2E-01");
+        assertThat(s2.getBody().balance()).isEqualTo(0.0);
+
+        // -----------------------------------------------------------------------
+        // S3 — Recharge W-E2E-01 with 20000; capture txIdRecharge
+        // -----------------------------------------------------------------------
+        Map<String, Object> rechargeBody = Map.of(
+                "amount", 20000.0,
+                "description", "E2E initial recharge"
+        );
+        ResponseEntity<TxR> s3 = rest.exchange(
+                base + "/users/USR-E2E/wallets/W-E2E-01/recharge",
+                HttpMethod.POST,
+                jsonEntity(rechargeBody),
+                TxR.class
+        );
+        assertThat(s3.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s3.getBody()).isNotNull();
+        String txIdRecharge = s3.getBody().id();
+        assertThat(txIdRecharge).isNotBlank();
+
+        // Verify balance = 20000
+        ResponseEntity<List<WalletR>> walletsAfterRecharge = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<WalletR>>() {}
+        );
+        assertThat(walletsAfterRecharge.getStatusCode()).isEqualTo(HttpStatus.OK);
+        WalletR w01AfterRecharge = walletsAfterRecharge.getBody().stream()
+                .filter(w -> "W-E2E-01".equals(w.code()))
+                .findFirst().orElseThrow();
+        assertThat(w01AfterRecharge.balance()).isEqualTo(20000.0);
+
+        // -----------------------------------------------------------------------
+        // S4 — Withdraw 1000 from W-E2E-01; capture txIdWithdraw
+        // -----------------------------------------------------------------------
+        Map<String, Object> withdrawBody = Map.of(
+                "amount", 1000.0,
+                "description", "E2E withdraw"
+        );
+        ResponseEntity<TxR> s4 = rest.exchange(
+                base + "/users/USR-E2E/wallets/W-E2E-01/withdraw",
+                HttpMethod.POST,
+                jsonEntity(withdrawBody),
+                TxR.class
+        );
+        assertThat(s4.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s4.getBody()).isNotNull();
+        String txIdWithdraw = s4.getBody().id();
+        assertThat(txIdWithdraw).isNotBlank();
+
+        // Verify balance = 19000
+        ResponseEntity<List<WalletR>> walletsAfterWithdraw = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<WalletR>>() {}
+        );
+        WalletR w01AfterWithdraw = walletsAfterWithdraw.getBody().stream()
+                .filter(w -> "W-E2E-01".equals(w.code()))
+                .findFirst().orElseThrow();
+        assertThat(w01AfterWithdraw.balance()).isEqualTo(19000.0);
+
+        // -----------------------------------------------------------------------
+        // S5 — Create W-E2E-02 and perform internal transfer 500
+        // -----------------------------------------------------------------------
+        Map<String, String> createWallet02Body = Map.of(
+                "code", "W-E2E-02",
+                "name", "Backup Wallet",
+                "type", "SAVINGS"
+        );
+        ResponseEntity<WalletR> s5a = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.POST,
+                jsonEntity(createWallet02Body),
+                WalletR.class
+        );
+        assertThat(s5a.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(s5a.getBody()).isNotNull();
+        assertThat(s5a.getBody().code()).isEqualTo("W-E2E-02");
+
+        Map<String, Object> internalTransferBody = Map.of(
+                "sourceWalletId", "W-E2E-01",
+                "targetWalletId", "W-E2E-02",
+                "amount", 500.0,
+                "description", "E2E internal transfer"
+        );
+        ResponseEntity<TxR> s5b = rest.exchange(
+                base + "/users/USR-E2E/transfers/internal",
+                HttpMethod.POST,
+                jsonEntity(internalTransferBody),
+                TxR.class
+        );
+        assertThat(s5b.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Verify balances: W-E2E-01=18500, W-E2E-02=500
+        ResponseEntity<List<WalletR>> walletsAfterInternal = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<WalletR>>() {}
+        );
+        assertThat(walletsAfterInternal.getStatusCode()).isEqualTo(HttpStatus.OK);
+        WalletR w01AfterInternal = walletsAfterInternal.getBody().stream()
+                .filter(w -> "W-E2E-01".equals(w.code()))
+                .findFirst().orElseThrow();
+        WalletR w02AfterInternal = walletsAfterInternal.getBody().stream()
+                .filter(w -> "W-E2E-02".equals(w.code()))
+                .findFirst().orElseThrow();
+        assertThat(w01AfterInternal.balance()).isEqualTo(18500.0);
+        assertThat(w02AfterInternal.balance()).isEqualTo(500.0);
+
+        // -----------------------------------------------------------------------
+        // S6 — Transaction history contains all prior operations (>= 3)
+        // -----------------------------------------------------------------------
+        ResponseEntity<List<TxR>> s6 = rest.exchange(
+                base + "/users/USR-E2E/transactions",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<TxR>>() {}
+        );
+        assertThat(s6.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s6.getBody()).isNotNull();
+        assertThat(s6.getBody().size()).isGreaterThanOrEqualTo(3);
+
+        // -----------------------------------------------------------------------
+        // S7 — Reverse the withdrawal (txIdWithdraw); assert status=REVERSED
+        //       and balance W-E2E-01 = 18500 + 1000 = 19500
+        // -----------------------------------------------------------------------
+        ResponseEntity<TxR> s7 = rest.exchange(
+                base + "/transactions/" + txIdWithdraw + "/reverse",
+                HttpMethod.POST,
+                HttpEntity.EMPTY,
+                TxR.class
+        );
+        assertThat(s7.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s7.getBody()).isNotNull();
+        assertThat(s7.getBody().status()).isEqualTo("REVERSED");
+
+        // Verify W-E2E-01 balance = 19500
+        ResponseEntity<List<WalletR>> walletsAfterReverse = rest.exchange(
+                base + "/users/USR-E2E/wallets",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<WalletR>>() {}
+        );
+        WalletR w01AfterReverse = walletsAfterReverse.getBody().stream()
+                .filter(w -> "W-E2E-01".equals(w.code()))
+                .findFirst().orElseThrow();
+        assertThat(w01AfterReverse.balance()).isEqualTo(19500.0);
+
+        // -----------------------------------------------------------------------
+        // S8 — Points and loyalty level for USR-E2E
+        // -----------------------------------------------------------------------
+        ResponseEntity<PointsR> s8 = rest.exchange(
+                base + "/users/USR-E2E/points",
+                HttpMethod.GET,
+                null,
+                PointsR.class
+        );
+        assertThat(s8.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s8.getBody()).isNotNull();
+        assertThat(s8.getBody().points()).isGreaterThanOrEqualTo(0.0);
+        assertThat(s8.getBody().loyaltyLevel()).isNotNull();
+
+        // -----------------------------------------------------------------------
+        // S9 — Create USR-E2E-B + W-E2E-B-01; perform external transfer 15000
+        //       (triggers FraudDetector: 15000 > 10000 threshold)
+        // -----------------------------------------------------------------------
+
+        // Create user B
+        Map<String, String> createUserBBody = Map.of(
+                "id", "USR-E2E-B",
+                "name", "User B",
+                "email", "b@example.com"
+        );
+        ResponseEntity<UserR> s9CreateUserB = rest.exchange(
+                base + "/users",
+                HttpMethod.POST,
+                jsonEntity(createUserBBody),
+                UserR.class
+        );
+        assertThat(s9CreateUserB.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // Create wallet for user B
+        Map<String, String> createWalletBBody = Map.of(
+                "code", "W-E2E-B-01",
+                "name", "User B Wallet",
+                "type", "SAVINGS"
+        );
+        ResponseEntity<WalletR> s9CreateWalletB = rest.exchange(
+                base + "/users/USR-E2E-B/wallets",
+                HttpMethod.POST,
+                jsonEntity(createWalletBBody),
+                WalletR.class
+        );
+        assertThat(s9CreateWalletB.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // Perform external transfer 15000 (W-E2E-01 has 19500 — sufficient)
+        Map<String, Object> externalTransferBody = Map.of(
+                "sourceUserId", "USR-E2E",
+                "sourceWalletId", "W-E2E-01",
+                "targetUserId", "USR-E2E-B",
+                "targetWalletId", "W-E2E-B-01",
+                "amount", 15000.0,
+                "description", "E2E external transfer"
+        );
+        ResponseEntity<ExternalTxR> s9Transfer = rest.exchange(
+                base + "/transfers/external",
+                HttpMethod.POST,
+                jsonEntity(externalTransferBody),
+                ExternalTxR.class
+        );
+        assertThat(s9Transfer.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s9Transfer.getBody()).isNotNull();
+        assertThat(s9Transfer.getBody().outgoingTransaction()).isNotNull();
+        assertThat(s9Transfer.getBody().incomingTransaction()).isNotNull();
+
+        // -----------------------------------------------------------------------
+        // S10 — Analytics summary, fraud events, notifications
+        // -----------------------------------------------------------------------
+
+        // GET /analytics/summary
+        ResponseEntity<AnalyticsSummaryR> s10Summary = rest.exchange(
+                base + "/analytics/summary",
+                HttpMethod.GET,
+                null,
+                AnalyticsSummaryR.class
+        );
+        assertThat(s10Summary.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s10Summary.getBody()).isNotNull();
+        assertThat(s10Summary.getBody().totalUsers()).isGreaterThanOrEqualTo(2);
+        assertThat(s10Summary.getBody().totalTransactions()).isGreaterThanOrEqualTo(3);
+        assertThat(s10Summary.getBody().fraudEventCount()).isGreaterThanOrEqualTo(1);
+
+        // GET /fraud/events — at least one HIGH severity LARGE_TRANSACTION
+        ResponseEntity<List<FraudEventR>> s10Fraud = rest.exchange(
+                base + "/fraud/events",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<FraudEventR>>() {}
+        );
+        assertThat(s10Fraud.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s10Fraud.getBody()).isNotNull();
+        assertThat(s10Fraud.getBody()).isNotEmpty();
+        assertThat(s10Fraud.getBody()).anyMatch(e ->
+                "HIGH".equals(e.severity()) && "LARGE_TRANSACTION".equals(e.type())
+        );
+
+        // GET /notifications/users/USR-E2E — 200, valid array (size >= 0)
+        ResponseEntity<List<Map<String, Object>>> s10Notifications = rest.exchange(
+                base + "/notifications/users/USR-E2E",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+        );
+        assertThat(s10Notifications.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(s10Notifications.getBody()).isNotNull();
+    }
+}

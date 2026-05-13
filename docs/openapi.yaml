@@ -1,0 +1,1137 @@
+openapi: 3.0.3
+info:
+  title: Plataforma Fintech de Billeteras Digitales API
+  version: 1.0.0
+  description: |
+    Contrato REST entre el backend Spring Boot y el frontend React.
+    Este archivo es la fuente de verdad para DTOs, endpoints y errores.
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Backend local Spring Boot
+tags:
+  - name: Users
+  - name: Wallets
+  - name: Operations
+  - name: Transactions
+  - name: Points
+  - name: ScheduledOperations
+  - name: Notifications
+  - name: Analytics
+  - name: Fraud
+paths:
+  /users:
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Crear usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /users/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUserById
+      summary: Obtener usuario por ID
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Actualizar nombre o email del usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      summary: Eliminar usuario y datos en cascada
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '204':
+          description: Usuario eliminado
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{userId}/wallets:
+    get:
+      tags: [Wallets]
+      operationId: getUserWallets
+      summary: Listar billeteras de un usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Billeteras del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WalletResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Wallets]
+      operationId: createWallet
+      summary: Crear billetera para usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWalletRequest'
+      responses:
+        '201':
+          description: Billetera creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /users/{userId}/wallets/{walletId}/recharge:
+    post:
+      tags: [Operations]
+      operationId: rechargeWallet
+      summary: Recargar billetera
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyOperationRequest'
+      responses:
+        '200':
+          description: Recarga realizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /users/{userId}/wallets/{walletId}/withdraw:
+    post:
+      tags: [Operations]
+      operationId: withdrawWallet
+      summary: Retirar dinero de billetera
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoneyOperationRequest'
+      responses:
+        '200':
+          description: Retiro realizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /users/{userId}/transfers/internal:
+    post:
+      tags: [Operations]
+      operationId: createInternalTransfer
+      summary: Transferir entre billeteras del mismo usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternalTransferRequest'
+      responses:
+        '200':
+          description: Transferencia interna realizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /transfers/external:
+    post:
+      tags: [Operations]
+      operationId: createExternalTransfer
+      summary: Transferir entre usuarios
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExternalTransferRequest'
+      responses:
+        '200':
+          description: Transferencia externa realizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalTransferResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /users/{userId}/transactions:
+    get:
+      tags: [Transactions]
+      operationId: getUserTransactions
+      summary: Obtener historial del usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/TransactionTypeQuery'
+        - $ref: '#/components/parameters/TransactionStatusQuery'
+      responses:
+        '200':
+          description: Historial del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{userId}/wallets/{walletId}/transactions:
+    get:
+      tags: [Transactions]
+      operationId: getWalletTransactions
+      summary: Obtener historial de una billetera
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/WalletId'
+      responses:
+        '200':
+          description: Historial de la billetera
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /transactions/{transactionId}/reverse:
+    post:
+      tags: [Transactions]
+      operationId: reverseTransaction
+      summary: Revertir una transacción
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transacción revertida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /users/{userId}/points:
+    get:
+      tags: [Points]
+      operationId: getUserPoints
+      summary: Obtener puntos y nivel del usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Puntos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PointsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /points/ranking:
+    get:
+      tags: [Points]
+      operationId: getPointsRanking
+      summary: Obtener ranking de puntos
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Ranking descendente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RankingItemResponse'
+  /scheduled-operations:
+    get:
+      tags: [ScheduledOperations]
+      operationId: getScheduledOperations
+      summary: Listar operaciones programadas
+      responses:
+        '200':
+          description: Operaciones programadas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduledOperationResponse'
+    post:
+      tags: [ScheduledOperations]
+      operationId: createScheduledOperation
+      summary: Crear operación programada
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduledOperationRequest'
+      responses:
+        '201':
+          description: Operación programada creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledOperationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /scheduled-operations/{operationId}/cancel:
+    post:
+      tags: [ScheduledOperations]
+      operationId: cancelScheduledOperation
+      summary: Cancelar operación programada
+      parameters:
+        - $ref: '#/components/parameters/OperationId'
+      responses:
+        '200':
+          description: Operación cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledOperationResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /scheduled-operations/run:
+    post:
+      tags: [ScheduledOperations]
+      operationId: runScheduledOperations
+      summary: Ejecutar operaciones programadas vencidas
+      responses:
+        '200':
+          description: Reporte de ejecución
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutionReportResponse'
+  /notifications/users/{userId}:
+    get:
+      tags: [Notifications]
+      operationId: getUserNotifications
+      summary: Listar notificaciones del usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - name: unreadOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Notificaciones del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /notifications/{notificationId}/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationAsRead
+      summary: Marcar notificación como leída
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+      responses:
+        '200':
+          description: Notificación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /analytics/summary:
+    get:
+      tags: [Analytics]
+      operationId: getAnalyticsSummary
+      summary: Obtener resumen analítico
+      responses:
+        '200':
+          description: Resumen del sistema
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSummaryResponse'
+  /analytics/top-users:
+    get:
+      tags: [Analytics]
+      operationId: getTopUsers
+      summary: Obtener usuarios más activos
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Usuarios más activos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricItemResponse'
+  /analytics/top-wallets:
+    get:
+      tags: [Analytics]
+      operationId: getTopWallets
+      summary: Obtener billeteras con mayor uso
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Billeteras con mayor uso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricItemResponse'
+  /analytics/top-transactions:
+    get:
+      tags: [Analytics]
+      operationId: getTopTransactions
+      summary: Obtener transacciones de mayor valor
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Transacciones de mayor valor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TransactionResponse'
+  /analytics/cycles:
+    get:
+      tags: [Analytics]
+      operationId: getCycles
+      summary: Detectar ciclos en el grafo de transferencias
+      responses:
+        '200':
+          description: Ciclos detectados (cada ciclo es lista de user IDs)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: string
+  /analytics/top-wallet-categories:
+    get:
+      tags: [Analytics]
+      operationId: getTopWalletCategories
+      summary: Obtener categorías de billetera más comunes
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Categorías de billetera por conteo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricItemResponse'
+  /analytics/movement-by-type:
+    get:
+      tags: [Analytics]
+      operationId: getMovementByType
+      summary: Obtener movimientos agrupados por tipo
+      responses:
+        '200':
+          description: Movimientos por tipo (excluye REVERSED y EXTERNAL_TRANSFER_RECEIVED)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MetricItemResponse'
+  /analytics/total-moved:
+    get:
+      tags: [Analytics]
+      operationId: getTotalMoved
+      summary: Obtener total movido en un rango de fechas
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Total movido en el rango
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RangeTotalResponse'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /analytics/frequent-routes:
+    get:
+      tags: [Analytics]
+      operationId: getFrequentRoutes
+      summary: Obtener rutas frecuentes de transferencia
+      parameters:
+        - name: minTransfers
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Rutas frecuentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RouteMetricResponse'
+  /fraud/events:
+    get:
+      tags: [Fraud]
+      operationId: getFraudEvents
+      summary: Listar eventos sospechosos
+      parameters:
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: severity
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/FraudSeverity'
+      responses:
+        '200':
+          description: Eventos sospechosos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FraudEventResponse'
+components:
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: USR001
+    WalletId:
+      name: walletId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: WALLET-001
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: TX-001
+    OperationId:
+      name: operationId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: OP-001
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: NOTIF-001
+    TransactionTypeQuery:
+      name: type
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/TransactionType'
+    TransactionStatusQuery:
+      name: status
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/TransactionStatus'
+  responses:
+    BadRequest:
+      description: Request inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Conflict:
+      description: Conflicto de recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    BusinessError:
+      description: Regla de negocio incumplida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+  schemas:
+    CreateUserRequest:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: string
+          minLength: 1
+          example: USR001
+        name:
+          type: string
+          minLength: 2
+          example: Juan Pérez
+        email:
+          type: string
+          format: email
+          example: juan@example.com
+    UserResponse:
+      type: object
+      required: [id, name, email, registeredAt, points, loyaltyLevel, walletCount, totalBalance]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        registeredAt:
+          type: string
+          format: date-time
+        points:
+          type: number
+          format: double
+        loyaltyLevel:
+          $ref: '#/components/schemas/LoyaltyLevel'
+        walletCount:
+          type: integer
+        totalBalance:
+          type: number
+          format: double
+    CreateWalletRequest:
+      type: object
+      required: [code, name, type]
+      properties:
+        code:
+          type: string
+          example: WALLET-001
+        name:
+          type: string
+          example: Gastos diarios
+        type:
+          type: string
+          example: DAILY_EXPENSES
+    WalletResponse:
+      type: object
+      required: [code, name, type, ownerId, balance, active, createdAt, transactionCount]
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        ownerId:
+          type: string
+        balance:
+          type: number
+          format: double
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        transactionCount:
+          type: integer
+    MoneyOperationRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 1500.0
+        description:
+          type: string
+          example: Recarga inicial
+    InternalTransferRequest:
+      type: object
+      required: [sourceWalletId, targetWalletId, amount]
+      properties:
+        sourceWalletId:
+          type: string
+        targetWalletId:
+          type: string
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        description:
+          type: string
+    ExternalTransferRequest:
+      type: object
+      required: [sourceUserId, sourceWalletId, targetUserId, targetWalletId, amount]
+      properties:
+        sourceUserId:
+          type: string
+        sourceWalletId:
+          type: string
+        targetUserId:
+          type: string
+        targetWalletId:
+          type: string
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        description:
+          type: string
+    ExternalTransferResponse:
+      type: object
+      required: [outgoingTransaction, incomingTransaction]
+      properties:
+        outgoingTransaction:
+          $ref: '#/components/schemas/TransactionResponse'
+        incomingTransaction:
+          $ref: '#/components/schemas/TransactionResponse'
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          example: Juan Actualizado
+        email:
+          type: string
+          format: email
+          example: actualizado@example.com
+    ExecutionReportResponse:
+      type: object
+      required: [executed, failed, executedIds, failedIds]
+      properties:
+        executed:
+          type: integer
+        failed:
+          type: integer
+        executedIds:
+          type: array
+          items:
+            type: string
+        failedIds:
+          type: array
+          items:
+            type: string
+    RangeTotalResponse:
+      type: object
+      required: [totalAmount, count, from, to]
+      properties:
+        totalAmount:
+          type: number
+          format: double
+        count:
+          type: integer
+        from:
+          type: string
+          format: date-time
+        to:
+          type: string
+          format: date-time
+    TransactionResponse:
+      type: object
+      required:
+        - id
+        - timestamp
+        - type
+        - amount
+        - sourceWalletId
+        - targetWalletId
+        - sourceUserId
+        - targetUserId
+        - status
+        - pointsGenerated
+        - reversible
+        - riskLevel
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        amount:
+          type: number
+          format: double
+        sourceWalletId:
+          type: string
+        targetWalletId:
+          type: string
+        sourceUserId:
+          type: string
+        targetUserId:
+          type: string
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        pointsGenerated:
+          type: number
+          format: double
+        description:
+          type: string
+        reversible:
+          type: boolean
+        riskLevel:
+          $ref: '#/components/schemas/FraudSeverity'
+    PointsResponse:
+      type: object
+      required: [userId, points, loyaltyLevel]
+      properties:
+        userId:
+          type: string
+        points:
+          type: number
+          format: double
+        loyaltyLevel:
+          $ref: '#/components/schemas/LoyaltyLevel'
+    RankingItemResponse:
+      type: object
+      required: [position, userId, userName, points, loyaltyLevel]
+      properties:
+        position:
+          type: integer
+        userId:
+          type: string
+        userName:
+          type: string
+        points:
+          type: number
+          format: double
+        loyaltyLevel:
+          $ref: '#/components/schemas/LoyaltyLevel'
+    CreateScheduledOperationRequest:
+      type: object
+      required: [type, sourceUserId, sourceWalletId, amount, scheduledAt]
+      properties:
+        type:
+          $ref: '#/components/schemas/ScheduledOperationType'
+        sourceUserId:
+          type: string
+        sourceWalletId:
+          type: string
+        targetUserId:
+          type: string
+        targetWalletId:
+          type: string
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+        scheduledAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+    ScheduledOperationResponse:
+      type: object
+      required: [id, type, status, sourceUserId, sourceWalletId, amount, scheduledAt]
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/ScheduledOperationType'
+        status:
+          $ref: '#/components/schemas/ScheduledOperationStatus'
+        sourceUserId:
+          type: string
+        sourceWalletId:
+          type: string
+        targetUserId:
+          type: string
+        targetWalletId:
+          type: string
+        amount:
+          type: number
+          format: double
+        scheduledAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+    NotificationResponse:
+      type: object
+      required: [id, userId, type, severity, title, message, read, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        severity:
+          $ref: '#/components/schemas/NotificationSeverity'
+        title:
+          type: string
+        message:
+          type: string
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+    AnalyticsSummaryResponse:
+      type: object
+      required:
+        - totalUsers
+        - totalWallets
+        - totalTransactions
+        - totalMovedAmount
+        - fraudEventCount
+        - unreadNotificationCount
+      properties:
+        totalUsers:
+          type: integer
+        totalWallets:
+          type: integer
+        totalTransactions:
+          type: integer
+        totalMovedAmount:
+          type: number
+          format: double
+        fraudEventCount:
+          type: integer
+        unreadNotificationCount:
+          type: integer
+    MetricItemResponse:
+      type: object
+      required: [id, label, value]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        value:
+          type: number
+          format: double
+    RouteMetricResponse:
+      type: object
+      required: [sourceUserId, targetUserId, transferCount, totalAmount]
+      properties:
+        sourceUserId:
+          type: string
+        targetUserId:
+          type: string
+        transferCount:
+          type: integer
+        totalAmount:
+          type: number
+          format: double
+    FraudEventResponse:
+      type: object
+      required: [id, userId, type, severity, description, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        transactionId:
+          type: string
+        type:
+          type: string
+          example: HIGH_VELOCITY
+        severity:
+          $ref: '#/components/schemas/FraudSeverity'
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ApiError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          example: El request es inválido.
+        details:
+          type: array
+          items:
+            type: string
+    LoyaltyLevel:
+      type: string
+      enum: [BRONZE, SILVER, GOLD, PLATINUM]
+    TransactionType:
+      type: string
+      enum: [RECHARGE, WITHDRAWAL, INTERNAL_TRANSFER, EXTERNAL_TRANSFER_SENT, EXTERNAL_TRANSFER_RECEIVED]
+    TransactionStatus:
+      type: string
+      enum: [SUCCESSFUL, REVERSED, PENDING, REJECTED]
+    ScheduledOperationType:
+      type: string
+      enum: [RECHARGE, WITHDRAWAL, INTERNAL_TRANSFER, EXTERNAL_TRANSFER]
+    ScheduledOperationStatus:
+      type: string
+      enum: [PENDING, EXECUTED, CANCELLED, FAILED]
+    NotificationType:
+      type: string
+      enum: [LOW_BALANCE, TRANSACTION, FRAUD_ALERT, POINTS_LEVEL, SYSTEM]
+    NotificationSeverity:
+      type: string
+      enum: [INFO, WARNING, CRITICAL]
+    FraudSeverity:
+      type: string
+      enum: [LOW, MEDIUM, HIGH, CRITICAL]
