@@ -6,9 +6,10 @@ import App from './App';
 // and lazy-loads the HomePage component inside a Suspense boundary.
 test('renders accessible nav links on home route', async () => {
   render(<App />);
-  // The nav should always be present, immediately
-  const navLinks = screen.getAllByRole('link');
+  // With React Router lazy route option, the layout (and its nav) renders once
+  // the initial route module resolves — use findAll* to wait.
+  const navLinks = await screen.findAllByRole('link');
   expect(navLinks.length).toBeGreaterThan(0);
-  // The brand wordmark "fintech" is always visible in the nav header
-  expect(screen.getByText(/fintech/i)).toBeInTheDocument();
+  // Exact match — HomePage hero also contains "Fintech", we only want the nav wordmark
+  expect(screen.getByText('fintech')).toBeInTheDocument();
 });
