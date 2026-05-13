@@ -623,6 +623,44 @@
           }
         },
         {
+          "name": "POST /scheduled-operations  (futura, quedará PENDING para cancelar)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('scheduledOpIdFuture', pm.response.json().id);",
+                  "pm.environment.set('scheduledOpIdFuture', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"RECHARGE\",\n  \"sourceUserId\": \"{{userIdA}}\",\n  \"sourceWalletId\": \"{{walletA1}}\",\n  \"amount\": 250,\n  \"scheduledAt\": \"2030-12-31T23:59:00Z\",\n  \"description\": \"Programada futura — para cancelar\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/scheduled-operations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "scheduled-operations"
+              ]
+            }
+          }
+        },
+        {
           "name": "GET /scheduled-operations",
           "request": {
             "method": "GET",
@@ -654,17 +692,17 @@
           }
         },
         {
-          "name": "POST /scheduled-operations/{id}/cancel",
+          "name": "POST /scheduled-operations/{id}/cancel  (cancela la futura)",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/scheduled-operations/{{scheduledOpId}}/cancel",
+              "raw": "{{baseUrl}}/scheduled-operations/{{scheduledOpIdFuture}}/cancel",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "scheduled-operations",
-                "{{scheduledOpId}}",
+                "{{scheduledOpIdFuture}}",
                 "cancel"
               ]
             }
