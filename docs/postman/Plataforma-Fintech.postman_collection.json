@@ -63,13 +63,6 @@
             "body": {"mode": "raw", "raw": "{\n  \"name\": \"Ana M.\",\n  \"email\": \"ana.m@example.com\"\n}"},
             "url": {"raw": "{{baseUrl}}/users/{{userIdA}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userIdA}}"]}
           }
-        },
-        {
-          "name": "DELETE /users/{userId}  (cascada total)",
-          "request": {
-            "method": "DELETE",
-            "url": {"raw": "{{baseUrl}}/users/{{userIdB}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userIdB}}"]}
-          }
         }
       ]
     },
@@ -468,6 +461,18 @@
                 {"key": "severity", "value": "HIGH"}
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "99 — Cleanup (opcional, ejecutar al final)",
+      "item": [
+        {
+          "name": "DELETE /users/USR002  (cascada total)",
+          "request": {
+            "method": "DELETE",
+            "url": {"raw": "{{baseUrl}}/users/{{userIdB}}", "host": ["{{baseUrl}}"], "path": ["users", "{{userIdB}}"]}
           }
         }
       ]
