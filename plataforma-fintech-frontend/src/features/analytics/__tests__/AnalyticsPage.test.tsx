@@ -32,6 +32,26 @@ vi.mock('../CyclesGraph', () => ({
     ),
 }));
 
+// Mock TransferNetworkGraph — ReactFlow + dagre not available in jsdom
+vi.mock('../TransferNetworkGraph', () => ({
+  TransferNetworkGraph: ({
+    routes,
+  }: {
+    routes: { sourceUserId: string; targetUserId: string; transferCount: number; totalAmount: number }[] | undefined;
+  }) =>
+    !routes || routes.length === 0 ? (
+      <p>Sin rutas frecuentes</p>
+    ) : (
+      <ul>
+        {routes.map((r) => (
+          <li key={`${r.sourceUserId}-${r.targetUserId}`}>
+            {r.sourceUserId} → {r.targetUserId}
+          </li>
+        ))}
+      </ul>
+    ),
+}));
+
 // Mock the hooks module so we don't need real HTTP calls
 vi.mock('../hooks', () => ({
   useAnalyticsSummaryQuery: vi.fn(),

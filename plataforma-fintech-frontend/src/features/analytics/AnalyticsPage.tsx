@@ -24,6 +24,7 @@ import {
 } from './hooks';
 import { labelOperationType, labelWalletType } from '../../shared/i18n/enum-labels';
 import { CyclesGraph } from './CyclesGraph';
+import { TransferNetworkGraph } from './TransferNetworkGraph';
 
 const LIMIT_OPTIONS = [5, 10, 25, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
@@ -405,6 +406,14 @@ export function AnalyticsPage() {
             minTransfers={minTransfers}
             onMinTransfersChange={setMinTransfers}
           />
+
+          {/* Transfer network graph */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-heading-sm text-ink">
+              Visualización de Red de Transferencias
+            </h3>
+            <TransferNetworkGraph routes={routes} />
+          </div>
 
           {/* Top Transactions */}
           <div className="flex flex-col gap-4">

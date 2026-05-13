@@ -4,20 +4,25 @@ import { CyclesGraph } from '../CyclesGraph';
 
 // Mock @xyflow/react — requires canvas/ResizeObserver not available in jsdom
 vi.mock('@xyflow/react', () => ({
-  ReactFlow: ({ nodes }: { nodes: { data: { label: string } }[] }) => (
+  ReactFlow: ({ nodes }: { nodes: { data: { userId?: string; label?: string } }[] }) => (
     <div data-testid="react-flow">
-      {nodes.map((n) => (
-        <span key={n.data.label}>{n.data.label}</span>
-      ))}
+      {nodes.map((n) => {
+        const text = n.data.userId ?? n.data.label ?? '';
+        return <span key={text}>{text}</span>;
+      })}
     </div>
   ),
+  Background: () => null,
+  BackgroundVariant: { Dots: 'dots', Lines: 'lines', Cross: 'cross' },
+  Handle: () => null,
+  Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
   MarkerType: { ArrowClosed: 'arrowclosed' },
 }));
 
 describe('CyclesGraph', () => {
   it('renders empty state when no cycles', () => {
     render(<CyclesGraph cycles={[]} />);
-    expect(screen.getByText(/no se detectaron ciclos/i)).toBeInTheDocument();
+    expect(screen.getByText(/sin ciclos detectados/i)).toBeInTheDocument();
   });
 
   it('renders cycle panels for each cycle', () => {
@@ -27,8 +32,10 @@ describe('CyclesGraph', () => {
     ];
     render(<CyclesGraph cycles={cycles} />);
 
-    expect(screen.getByText(/ciclo #1 \(3 usuarios\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/ciclo #2 \(2 usuarios\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/ciclo #1/i)).toBeInTheDocument();
+    expect(screen.getByText(/3 usuarios/i)).toBeInTheDocument();
+    expect(screen.getByText(/ciclo #2/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 usuarios/i)).toBeInTheDocument();
   });
 
   it('renders nodes for each userId in a cycle', () => {
@@ -44,7 +51,6 @@ describe('CyclesGraph', () => {
     const cycles = [['USR_A', 'USR_B']];
     render(<CyclesGraph cycles={cycles} />);
 
-    // The sr-only details contains the cycle text path
     const details = document.querySelector('details');
     expect(details).toBeTruthy();
   });
@@ -53,6 +59,18 @@ describe('CyclesGraph', () => {
     const cycles = [['USR_A']];
     render(<CyclesGraph cycles={cycles} />);
 
-    expect(screen.getByText(/ciclo #1 \(1 usuario\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/ciclo #1/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 usuario/i)).toBeInTheDocument();
+  });
+
+  it('uses grid layout when there are multiple cycles', () => {
+    const cycles = [
+      ['USR_A', 'USR_B'],
+      ['USR_C', 'USR_D'],
+    ];
+    const { container } = render(<CyclesGraph cycles={cycles} />);
+    // Grid wrapper exists
+    const grid = container.querySelector('.grid');
+    expect(grid).toBeTruthy();
   });
 });
