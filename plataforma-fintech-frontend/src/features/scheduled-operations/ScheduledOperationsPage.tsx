@@ -22,6 +22,7 @@ import { EmptyState } from '../../shared/components/EmptyState';
 import { Skeleton } from '../../shared/components/Skeleton';
 import { pushToast } from '../../shared/components/Toast';
 import { SearchSelect } from '../../shared/components/SearchSelect';
+import { AmountInput } from '../../shared/components/AmountInput';
 import { useUsersListQuery } from '../users/hooks';
 import { useUserWalletsQuery } from '../wallets/hooks';
 import type {
@@ -219,12 +220,10 @@ export function ScheduledOperationsPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="amount" className={labelCls}>Monto</label>
-                <input
+                <AmountInput
                   id="amount"
-                  type="number"
-                  step="0.01"
                   {...register('amount', { valueAsNumber: true })}
-                  className={inputCls}
+                  placeholder="0.00"
                 />
                 {errors.amount && <span className={errorCls}>{errors.amount.message}</span>}
               </div>

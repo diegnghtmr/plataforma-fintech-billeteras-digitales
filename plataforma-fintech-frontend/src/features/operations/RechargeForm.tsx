@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DollarSign } from 'lucide-react';
 import { moneyOperationSchema, type MoneyOperationFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
+import { AmountInput } from '../../shared/components/AmountInput';
 import { Input } from '../../shared/components/Input';
 import { Field } from '../../shared/components/Field';
 import type { ApiError } from '../../api/error';
@@ -46,10 +46,7 @@ export function RechargeForm({ userId, walletId, onSubmit, isPending, error }: R
       data-testid="recharge-form"
     >
       <Field label="Monto" error={errors.amount?.message}>
-        <Input
-          type="number"
-          step="0.01"
-          leftIcon={DollarSign}
+        <AmountInput
           data-testid="recharge-amount"
           {...register('amount', { valueAsNumber: true })}
           placeholder="0.00"

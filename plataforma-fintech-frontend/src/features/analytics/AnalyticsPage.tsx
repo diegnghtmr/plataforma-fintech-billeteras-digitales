@@ -166,9 +166,16 @@ function FrequentRoutesTable({
           <label className="text-stone text-sm">Min. transferencias:</label>
           <input
             type="number"
+            inputMode="numeric"
             min={1}
+            step={1}
             value={minTransfers}
             onChange={(e) => onMinTransfersChange(Math.max(1, Number(e.target.value)))}
+            onKeyDown={(e) => {
+              if (['e', 'E', '+', '-', ',', '.'].includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
             className="border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-20"
           />
         </div>

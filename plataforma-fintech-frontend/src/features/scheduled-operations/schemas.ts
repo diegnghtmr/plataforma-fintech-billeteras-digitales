@@ -13,7 +13,7 @@ export const createScheduledOperationSchema = z.object({
   sourceWalletId: z.string().min(1, 'La billetera de origen es requerida'),
   targetUserId: z.string().optional(),
   targetWalletId: z.string().optional(),
-  amount: z.number().min(0.01, 'El monto debe ser mayor a 0'),
+  amount: z.number().positive('El monto debe ser mayor a 0').finite(),
   scheduledAt: z.string().min(1, 'La fecha programada es requerida'),
   description: z.string().optional(),
 });

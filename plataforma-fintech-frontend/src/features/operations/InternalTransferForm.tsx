@@ -1,8 +1,9 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DollarSign, Wallet } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 import { internalTransferSchema, type InternalTransferFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
+import { AmountInput } from '../../shared/components/AmountInput';
 import { Input } from '../../shared/components/Input';
 import { Field } from '../../shared/components/Field';
 import { SearchSelect } from '../../shared/components/SearchSelect';
@@ -94,10 +95,7 @@ export function InternalTransferForm({
         />
       </Field>
       <Field label="Monto" error={errors.amount?.message}>
-        <Input
-          type="number"
-          step="0.01"
-          leftIcon={DollarSign}
+        <AmountInput
           {...register('amount', { valueAsNumber: true })}
           placeholder="0.00"
         />
