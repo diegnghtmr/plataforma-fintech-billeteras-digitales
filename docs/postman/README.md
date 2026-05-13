@@ -4,8 +4,13 @@ Archivo: `Plataforma-Fintech.postman_collection.json` (Postman Collection v2.1).
 
 ## Importar
 
-1. Abrí Postman → **Import** → arrastrá el JSON o pegá su contenido.
-2. La colección aparece como **"Plataforma Fintech — Billeteras Digitales"** con 10 carpetas.
+1. Abrí Postman → **Import** → arrastrá **los dos archivos** del directorio `docs/postman/`:
+   - `Plataforma-Fintech.postman_collection.json` (colección con 32 endpoints)
+   - `Plataforma-Fintech-Local.postman_environment.json` (environment con las variables)
+2. En la esquina superior derecha, seleccioná el environment **"Plataforma Fintech — Local"** del dropdown.
+3. La colección aparece como **"Plataforma Fintech — Billeteras Digitales"** con 10 carpetas y las variables ya cargadas.
+
+> Postman prioriza Environment sobre Collection variables. Con el environment seleccionado las variables se aplican automáticamente sin necesidad de tocar la colección.
 
 ## Variables (definidas en la colección)
 
