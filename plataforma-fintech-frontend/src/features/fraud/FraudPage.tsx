@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { ShieldAlert } from 'lucide-react';
 import { useFraudEventsQuery } from './hooks';
 import { FraudSeverityBadge } from './FraudSeverityBadge';
+import { EmptyState } from '../../shared/components/EmptyState';
 import type { FraudSeverity } from '../../api/fraud';
 
 const SEVERITY_OPTIONS = ['', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
@@ -24,16 +26,10 @@ export function FraudPage() {
       {/* Hero — dark band */}
       <section className="bg-canvas-dark py-[88px]">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
-          <h1
-            className="text-on-dark font-medium leading-none tracking-tight mb-4"
-            style={{
-              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
-            }}
-          >
+          <h1 className="text-display-xl text-on-dark mb-4">
             Eventos sospechosos
           </h1>
-          <p className="text-on-dark-mute text-lg max-w-xl">
+          <p className="text-body-lg text-on-dark-mute max-w-xl">
             Monitoreo de fraude en tiempo real. Filtrá por usuario o nivel de severidad.
           </p>
 
@@ -44,7 +40,7 @@ export function FraudPage() {
               placeholder="Usuario ID"
               value={userIdFilter}
               onChange={(e) => setUserIdFilter(e.target.value)}
-              className="bg-surface-deep text-on-dark border border-hairline-dark rounded-[12px] px-4 h-12 text-sm focus:outline-none focus:border-on-dark w-48 placeholder:text-on-dark-mute"
+              className="bg-surface-deep text-on-dark border border-hairline-dark rounded-[12px] px-4 h-12 text-body-sm focus:outline-none focus:border-on-dark w-full sm:w-48 placeholder:text-on-dark-mute"
             />
             <select
               value={severityFilter}
@@ -64,7 +60,11 @@ export function FraudPage() {
       <section className="bg-canvas-dark pb-[88px]">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
           {!events || events.length === 0 ? (
-            <p className="text-on-dark-mute text-sm">No hay eventos de fraude</p>
+            <EmptyState
+              icon={ShieldAlert}
+              title="Sin eventos de fraude"
+              description="No se encontraron eventos con los filtros actuales."
+            />
           ) : (
             <div className="flex flex-col gap-4">
               {events.map((event) => (

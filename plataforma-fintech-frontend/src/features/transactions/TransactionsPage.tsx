@@ -3,6 +3,10 @@ import { TransactionFilters } from './TransactionFilters';
 import { TransactionRow } from './TransactionRow';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { useAppStore } from '../../stores/use-app-store';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { Skeleton } from '../../shared/components/Skeleton';
+import { pushToast } from '../../shared/components/Toast';
+import { ArrowLeftRight } from 'lucide-react';
 import type { TransactionType as StoreTransactionType, TransactionStatus as StoreTransactionStatus } from '../../stores/use-app-store';
 
 export function TransactionsPage() {
@@ -55,13 +59,11 @@ export function TransactionsPage() {
   if (!selectedUserId) {
     return (
       <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
-        <p className="text-charcoal text-sm">
-          Selecciona un usuario desde la sección de{' '}
-          <a href="/users" className="text-accent-blue-link underline">
-            Usuarios
-          </a>{' '}
-          para ver su historial de transacciones.
-        </p>
+        <EmptyState
+          icon={ArrowLeftRight}
+          title="Selecciona un usuario"
+          description="Seleccioná un usuario desde la sección de Usuarios para ver su historial."
+        />
       </div>
     );
   }
@@ -70,13 +72,10 @@ export function TransactionsPage() {
     <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
       {/* Hero */}
       <div className="mb-12">
-        <h1
-          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <h1 className="text-display-lg text-ink mb-3">
           Historial y reversión
         </h1>
-        <p className="text-base text-charcoal">
+        <p className="text-body-md text-charcoal">
           Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
         </p>
       </div>
@@ -89,11 +88,19 @@ export function TransactionsPage() {
       />
 
       {isLoading && (
-        <p className="text-stone text-sm">Cargando transacciones...</p>
+        <div className="flex flex-col gap-3 mt-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-[12px]" />
+          ))}
+        </div>
       )}
 
       {!isLoading && (!transactions || transactions.length === 0) && (
-        <p className="text-stone text-sm">No hay transacciones que mostrar.</p>
+        <EmptyState
+          icon={ArrowLeftRight}
+          title="Sin transacciones"
+          description="No hay transacciones que mostrar con los filtros aplicados."
+        />
       )}
 
       {transactions && transactions.length > 0 && (
@@ -118,11 +125,17 @@ export function TransactionsPage() {
                   key={tx.id}
                   tx={tx}
                   onReverse={(txId) =>
-                    reverseMutation.mutate({
-                      transactionId: txId,
-                      userId: selectedUserId,
-                      ...(walletIdFilter ? { walletId: walletIdFilter } : {}),
-                    })
+                    reverseMutation.mutate(
+                      {
+                        transactionId: txId,
+                        userId: selectedUserId,
+                        ...(walletIdFilter ? { walletId: walletIdFilter } : {}),
+                      },
+                      {
+                        onSuccess: () => pushToast({ variant: 'success', message: 'Transacción revertida.' }),
+                        onError: () => pushToast({ variant: 'error', message: 'No se pudo revertir la transacción.' }),
+                      }
+                    )
                   }
                   isReverting={reverseMutation.isPending}
                 />
@@ -132,12 +145,7 @@ export function TransactionsPage() {
         </div>
       )}
 
-      {reverseMutation.isError && (
-        <p className="text-accent-danger text-sm">
-          Error al revertir:{' '}
-          {(reverseMutation.error as { message?: string })?.message ?? 'Error desconocido'}
-        </p>
-      )}
+      {/* Error is surfaced via Toast */}
     </div>
   );
 }

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { CalendarClock } from 'lucide-react';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import {
   useScheduledOperationsQuery,
@@ -14,6 +16,10 @@ import {
 } from './schemas';
 import { Card } from '../../shared/components/Card';
 import { Button } from '../../shared/components/Button';
+import { Modal } from '../../shared/components/Modal';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { Skeleton } from '../../shared/components/Skeleton';
+import { pushToast } from '../../shared/components/Toast';
 import type {
   ScheduledOperationResponse,
   CreateScheduledOperationRequest,
@@ -28,6 +34,7 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
 export function ScheduledOperationsPage() {
   const selectedUserId = useSelectionStore((s) => s.selectedUserId);
   const selectedWalletId = useSelectionStore((s) => s.selectedWalletId);
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
 
   const { data: operations = [], isLoading } = useScheduledOperationsQuery();
   const createMutation = useCreateScheduledOperationMutation();
@@ -55,8 +62,29 @@ export function ScheduledOperationsPage() {
       ...data,
       scheduledAt: new Date(data.scheduledAt).toISOString(),
     }) as CreateScheduledOperationRequest;
-    createMutation.mutate(payload, { onSuccess: () => reset() });
+    createMutation.mutate(payload, {
+      onSuccess: () => {
+        reset();
+        pushToast({ variant: 'success', message: 'Operación programada creada.' });
+      },
+      onError: () => {
+        pushToast({ variant: 'error', message: 'No se pudo crear la operación.' });
+      },
+    });
   };
+
+  function handleCancelConfirm() {
+    if (!cancelTarget) return;
+    cancelMutation.mutate(cancelTarget, {
+      onSuccess: () => {
+        setCancelTarget(null);
+        pushToast({ variant: 'success', message: 'Operación cancelada.' });
+      },
+      onError: () => {
+        pushToast({ variant: 'error', message: 'No se pudo cancelar la operación.' });
+      },
+    });
+  }
 
   const inputCls =
     'w-full bg-canvas-light text-ink border border-hairline-light rounded-[12px] px-4 h-14 text-base focus:outline-none focus:border-brand';
@@ -68,10 +96,7 @@ export function ScheduledOperationsPage() {
       {/* Hero */}
       <div className="mb-12 flex items-start justify-between flex-wrap gap-6">
         <div>
-          <h1
-            className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
-            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-          >
+          <h1 className="text-display-lg text-ink mb-3">
             Operaciones programadas
           </h1>
           <p className="text-base text-charcoal">
@@ -102,10 +127,7 @@ export function ScheduledOperationsPage() {
       <div className="flex flex-col gap-8">
         {/* Create form */}
         <Card variant="light" className="max-w-lg">
-          <h2
-            className="text-xl font-medium text-ink mb-6"
-            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-          >
+          <h2 className="text-heading-sm text-ink mb-6">
             Nueva operación programada
           </h2>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -166,11 +188,30 @@ export function ScheduledOperationsPage() {
         </Card>
 
         {/* Operations table */}
+        <Modal
+          open={cancelTarget !== null}
+          onClose={() => setCancelTarget(null)}
+          title="Cancelar operación"
+          description="¿Estás seguro que querés cancelar esta operación programada?"
+          confirmLabel="Sí, cancelar"
+          tone="danger"
+          onConfirm={handleCancelConfirm}
+          isPending={cancelMutation.isPending}
+        />
+
         <div className="overflow-x-auto">
           {isLoading ? (
-            <p className="text-stone text-sm">Cargando...</p>
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full rounded-[12px]" />
+              ))}
+            </div>
           ) : operations.length === 0 ? (
-            <p className="text-stone text-sm">No hay operaciones programadas.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="Sin operaciones programadas"
+              description="No hay operaciones pendientes ni ejecutadas aún."
+            />
           ) : (
             <div className="rounded-[20px] border border-hairline-light overflow-hidden">
               <table className="w-full text-sm text-ink">
@@ -196,9 +237,9 @@ export function ScheduledOperationsPage() {
                       </td>
                       <td className="py-3 px-4">
                         <button
-                          onClick={() => cancelMutation.mutate(op.id)}
+                          onClick={() => setCancelTarget(op.id)}
                           disabled={op.status !== 'PENDING' || cancelMutation.isPending}
-                          className="inline-flex items-center justify-center rounded-full text-xs font-semibold tracking-wide px-3 py-1.5 bg-canvas-light border border-hairline-strong text-ink hover:opacity-70 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center rounded-full text-button-sm px-3 py-1.5 bg-canvas-light border border-hairline-strong text-ink hover:opacity-70 disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                         >
                           Cancelar
                         </button>

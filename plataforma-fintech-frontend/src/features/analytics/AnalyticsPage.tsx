@@ -39,13 +39,7 @@ function SummaryCards({ summary }: { summary: Record<string, number> | undefined
           className="bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-3"
         >
           <p className="text-on-dark-mute text-sm font-semibold uppercase tracking-widest">{card.label}</p>
-          <p
-            className="text-on-dark font-medium leading-none"
-            style={{
-              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
-              fontSize: '2.5rem',
-            }}
-          >
+          <p className="text-display-md text-on-dark">
             {card.value}
           </p>
         </div>
@@ -68,10 +62,7 @@ function MetricTable({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h3
-          className="text-xl font-medium text-ink"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <h3 className="text-heading-sm text-ink">
           {title}
         </h3>
         <select
@@ -124,10 +115,7 @@ function FrequentRoutesTable({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h3
-          className="text-xl font-medium text-ink"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <h3 className="text-heading-sm text-ink">
           Rutas Frecuentes
         </h3>
         <div className="flex items-center gap-2">
@@ -197,16 +185,10 @@ export function AnalyticsPage() {
       {/* Hero — dark band */}
       <section className="bg-canvas-dark py-[88px]">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
-          <h1
-            className="text-on-dark font-medium leading-none tracking-tight mb-4"
-            style={{
-              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
-            }}
-          >
+          <h1 className="text-display-xl text-on-dark mb-4">
             Analítica financiera
           </h1>
-          <p className="text-on-dark-mute text-lg max-w-xl">
+          <p className="text-body-lg text-on-dark-mute max-w-xl">
             Métricas en tiempo real sobre usuarios, billeteras, transacciones y patrones de fraude.
           </p>
         </div>
@@ -252,10 +234,7 @@ export function AnalyticsPage() {
           {/* Top Transactions */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
-              <h3
-                className="text-xl font-medium text-ink"
-                style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-              >
+              <h3 className="text-heading-sm text-ink">
                 Top Transacciones por Valor
               </h3>
               <select
@@ -310,10 +289,7 @@ export function AnalyticsPage() {
 
           {/* Total Moved in Range */}
           <div className="flex flex-col gap-4">
-            <h3
-              className="text-xl font-medium text-ink"
-              style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-            >
+            <h3 className="text-heading-sm text-ink">
               Total Movido en Rango
             </h3>
             <div className="flex gap-4 flex-wrap">
@@ -352,10 +328,7 @@ export function AnalyticsPage() {
 
           {/* Cycles */}
           <div className="flex flex-col gap-4">
-            <h3
-              className="text-xl font-medium text-ink"
-              style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-            >
+            <h3 className="text-heading-sm text-ink">
               Ciclos en Grafo de Transferencias
             </h3>
             {!cycles || cycles.length === 0 ? (

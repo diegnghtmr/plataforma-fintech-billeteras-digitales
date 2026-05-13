@@ -1,14 +1,12 @@
+import { lazy, Suspense } from 'react';
+import type React from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '../shared/layout/AppLayout';
+import { SkeletonPage } from '../shared/components/Skeleton';
 
-// Lazy placeholders — will be replaced with real pages in T04-F12/F14
-function HomePage() {
-  return <h1 className="text-canvas-fg text-2xl font-bold">Fintech Wallet</h1>;
-}
-
-// These will be replaced with real implementations
-import { lazy, Suspense } from 'react';
-
+const HomePage = lazy(() =>
+  import('../features/home/HomePage').then((m) => ({ default: m.HomePage }))
+);
 const UsersPage = lazy(() =>
   import('../features/users/UsersPage').then((m) => ({ default: m.UsersPage }))
 );
@@ -41,92 +39,36 @@ const FraudPage = lazy(() =>
   import('../features/fraud/FraudPage').then((m) => ({ default: m.FraudPage }))
 );
 
-export const router = createBrowserRouter([
+function withSkeleton(element: React.ReactElement) {
+  return <Suspense fallback={<SkeletonPage />}>{element}</Suspense>;
+}
+
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <AppLayout />,
+      children: [
+        { index: true, element: withSkeleton(<HomePage />) },
+        { path: 'users', element: withSkeleton(<UsersPage />) },
+        { path: 'wallets', element: withSkeleton(<WalletsPage />) },
+        { path: 'operations', element: withSkeleton(<OperationsPage />) },
+        { path: 'transactions', element: withSkeleton(<TransactionsPage />) },
+        { path: 'points', element: withSkeleton(<PointsPage />) },
+        { path: 'scheduled', element: withSkeleton(<ScheduledOperationsPage />) },
+        { path: 'notifications', element: withSkeleton(<NotificationsPage />) },
+        { path: 'analytics', element: withSkeleton(<AnalyticsPage />) },
+        { path: 'fraud', element: withSkeleton(<FraudPage />) },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      { index: true, element: <HomePage /> },
-      {
-        path: 'users',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <UsersPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'wallets',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <WalletsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'operations',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <OperationsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'transactions',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <TransactionsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'points',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <PointsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'scheduled',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <ScheduledOperationsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'notifications',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <NotificationsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'analytics',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <AnalyticsPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'fraud',
-        element: (
-          <Suspense fallback={<div className="text-canvas-fg">Cargando...</div>}>
-            <FraudPage />
-          </Suspense>
-        ),
-      },
-    ],
-  },
-], {
-  future: {
-    v7_relativeSplatPath: true,
-    v7_fetcherPersist: true,
-    v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_skipActionErrorRevalidation: true,
-  },
-});
+    future: {
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    },
+  }
+);

@@ -26,10 +26,7 @@ export function PointsCard({ points, loyaltyLevel }: PointsCardProps) {
         Mis Puntos
       </h3>
       <div className="flex items-center gap-4">
-        <span
-          className="text-on-dark font-medium leading-none"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif", fontSize: '48px' }}
-        >
+        <span className="text-display-md text-on-dark">
           {points.toFixed(2)}
         </span>
         <LoyaltyBadge level={loyaltyLevel} />

@@ -174,7 +174,8 @@ describe('TransactionsPage', () => {
     fireEvent.click(button);
 
     expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ transactionId: 'TX-000001' })
+      expect.objectContaining({ transactionId: 'TX-000001' }),
+      expect.any(Object)
     );
   });
 
@@ -277,7 +278,8 @@ describe('TransactionsPage', () => {
     fireEvent.click(button);
 
     expect(mockMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ transactionId: 'TX-000001', userId: 'USR001', walletId: 'W001' })
+      expect.objectContaining({ transactionId: 'TX-000001', userId: 'USR001', walletId: 'W001' }),
+      expect.any(Object)
     );
   });
 

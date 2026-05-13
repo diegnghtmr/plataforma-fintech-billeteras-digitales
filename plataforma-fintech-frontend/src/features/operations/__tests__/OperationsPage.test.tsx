@@ -98,7 +98,8 @@ describe('OperationsPage', () => {
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
-        expect.objectContaining({ userId: 'USR001', walletId: 'W001', amount: 200 })
+        expect.objectContaining({ userId: 'USR001', walletId: 'W001', amount: 200 }),
+        expect.any(Object)
       );
     });
   });

@@ -1,15 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-// App now renders RouterProvider + QueryClientProvider.
-// The home route (/) renders AppLayout with the brand heading "Fintech Wallet"
-// in the sidebar nav, so an accessible heading is always present.
-test('renders accessible heading on home route', async () => {
+// App renders RouterProvider + QueryClientProvider.
+// The home route (/) renders AppLayout with a nav bar containing the brand wordmark
+// and lazy-loads the HomePage component inside a Suspense boundary.
+test('renders accessible nav links on home route', async () => {
   render(<App />);
-  // There may be multiple "Fintech Wallet" headings (sidebar brand + page h1).
-  const headings = screen.getAllByRole('heading');
-  expect(headings.length).toBeGreaterThan(0);
-  // At least one heading contains the brand text
-  const brandHeadings = screen.getAllByText(/fintech wallet/i);
-  expect(brandHeadings.length).toBeGreaterThan(0);
+  // The nav should always be present, immediately
+  const navLinks = screen.getAllByRole('link');
+  expect(navLinks.length).toBeGreaterThan(0);
+  // The brand wordmark "fintech" is always visible in the nav header
+  expect(screen.getByText(/fintech/i)).toBeInTheDocument();
 });

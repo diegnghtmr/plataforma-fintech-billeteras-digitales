@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { Bell } from 'lucide-react';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { useUserNotificationsQuery, useMarkNotificationReadMutation } from './hooks';
 import { SeverityBadge } from './SeverityBadge';
+import { EmptyState } from '../../shared/components/EmptyState';
+import { Skeleton } from '../../shared/components/Skeleton';
+import { pushToast } from '../../shared/components/Toast';
 import type { NotificationResponse } from '../../api/notifications';
 
 export function NotificationsPage() {
@@ -17,13 +21,10 @@ export function NotificationsPage() {
   if (!selectedUserId) {
     return (
       <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
-        <h1
-          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-4"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <h1 className="text-display-lg text-ink mb-4">
           Alertas y notificaciones
         </h1>
-        <p className="text-base text-charcoal">
+        <p className="text-body-md text-charcoal">
           Por favor selecciona un usuario para ver sus notificaciones.
         </p>
       </div>
@@ -35,13 +36,10 @@ export function NotificationsPage() {
       {/* Hero */}
       <div className="mb-12 flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1
-            className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
-            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-          >
+          <h1 className="text-display-lg text-ink mb-3">
             Alertas y notificaciones
           </h1>
-          <p className="text-base text-charcoal">
+          <p className="text-body-md text-charcoal">
             Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
           </p>
         </div>
@@ -60,11 +58,17 @@ export function NotificationsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-stone text-sm">Cargando...</p>
+        <div className="flex flex-col gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-[20px]" />
+          ))}
+        </div>
       ) : notifications.length === 0 ? (
-        <p className="text-stone text-sm">
-          {unreadOnly ? 'No hay notificaciones sin leer.' : 'No hay notificaciones.'}
-        </p>
+        <EmptyState
+          icon={Bell}
+          title={unreadOnly ? 'Sin notificaciones no leídas' : 'Sin notificaciones'}
+          description="No hay nada que mostrar por ahora."
+        />
       ) : (
         <div className="flex flex-col gap-4">
           {notifications.map((n: NotificationResponse) => (
@@ -90,7 +94,10 @@ export function NotificationsPage() {
 
               {!n.read && (
                 <button
-                  onClick={() => markReadMutation.mutate(n.id)}
+                  onClick={() => markReadMutation.mutate(n.id, {
+                    onSuccess: () => pushToast({ variant: 'success', message: 'Notificación marcada como leída.' }),
+                    onError: () => pushToast({ variant: 'error', message: 'No se pudo marcar la notificación.' }),
+                  })}
                   disabled={markReadMutation.isPending}
                   aria-label="Marcar como leída"
                   className="inline-flex items-center justify-center rounded-full text-xs font-semibold tracking-wide px-4 py-2 h-9 bg-surface-soft text-ink hover:opacity-90 disabled:opacity-50 whitespace-nowrap shrink-0"

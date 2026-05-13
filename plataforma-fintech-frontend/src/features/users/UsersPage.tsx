@@ -5,6 +5,8 @@ import { UserForm } from './UserForm';
 import { UserCard } from './UserCard';
 import { Button } from '../../shared/components/Button';
 import { Card } from '../../shared/components/Card';
+import { Modal } from '../../shared/components/Modal';
+import { pushToast } from '../../shared/components/Toast';
 import type { CreateUserFormData } from './schemas';
 
 export function UsersPage() {
@@ -24,6 +26,10 @@ export function UsersPage() {
     mutation.mutate(data, {
       onSuccess: (result) => {
         setCreatedUserId(result.id);
+        pushToast({ variant: 'success', message: 'Usuario creado correctamente.' });
+      },
+      onError: () => {
+        pushToast({ variant: 'error', message: 'No se pudo crear el usuario.' });
       },
     });
   }
@@ -34,7 +40,13 @@ export function UsersPage() {
     if (editName) body.name = editName;
     if (editEmail) body.email = editEmail;
     updateMutation.mutate({ userId: createdUserId, body }, {
-      onSuccess: () => setShowEditForm(false),
+      onSuccess: () => {
+        setShowEditForm(false);
+        pushToast({ variant: 'success', message: 'Usuario actualizado.' });
+      },
+      onError: () => {
+        pushToast({ variant: 'error', message: 'No se pudo actualizar el usuario.' });
+      },
     });
   }
 
@@ -44,6 +56,10 @@ export function UsersPage() {
       onSuccess: () => {
         setCreatedUserId(undefined);
         setShowDeleteConfirm(false);
+        pushToast({ variant: 'success', message: 'Usuario eliminado.' });
+      },
+      onError: () => {
+        pushToast({ variant: 'error', message: 'No se pudo eliminar el usuario.' });
       },
     });
   }
@@ -52,13 +68,10 @@ export function UsersPage() {
     <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
       {/* Hero band */}
       <div className="mb-12">
-        <h1
-          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <h1 className="text-display-lg text-ink mb-3">
           Usuarios
         </h1>
-        <p className="text-base text-charcoal">
+        <p className="text-body-md text-charcoal">
           Gestiona usuarios, sus billeteras y nivel de fidelización.
         </p>
       </div>
@@ -66,8 +79,7 @@ export function UsersPage() {
       <div className="flex flex-col gap-8 max-w-lg">
         {/* Create user form */}
         <Card variant="light">
-          <h2 className="text-xl font-medium text-ink mb-6"
-            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}>
+          <h2 className="text-heading-sm text-ink mb-6">
             Crear usuario
           </h2>
           <UserForm onSubmit={handleSubmit} isPending={mutation.isPending} />
@@ -128,30 +140,16 @@ export function UsersPage() {
               </Card>
             )}
 
-            {showDeleteConfirm && (
-              <Card variant="light" className="border-accent-danger flex flex-col gap-4">
-                <p className="text-ink text-sm">
-                  ¿Eliminar usuario <strong>{user.id}</strong> y todos sus datos?
-                </p>
-                <div className="flex gap-3">
-                  <Button
-                    variant="soft"
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    className="h-10 px-5 text-sm text-accent-danger hover:opacity-80"
-                  >
-                    {deleteMutation.isPending ? 'Eliminando...' : 'Confirmar eliminación'}
-                  </Button>
-                  <Button
-                    variant="outline-light"
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="h-10 px-5 text-sm"
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </Card>
-            )}
+            <Modal
+              open={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              title="Eliminar usuario"
+              description={`¿Eliminar usuario ${user.id} y todos sus datos? Esta acción no se puede deshacer.`}
+              confirmLabel="Confirmar eliminación"
+              tone="danger"
+              onConfirm={handleDelete}
+              isPending={deleteMutation.isPending}
+            />
           </>
         )}
       </div>

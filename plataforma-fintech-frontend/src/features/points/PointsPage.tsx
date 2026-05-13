@@ -19,16 +19,10 @@ export function PointsPage() {
       {/* Hero — dark storytelling band */}
       <section className="bg-canvas-dark py-[88px]">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
-          <h1
-            className="text-on-dark font-medium leading-none tracking-tight mb-4"
-            style={{
-              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
-              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
-            }}
-          >
+          <h1 className="text-display-xl text-on-dark mb-4">
             Tus puntos
           </h1>
-          <p className="text-on-dark-mute text-lg max-w-xl">
+          <p className="text-body-lg text-on-dark-mute max-w-xl">
             Consulta tu nivel de fidelización, puntos acumulados y posición en el ranking global.
           </p>
         </div>
@@ -53,10 +47,7 @@ export function PointsPage() {
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between flex-wrap gap-4">
-              <h2
-                className="text-2xl font-medium text-ink"
-                style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-              >
+              <h2 className="text-heading-lg text-ink">
                 Ranking
               </h2>
               <div className="flex items-center gap-2">
@@ -81,7 +72,11 @@ export function PointsPage() {
             {rankingData ? (
               <RankingTable items={rankingData} />
             ) : (
-              <p className="text-stone text-sm">Cargando ranking...</p>
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 w-full animate-pulse bg-surface-soft rounded-[8px]" />
+                ))}
+              </div>
             )}
           </div>
         </div>

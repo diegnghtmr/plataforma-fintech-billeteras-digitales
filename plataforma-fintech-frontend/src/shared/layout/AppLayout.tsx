@@ -1,31 +1,47 @@
 import { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import {
+  Home,
+  Users,
+  Wallet,
+  Send,
+  ArrowLeftRight,
+  Trophy,
+  CalendarClock,
+  Bell,
+  BarChart3,
+  ShieldAlert,
+  Menu,
+  X,
+} from 'lucide-react';
+import { ToastViewport } from '../components/Toast';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Inicio' },
-  { to: '/users', label: 'Usuarios' },
-  { to: '/wallets', label: 'Billeteras' },
-  { to: '/operations', label: 'Operaciones' },
-  { to: '/transactions', label: 'Transacciones' },
-  { to: '/points', label: 'Puntos' },
-  { to: '/scheduled', label: 'Programadas' },
-  { to: '/notifications', label: 'Alertas' },
-  { to: '/analytics', label: 'Analítica' },
-  { to: '/fraud', label: 'Fraude' },
+  { to: '/', label: 'Inicio', Icon: Home },
+  { to: '/users', label: 'Usuarios', Icon: Users },
+  { to: '/wallets', label: 'Billeteras', Icon: Wallet },
+  { to: '/operations', label: 'Operaciones', Icon: Send },
+  { to: '/transactions', label: 'Transacciones', Icon: ArrowLeftRight },
+  { to: '/points', label: 'Puntos', Icon: Trophy },
+  { to: '/scheduled', label: 'Programadas', Icon: CalendarClock },
+  { to: '/notifications', label: 'Alertas', Icon: Bell },
+  { to: '/analytics', label: 'Analítica', Icon: BarChart3 },
+  { to: '/fraud', label: 'Fraude', Icon: ShieldAlert },
 ] as const;
 
-function NavItem({ to, label }: { to: string; label: string }) {
+function NavItem({ to, label, Icon }: { to: string; label: string; Icon: typeof Home }) {
   return (
     <NavLink
       to={to}
       end={to === '/'}
       className={({ isActive }) =>
-        `text-sm font-semibold tracking-wide transition-opacity px-1 py-0.5 ${
+        `inline-flex items-center gap-2 text-button-sm tracking-wide transition-opacity px-1 py-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas-dark rounded-sm ${
           isActive ? 'text-on-dark' : 'text-on-dark-mute hover:text-on-dark'
         }`
       }
     >
-      {label}
+      <Icon size={18} strokeWidth={1.5} />
+      <span>{label}</span>
     </NavLink>
   );
 }
@@ -38,25 +54,22 @@ export function AppLayout() {
       {/* Top nav — canvas-dark, h-16 */}
       <header className="fixed top-0 inset-x-0 z-50 bg-canvas-dark h-16 flex items-center px-6 lg:px-12">
         {/* Wordmark */}
-        <span
-          className="font-display font-medium text-on-dark text-xl tracking-tight mr-8 shrink-0"
-          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
-        >
+        <span className="font-display font-medium text-on-dark text-xl tracking-tight mr-8 shrink-0">
           fintech
         </span>
 
-        {/* Desktop nav links — centred */}
-        <nav className="hidden lg:flex items-center gap-6 flex-1">
+        {/* Desktop nav links */}
+        <nav className="hidden lg:flex items-center gap-6 flex-1 overflow-x-auto">
           {NAV_ITEMS.map((item) => (
-            <NavItem key={item.to} to={item.to} label={item.label} />
+            <NavItem key={item.to} to={item.to} label={item.label} Icon={item.Icon} />
           ))}
         </nav>
 
         {/* CTA — right side */}
-        <div className="hidden lg:flex ml-auto">
+        <div className="hidden lg:flex ml-auto shrink-0">
           <NavLink
             to="/users"
-            className="inline-flex items-center justify-center rounded-full bg-canvas-light text-canvas-dark text-sm font-semibold tracking-wide px-5 py-2 h-10 hover:bg-faint transition-colors"
+            className="inline-flex items-center justify-center rounded-full bg-canvas-light text-canvas-dark text-button-sm px-5 py-2 h-10 hover:bg-faint transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas-dark"
           >
             Ir al dashboard
           </NavLink>
@@ -64,17 +77,11 @@ export function AppLayout() {
 
         {/* Hamburger — mobile */}
         <button
-          className="lg:hidden ml-auto text-on-dark p-2"
-          aria-label="Abrir menú"
+          className="lg:hidden ml-auto text-on-dark p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm"
+          aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
           onClick={() => setMobileOpen((v) => !v)}
         >
-          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            {mobileOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </header>
 
@@ -95,11 +102,12 @@ export function AppLayout() {
                 end={item.to === '/'}
                 onClick={() => setMobileOpen(false)}
                 className={({ isActive }) =>
-                  `text-base font-semibold tracking-wide py-3 border-b border-hairline-dark transition-opacity ${
+                  `inline-flex items-center gap-3 text-base font-semibold tracking-wide py-3 border-b border-hairline-dark transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-sm ${
                     isActive ? 'text-on-dark' : 'text-on-dark-mute'
                   }`
                 }
               >
+                <item.Icon size={20} strokeWidth={1.5} />
                 {item.label}
               </NavLink>
             ))}
@@ -111,6 +119,9 @@ export function AppLayout() {
       <main className="pt-16 bg-canvas-light">
         <Outlet />
       </main>
+
+      {/* Toast viewport — renders floating notifications */}
+      <ToastViewport />
     </div>
   );
 }

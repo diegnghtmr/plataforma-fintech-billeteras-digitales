@@ -1,3 +1,4 @@
+import { Undo2 } from 'lucide-react';
 import type { TransactionResponse } from '../../api/transactions';
 
 interface TransactionRowProps {
@@ -27,12 +28,13 @@ export function TransactionRow({ tx, onReverse, isReverting }: TransactionRowPro
         <button
           onClick={() => onReverse(tx.id)}
           disabled={!canRevert || isReverting}
-          className={`inline-flex items-center justify-center rounded-full text-xs font-semibold tracking-wide px-3 py-1.5 transition-opacity ${
+          className={`inline-flex items-center gap-1.5 justify-center rounded-full text-xs font-semibold tracking-wide px-3 py-1.5 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
             canRevert
               ? 'bg-canvas-light border border-hairline-strong text-ink hover:opacity-70'
               : 'bg-surface-soft text-faint cursor-not-allowed'
           }`}
         >
+          <Undo2 size={12} strokeWidth={2} />
           Revertir
         </button>
       </td>

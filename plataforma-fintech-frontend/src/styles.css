@@ -1,15 +1,25 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Inter+Tight:wght@500&display=swap');
+/* ─── Font loading ─────────────────────────────────────────────────────────── */
+/* Preconnect hints belong in index.html; @import handles the actual fetch.    */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Inter+Tight:wght@400;500;600&display=swap');
 
 @theme {
-  /* Brand */
+  /* ── Font families ────────────────────────────────────────────────────────── */
+  /* display = Aeonik Pro substitute (Inter Tight) + fallbacks */
+  --font-display: 'Inter Tight', 'Aeonik Pro', system-ui, sans-serif;
+  /* body = Inter */
+  --font-body: 'Inter', system-ui, sans-serif;
+  /* legacy alias — kept for existing utilities */
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* ── Brand ────────────────────────────────────────────────────────────────── */
   --color-brand: #494fdf;
   --color-brand-bright: #4f55f1;
   --color-brand-deep: #3a40c4;
   --color-on-brand: #ffffff;
 
-  /* Text — light mode */
+  /* ── Text — light mode ────────────────────────────────────────────────────── */
   --color-ink: #191c1f;
   --color-body: #1f2226;
   --color-charcoal: #3a3d40;
@@ -18,26 +28,27 @@
   --color-stone: #8d969e;
   --color-faint: #c9c9cd;
 
-  /* Canvas */
+  /* ── Canvas ───────────────────────────────────────────────────────────────── */
   --color-canvas-light: #ffffff;
   --color-canvas-dark: #000000;
 
-  /* Surfaces */
+  /* ── Surfaces ─────────────────────────────────────────────────────────────── */
   --color-surface-soft: #f4f4f4;
   --color-surface-card: #ffffff;
   --color-surface-deep: #0a0a0a;
   --color-surface-elevated: #16181a;
 
-  /* On-dark text */
+  /* ── On-dark text ─────────────────────────────────────────────────────────── */
   --color-on-dark: #ffffff;
   --color-on-dark-mute: rgba(255, 255, 255, 0.72);
 
-  /* Hairlines */
+  /* ── Hairlines ────────────────────────────────────────────────────────────── */
   --color-hairline-light: #e2e2e7;
   --color-hairline-dark: rgba(255, 255, 255, 0.12);
   --color-hairline-strong: #191c1f;
+  --color-divider-soft: rgba(255, 255, 255, 0.06);
 
-  /* Wide accent palette — iconography / badges only, NEVER button surfaces */
+  /* ── Wide accent palette — iconography / badges only, NEVER button surfaces ─ */
   --color-accent-teal: #00a87e;
   --color-accent-light-blue: #007bc2;
   --color-accent-blue-link: #376cd5;
@@ -49,8 +60,9 @@
   --color-accent-danger: #e23b4a;
   --color-accent-deep-red: #8b0000;
   --color-accent-brown: #936d62;
+  --color-link: #376cd5;
 
-  /* Border radius */
+  /* ── Border radius ────────────────────────────────────────────────────────── */
   --radius-none: 0px;
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -58,12 +70,20 @@
   --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* Typography */
-  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  /* ── Spacing scale (DESIGN.md tokens) ────────────────────────────────────── */
+  --spacing-xxs: 4px;
+  --spacing-xs: 6px;
+  --spacing-sm: 8px;
+  --spacing-md: 14px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 48px;
+  --spacing-block: 80px;
+  --spacing-section: 88px;
+  --spacing-band: 120px;
 
-  /* Legacy shims — kept so old Tailwind utilities resolve without error */
-  /* These map to the nearest new token; no new usage should reference them */
+  /* ── Legacy shims — kept so old Tailwind utilities resolve without error ──── */
   --color-canvas: #000000;
   --color-canvas-fg: #ffffff;
   --color-surface: #16181a;
@@ -82,8 +102,147 @@
   --color-platinum: #494fdf;
 }
 
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
 body {
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   color: var(--color-ink);
   background: var(--color-canvas-light);
+}
+
+/* ─── Typography utilities (DESIGN.md scale) ────────────────────────────────── */
+@layer components {
+  /* Display sizes — Inter Tight / Aeonik Pro substitute, weight 500 */
+  .text-display-xxl {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 8vw, 136px);
+    font-weight: 500;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+  }
+
+  .text-display-xl {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 6vw, 80px);
+    font-weight: 500;
+    line-height: 1.0;
+    letter-spacing: -0.01em;
+  }
+
+  .text-display-lg {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  .text-display-md {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  /* Heading sizes */
+  .text-heading-lg {
+    font-family: var(--font-display);
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 500;
+    line-height: 1.19;
+    letter-spacing: -0.01em;
+  }
+
+  .text-heading-md {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.33;
+    letter-spacing: 0;
+  }
+
+  .text-heading-sm {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  /* Body sizes — Inter */
+  .text-body-lg {
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.56;
+    letter-spacing: -0.005em;
+  }
+
+  .text-body-md {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.015em;
+  }
+
+  .text-body-md-bold {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.01em;
+  }
+
+  .text-body-sm {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: 0;
+  }
+
+  /* Button label sizes */
+  .text-button-lg {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .text-button-md {
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: 0.015em;
+  }
+
+  .text-button-sm {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.43;
+    letter-spacing: 0;
+  }
+
+  /* Caption */
+  .text-caption {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  /* Eyebrow — uppercase small tracking label */
+  .text-eyebrow {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
 }

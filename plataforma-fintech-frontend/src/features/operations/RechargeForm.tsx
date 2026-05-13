@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DollarSign } from 'lucide-react';
 import { moneyOperationSchema, type MoneyOperationFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
@@ -48,6 +49,7 @@ export function RechargeForm({ userId, walletId, onSubmit, isPending, error }: R
         <Input
           type="number"
           step="0.01"
+          leftIcon={DollarSign}
           data-testid="recharge-amount"
           {...register('amount', { valueAsNumber: true })}
           placeholder="0.00"

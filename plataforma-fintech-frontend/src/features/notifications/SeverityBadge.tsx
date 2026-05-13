@@ -1,3 +1,5 @@
+import { Info, AlertTriangle, AlertOctagon } from 'lucide-react';
+
 type NotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 
 /**
@@ -5,10 +7,10 @@ type NotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
  * because SeverityBadge.test.tsx uses className.toContain() assertions.
  * The actual colour values are resolved by the legacy shim tokens in styles.css.
  */
-const SEVERITY_CLASSES: Record<NotificationSeverity, string> = {
-  INFO: 'bg-info text-info-fg',
-  WARNING: 'bg-warn text-warn-fg',
-  CRITICAL: 'bg-danger text-danger-fg',
+const SEVERITY_CONFIG: Record<NotificationSeverity, { className: string; Icon: typeof Info }> = {
+  INFO: { className: 'bg-info text-info-fg', Icon: Info },
+  WARNING: { className: 'bg-warn text-warn-fg', Icon: AlertTriangle },
+  CRITICAL: { className: 'bg-danger text-danger-fg', Icon: AlertOctagon },
 };
 
 interface SeverityBadgeProps {
@@ -16,10 +18,12 @@ interface SeverityBadgeProps {
 }
 
 export function SeverityBadge({ severity }: SeverityBadgeProps) {
+  const { className, Icon } = SEVERITY_CONFIG[severity];
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${SEVERITY_CLASSES[severity]}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${className}`}
     >
+      <Icon size={12} strokeWidth={2} />
       {severity}
     </span>
   );

@@ -127,6 +127,6 @@ describe('NotificationsPage', () => {
     const markReadBtn = screen.getByRole('button', { name: /marcar como leída/i });
     fireEvent.click(markReadBtn);
 
-    expect(mutateFn).toHaveBeenCalledWith('NTF-000002');
+    expect(mutateFn).toHaveBeenCalledWith('NTF-000002', expect.any(Object));
   });
 });
