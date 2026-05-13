@@ -68,3 +68,16 @@ export function labelFraudSeverity(value: string): string {
 export function labelLoyaltyLevel(value: string): string {
   return (LOYALTY_LEVEL_LABEL as Record<string, string>)[value] ?? value;
 }
+
+export const WALLET_TYPE_LABEL = {
+  DAILY_EXPENSES: 'Gastos diarios',
+  SAVINGS: 'Ahorros',
+  INVESTMENT: 'Inversiones',
+  SHOPPING: 'Compras',
+  SUBSCRIPTIONS: 'Suscripciones',
+  TRANSPORT: 'Transporte',
+} as const;
+
+export function labelWalletType(value: string): string {
+  return (WALLET_TYPE_LABEL as Record<string, string>)[value] ?? value;
+}

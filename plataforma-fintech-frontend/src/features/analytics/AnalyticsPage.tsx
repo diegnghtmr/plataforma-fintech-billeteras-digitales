@@ -1,5 +1,17 @@
 import { useState } from 'react';
 import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
+import {
   useAnalyticsSummaryQuery,
   useTopUsersQuery,
   useTopWalletsQuery,
@@ -10,12 +22,36 @@ import {
   useMovementByTypeQuery,
   useTotalMovedQuery,
 } from './hooks';
+import { labelOperationType, labelWalletType } from '../../shared/i18n/enum-labels';
 
 const LIMIT_OPTIONS = [5, 10, 25, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
 
 const selectCls =
   'border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand';
+
+// Brand + accent palette for charts
+const BRAND_COBALT = '#494fdf';
+const PIE_PALETTE = [
+  '#00a87e', // teal
+  '#376cd5', // blue-link
+  '#428619', // light-green
+  '#b09000', // yellow
+  '#e61e49', // pink
+  '#007bc2', // light-blue
+];
+
+const tooltipStyle: React.CSSProperties = {
+  backgroundColor: '#ffffff',
+  border: '1px solid #e2e2e7',
+  borderRadius: '8px',
+  fontSize: '13px',
+  color: '#191c1f',
+};
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
 
 function SummaryCards({ summary }: { summary: Record<string, number> | undefined }) {
   if (!summary) {
@@ -53,11 +89,15 @@ function MetricTable({
   items,
   limit,
   onLimitChange,
+  formatId,
+  formatLabel,
 }: {
   title: string;
   items: { id: string; label: string; value: number }[] | undefined;
   limit: LimitOption;
   onLimitChange: (v: LimitOption) => void;
+  formatId?: (v: string) => string;
+  formatLabel?: (v: string) => string;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -90,8 +130,12 @@ function MetricTable({
             <tbody>
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-hairline-light">
-                  <td className="py-3 px-4 text-stone font-mono text-xs">{item.id}</td>
-                  <td className="py-3 px-4 text-ink">{item.label}</td>
+                  <td className="py-3 px-4 text-stone font-mono text-xs">
+                    {formatId ? formatId(item.id) : item.id}
+                  </td>
+                  <td className="py-3 px-4 text-ink">
+                    {formatLabel ? formatLabel(item.label) : item.label}
+                  </td>
                   <td className="py-3 px-4 text-right text-ink font-semibold">{item.value}</td>
                 </tr>
               ))}
@@ -159,6 +203,102 @@ function FrequentRoutesTable({
   );
 }
 
+// ---------------------------------------------------------------------------
+// Chart components
+// ---------------------------------------------------------------------------
+
+function MovementBarChart({
+  items,
+}: {
+  items: { id: string; label: string; value: number }[] | undefined;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[300px] text-stone text-sm">
+        Sin datos
+      </div>
+    );
+  }
+
+  const data = items.map((item) => ({
+    name: labelOperationType(item.label),
+    cantidad: item.value,
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 8 }}>
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 11, fill: '#8d969e' }}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 11, fill: '#8d969e' }}
+          tickLine={false}
+          axisLine={false}
+          allowDecimals={false}
+        />
+        <Tooltip
+          contentStyle={tooltipStyle}
+          cursor={{ fill: '#f4f4f4' }}
+        />
+        <Bar dataKey="cantidad" fill={BRAND_COBALT} radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function WalletCategoryPieChart({
+  items,
+}: {
+  items: { id: string; label: string; value: number }[] | undefined;
+}) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[300px] text-stone text-sm">
+        Sin datos
+      </div>
+    );
+  }
+
+  const data = items.map((item) => ({
+    name: labelWalletType(item.label),
+    value: item.value,
+  }));
+
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={100}
+          paddingAngle={3}
+          dataKey="value"
+        >
+          {data.map((_entry, index) => (
+            <Cell key={`cell-${index}`} fill={PIE_PALETTE[index % PIE_PALETTE.length] as string} />
+          ))}
+        </Pie>
+        <Tooltip contentStyle={tooltipStyle} />
+        <Legend
+          iconType="circle"
+          iconSize={8}
+          wrapperStyle={{ fontSize: '12px', color: '#8d969e' }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 export function AnalyticsPage() {
   const [usersLimit, setUsersLimit] = useState<LimitOption>(10);
   const [walletsLimit, setWalletsLimit] = useState<LimitOption>(10);
@@ -207,8 +347,29 @@ export function AnalyticsPage() {
         </div>
       </section>
 
-      {/* Detail sections — light catalogue band */}
+      {/* Charts band — light */}
       <section className="bg-canvas-light py-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 flex flex-col gap-6">
+          <h2 className="text-heading-lg text-ink">Visualizaciones</h2>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Bar chart — Movimientos por Tipo */}
+            <div className="bg-surface-card border border-hairline-light rounded-[20px] p-8 flex flex-col gap-4">
+              <h3 className="text-heading-sm text-ink">Movimientos por Tipo</h3>
+              <MovementBarChart items={movementByType} />
+            </div>
+
+            {/* Pie chart — Categorías de Billetera */}
+            <div className="bg-surface-card border border-hairline-light rounded-[20px] p-8 flex flex-col gap-4">
+              <h3 className="text-heading-sm text-ink">Categorías de Billetera</h3>
+              <WalletCategoryPieChart items={walletCategories} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Detail sections — light catalogue band */}
+      <section className="bg-canvas-light pb-[88px]">
         <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 flex flex-col gap-12">
 
           <MetricTable
@@ -278,6 +439,8 @@ export function AnalyticsPage() {
             items={movementByType}
             limit={10}
             onLimitChange={() => {}}
+            formatId={labelOperationType}
+            formatLabel={labelOperationType}
           />
 
           <MetricTable
@@ -285,6 +448,8 @@ export function AnalyticsPage() {
             items={walletCategories}
             limit={walletCatLimit}
             onLimitChange={setWalletCatLimit}
+            formatId={labelWalletType}
+            formatLabel={labelWalletType}
           />
 
           {/* Total Moved in Range */}

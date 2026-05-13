@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Check } from 'lucide-react';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { useUserNotificationsQuery, useMarkNotificationReadMutation } from './hooks';
 import { SeverityBadge } from './SeverityBadge';
@@ -44,16 +44,24 @@ export function NotificationsPage() {
           </p>
         </div>
 
-        {/* Unread filter toggle */}
-        <label className="flex items-center gap-2 text-ink text-sm font-semibold cursor-pointer mt-2">
+        {/* Unread filter chip */}
+        <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-soft hover:bg-faint cursor-pointer transition-colors mt-2 select-none">
           <input
             type="checkbox"
             aria-label="Solo no leídas"
             checked={unreadOnly}
             onChange={(e) => setUnreadOnly(e.target.checked)}
-            className="rounded border-hairline-light accent-brand"
+            className="peer sr-only"
           />
-          Solo no leídas
+          {/* visible checkbox box */}
+          <span className="w-4 h-4 rounded flex items-center justify-center border border-hairline-light bg-canvas-light peer-checked:bg-canvas-dark peer-checked:border-canvas-dark transition-colors shrink-0">
+            <Check
+              size={10}
+              strokeWidth={3}
+              className={unreadOnly ? 'text-on-dark' : 'invisible'}
+            />
+          </span>
+          <span className="text-ink text-sm font-semibold">Solo no leídas</span>
         </label>
       </div>
 

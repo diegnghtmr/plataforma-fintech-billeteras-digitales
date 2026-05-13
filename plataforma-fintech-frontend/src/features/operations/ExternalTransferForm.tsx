@@ -1,10 +1,13 @@
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DollarSign, User, Wallet } from 'lucide-react';
 import { externalTransferSchema, type ExternalTransferFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
 import { Field } from '../../shared/components/Field';
+import { SearchSelect } from '../../shared/components/SearchSelect';
+import { useUsersListQuery } from '../users/hooks';
+import { useUserWalletsQuery } from '../wallets/hooks';
 import type { ApiError } from '../../api/error';
 
 interface ExternalTransferFormProps {
@@ -29,9 +32,12 @@ export function ExternalTransferForm({
   isPending,
   error,
 }: ExternalTransferFormProps) {
+  const { data: users = [], isLoading: usersLoading } = useUsersListQuery();
+
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ExternalTransferFormData>({
     resolver: zodResolver(externalTransferSchema),
@@ -41,6 +47,34 @@ export function ExternalTransferForm({
     },
   });
 
+  const watchedSourceUserId = useWatch({ control, name: 'sourceUserId' });
+  const watchedTargetUserId = useWatch({ control, name: 'targetUserId' });
+
+  const { data: sourceWallets = [], isLoading: sourceWalletsLoading } = useUserWalletsQuery(
+    watchedSourceUserId || undefined
+  );
+  const { data: targetWallets = [], isLoading: targetWalletsLoading } = useUserWalletsQuery(
+    watchedTargetUserId || undefined
+  );
+
+  const userOptions = users.map((u) => ({
+    value: u.id,
+    label: u.name,
+    description: `${u.id} · ${u.email}`,
+  }));
+
+  const sourceWalletOptions = sourceWallets.map((w) => ({
+    value: w.code,
+    label: w.name,
+    description: `${w.code} · ${w.type}`,
+  }));
+
+  const targetWalletOptions = targetWallets.map((w) => ({
+    value: w.code,
+    label: w.name,
+    description: `${w.code} · ${w.type}`,
+  }));
+
   const errorMessage = error
     ? (ERROR_MESSAGES[error.code] ?? error.message)
     : null;
@@ -48,16 +82,76 @@ export function ExternalTransferForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <Field label="Usuario origen" error={errors.sourceUserId?.message}>
-        <Input leftIcon={User} {...register('sourceUserId')} placeholder="USR001" />
+        <Controller
+          control={control}
+          name="sourceUserId"
+          render={({ field }) => (
+            <SearchSelect
+              aria-label="Usuario origen"
+              options={userOptions}
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Selecciona un usuario"
+              leftIcon={User}
+              isLoading={usersLoading}
+            />
+          )}
+        />
       </Field>
       <Field label="Billetera origen" error={errors.sourceWalletId?.message}>
-        <Input leftIcon={Wallet} {...register('sourceWalletId')} placeholder="W001" />
+        <Controller
+          control={control}
+          name="sourceWalletId"
+          render={({ field }) => (
+            <SearchSelect
+              aria-label="Billetera origen"
+              options={sourceWalletOptions}
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Selecciona una billetera"
+              emptyMessage={watchedSourceUserId ? 'Sin billeteras' : 'Selecciona un usuario primero'}
+              leftIcon={Wallet}
+              isLoading={sourceWalletsLoading}
+              disabled={!watchedSourceUserId}
+            />
+          )}
+        />
       </Field>
       <Field label="Usuario destino" error={errors.targetUserId?.message}>
-        <Input leftIcon={User} {...register('targetUserId')} placeholder="USR002" />
+        <Controller
+          control={control}
+          name="targetUserId"
+          render={({ field }) => (
+            <SearchSelect
+              aria-label="Usuario destino"
+              options={userOptions}
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Selecciona un usuario"
+              leftIcon={User}
+              isLoading={usersLoading}
+            />
+          )}
+        />
       </Field>
       <Field label="Billetera destino" error={errors.targetWalletId?.message}>
-        <Input leftIcon={Wallet} {...register('targetWalletId')} placeholder="W002" />
+        <Controller
+          control={control}
+          name="targetWalletId"
+          render={({ field }) => (
+            <SearchSelect
+              aria-label="Billetera destino"
+              options={targetWalletOptions}
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Selecciona una billetera"
+              emptyMessage={watchedTargetUserId ? 'Sin billeteras' : 'Selecciona un usuario destino primero'}
+              leftIcon={Wallet}
+              isLoading={targetWalletsLoading}
+              disabled={!watchedTargetUserId}
+            />
+          )}
+        />
       </Field>
       <Field label="Monto" error={errors.amount?.message}>
         <Input

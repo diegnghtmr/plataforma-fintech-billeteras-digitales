@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, useWatch, Controller, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, User, Wallet } from 'lucide-react';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import {
   useScheduledOperationsQuery,
@@ -21,6 +21,9 @@ import { Modal } from '../../shared/components/Modal';
 import { EmptyState } from '../../shared/components/EmptyState';
 import { Skeleton } from '../../shared/components/Skeleton';
 import { pushToast } from '../../shared/components/Toast';
+import { SearchSelect } from '../../shared/components/SearchSelect';
+import { useUsersListQuery } from '../users/hooks';
+import { useUserWalletsQuery } from '../wallets/hooks';
 import type {
   ScheduledOperationResponse,
   CreateScheduledOperationRequest,
@@ -42,10 +45,13 @@ export function ScheduledOperationsPage() {
   const cancelMutation = useCancelScheduledOperationMutation();
   const runMutation = useRunScheduledOpsMutation();
 
+  const { data: users = [], isLoading: usersLoading } = useUsersListQuery();
+
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreateScheduledOperationFormData>({
     resolver: zodResolver(createScheduledOperationSchema),
@@ -57,6 +63,23 @@ export function ScheduledOperationsPage() {
       scheduledAt: '',
     },
   });
+
+  const watchedSourceUserId = useWatch({ control, name: 'sourceUserId' });
+  const { data: sourceWallets = [], isLoading: walletsLoading } = useUserWalletsQuery(
+    watchedSourceUserId || undefined
+  );
+
+  const userOptions = users.map((u) => ({
+    value: u.id,
+    label: u.name,
+    description: `${u.id} · ${u.email}`,
+  }));
+
+  const walletOptions = sourceWallets.map((w) => ({
+    value: w.code,
+    label: w.name,
+    description: `${w.code} · ${w.type}`,
+  }));
 
   const onSubmit: SubmitHandler<CreateScheduledOperationFormData> = (data) => {
     const payload = stripUndefined({
@@ -150,13 +173,47 @@ export function ScheduledOperationsPage() {
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="sourceUserId" className={labelCls}>Usuario origen</label>
-                <input id="sourceUserId" {...register('sourceUserId')} className={inputCls} />
+                <Controller
+                  control={control}
+                  name="sourceUserId"
+                  render={({ field }) => (
+                    <SearchSelect
+                      id="sourceUserId"
+                      aria-label="Usuario origen"
+                      options={userOptions}
+                      value={field.value}
+                      onChange={(val) => {
+                        field.onChange(val);
+                      }}
+                      placeholder="Selecciona un usuario"
+                      leftIcon={User}
+                      isLoading={usersLoading}
+                    />
+                  )}
+                />
                 {errors.sourceUserId && <span className={errorCls}>{errors.sourceUserId.message}</span>}
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label htmlFor="sourceWalletId" className={labelCls}>Billetera origen</label>
-                <input id="sourceWalletId" {...register('sourceWalletId')} className={inputCls} />
+                <Controller
+                  control={control}
+                  name="sourceWalletId"
+                  render={({ field }) => (
+                    <SearchSelect
+                      id="sourceWalletId"
+                      aria-label="Billetera origen"
+                      options={walletOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Selecciona una billetera"
+                      emptyMessage={watchedSourceUserId ? 'Sin billeteras' : 'Selecciona un usuario primero'}
+                      leftIcon={Wallet}
+                      isLoading={walletsLoading}
+                      disabled={!watchedSourceUserId}
+                    />
+                  )}
+                />
                 {errors.sourceWalletId && <span className={errorCls}>{errors.sourceWalletId.message}</span>}
               </div>
 

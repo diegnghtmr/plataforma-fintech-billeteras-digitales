@@ -19,7 +19,7 @@ export function PointsCard({ points, loyaltyLevel }: PointsCardProps) {
   const hint = next ? `Faltan ${(next.threshold - points).toFixed(0)} puntos para ${next.level}` : null;
 
   return (
-    <div className="bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-4">
+    <div className="w-full bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-4">
       <h3
         className="text-on-dark-mute text-sm font-semibold uppercase tracking-widest"
       >
@@ -32,7 +32,7 @@ export function PointsCard({ points, loyaltyLevel }: PointsCardProps) {
         <LoyaltyBadge level={loyaltyLevel} />
       </div>
       {hint && (
-        <p className="text-on-dark-mute text-sm">{hint}</p>
+        <p className="text-on-dark-mute text-sm w-full">{hint}</p>
       )}
     </div>
   );

@@ -32,7 +32,7 @@ export function PointsPage() {
       {selectedUserId && pointsData && (
         <section className="bg-canvas-dark pb-[88px]">
           <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
-            <div className="max-w-sm">
+            <div className="w-full max-w-[24rem]">
               <PointsCard
                 points={pointsData.points}
                 loyaltyLevel={pointsData.loyaltyLevel}

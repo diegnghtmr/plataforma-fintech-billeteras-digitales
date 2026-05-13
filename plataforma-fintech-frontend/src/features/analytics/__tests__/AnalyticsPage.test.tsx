@@ -4,6 +4,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { AnalyticsPage } from '../AnalyticsPage';
 
+// Mock recharts — SVG/ResizeObserver are not available in jsdom
+vi.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  BarChart: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Bar: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  Tooltip: () => null,
+  PieChart: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Pie: () => null,
+  Cell: () => null,
+  Legend: () => null,
+}));
+
 // Mock the hooks module so we don't need real HTTP calls
 vi.mock('../hooks', () => ({
   useAnalyticsSummaryQuery: vi.fn(),
@@ -115,16 +129,17 @@ describe('AnalyticsPage', () => {
   it('renders "Movimientos por Tipo" section', () => {
     render(<AnalyticsPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/movimientos por tipo/i)).toBeInTheDocument();
-    // getAllByText to handle multiple occurrences (dropdown + table)
-    expect(screen.getAllByText('RECHARGE').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/movimientos por tipo/i).length).toBeGreaterThan(0);
+    // Labels are translated: RECHARGE → Recarga
+    expect(screen.getAllByText('Recarga').length).toBeGreaterThan(0);
   });
 
   it('renders "Categorías de Billetera" section', () => {
     render(<AnalyticsPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/categorías de billetera/i)).toBeInTheDocument();
-    expect(screen.getAllByText('SAVINGS').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/categorías de billetera/i).length).toBeGreaterThan(0);
+    // SAVINGS → Ahorros; DAILY → unknown enum (stays 'DAILY' as fallback)
+    expect(screen.getAllByText('Ahorros').length).toBeGreaterThan(0);
   });
 
   it('renders "Total Movido en Rango" section with date pickers', () => {
