@@ -298,9 +298,10 @@ describe('TransactionsPage', () => {
     const button = screen.getByRole('button', { name: /revertir/i });
     fireEvent.click(button);
 
-    const call = mockMutate.mock.calls[0][0];
-    expect(call.transactionId).toBe('TX-000001');
-    expect(call.userId).toBe('USR001');
-    expect(call.walletId).toBeUndefined();
+    const call = mockMutate.mock.calls[0]?.[0];
+    expect(call).toBeDefined();
+    expect(call?.transactionId).toBe('TX-000001');
+    expect(call?.userId).toBe('USR001');
+    expect(call?.walletId).toBeUndefined();
   });
 });
