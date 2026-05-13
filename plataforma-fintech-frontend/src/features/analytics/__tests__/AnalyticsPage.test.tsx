@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { AnalyticsPage } from '../AnalyticsPage';
@@ -16,6 +16,20 @@ vi.mock('recharts', () => ({
   Pie: () => null,
   Cell: () => null,
   Legend: () => null,
+}));
+
+// Mock CyclesGraph — ReactFlow requires canvas/ResizeObserver not available in jsdom
+vi.mock('../CyclesGraph', () => ({
+  CyclesGraph: ({ cycles }: { cycles: string[][] }) =>
+    cycles.length === 0 ? (
+      <p>No se detectaron ciclos</p>
+    ) : (
+      <ul>
+        {cycles.map((cycle, i) => (
+          <li key={i}>{[...cycle, cycle[0]].join(' → ')}</li>
+        ))}
+      </ul>
+    ),
 }));
 
 // Mock the hooks module so we don't need real HTTP calls
@@ -151,10 +165,28 @@ describe('AnalyticsPage', () => {
     expect(screen.getByText(/^hasta$/i)).toBeInTheDocument();
   });
 
-  it('renders totalMoved result when data is present', () => {
-    vi.mocked(useTotalMovedQuery).mockReturnValue({ data: MOCK_TOTAL_MOVED } as any);
-
+  it('renders "Seleccioná un rango" prompt when dates are empty', () => {
     render(<AnalyticsPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText(/seleccioná un rango/i)).toBeInTheDocument();
+  });
+
+  it('renders totalMoved KPI card when dates are set and data is present', () => {
+    vi.mocked(useTotalMovedQuery).mockReturnValue({
+      data: MOCK_TOTAL_MOVED,
+      isLoading: false,
+    } as any);
+
+    const { container } = render(<AnalyticsPage />, { wrapper: makeWrapper() });
+
+    // Simulate user filling in the date inputs via fireEvent
+    const dateInputs = container.querySelectorAll('input[type="datetime-local"]');
+    const fromInput = dateInputs[0] as HTMLInputElement;
+    const toInput = dateInputs[1] as HTMLInputElement;
+
+    // Simulate change events so rangeFrom/rangeTo state updates
+    fireEvent.change(fromInput, { target: { value: '2026-01-01T00:00' } });
+    fireEvent.change(toInput, { target: { value: '2026-12-31T23:59' } });
 
     expect(screen.getByText('$45000.50')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();

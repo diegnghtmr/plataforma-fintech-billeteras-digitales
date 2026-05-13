@@ -23,6 +23,7 @@ import {
   useTotalMovedQuery,
 } from './hooks';
 import { labelOperationType, labelWalletType } from '../../shared/i18n/enum-labels';
+import { CyclesGraph } from './CyclesGraph';
 
 const LIMIT_OPTIONS = [5, 10, 25, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
@@ -323,9 +324,12 @@ export function AnalyticsPage() {
   const { data: cycles } = useCyclesQuery();
   const { data: walletCategories } = useTopWalletCategoriesQuery(walletCatLimit);
   const { data: movementByType } = useMovementByTypeQuery();
-  const fromIso = rangeFrom ? new Date(rangeFrom).toISOString() : '';
-  const toIso = rangeTo ? new Date(rangeTo).toISOString() : '';
-  const { data: totalMoved } = useTotalMovedQuery(fromIso, toIso);
+  // datetime-local yields "YYYY-MM-DDTHH:mm" — append ":00" only when seconds are absent
+  // so that Date parsing treats it as local time consistently across browsers.
+  const toFullDatetime = (v: string) => (v.length === 16 ? `${v}:00` : v);
+  const fromIso = rangeFrom ? new Date(toFullDatetime(rangeFrom)).toISOString() : '';
+  const toIso = rangeTo ? new Date(toFullDatetime(rangeTo)).toISOString() : '';
+  const { data: totalMoved, isLoading: totalMovedLoading } = useTotalMovedQuery(fromIso, toIso);
 
   return (
     <>
@@ -464,6 +468,8 @@ export function AnalyticsPage() {
             <h3 className="text-heading-sm text-ink">
               Total Movido en Rango
             </h3>
+
+            {/* Date filters */}
             <div className="flex gap-4 flex-wrap">
               <div className="flex flex-col gap-1.5">
                 <label className="text-charcoal text-sm font-semibold">Desde</label>
@@ -471,7 +477,7 @@ export function AnalyticsPage() {
                   type="datetime-local"
                   value={rangeFrom}
                   onChange={(e) => setRangeFrom(e.target.value)}
-                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
+                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-full max-w-[14rem]"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -480,43 +486,48 @@ export function AnalyticsPage() {
                   type="datetime-local"
                   value={rangeTo}
                   onChange={(e) => setRangeTo(e.target.value)}
-                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
+                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-full max-w-[14rem]"
                 />
               </div>
             </div>
-            {totalMoved && (
-              <div className="bg-surface-card border border-hairline-light rounded-[20px] p-8 flex gap-8">
-                <div>
-                  <p className="text-stone text-sm font-semibold uppercase tracking-widest">Total</p>
-                  <p className="text-ink font-semibold text-2xl mt-1">${totalMoved.totalAmount.toFixed(2)}</p>
+
+            {/* KPI result card */}
+            {!rangeFrom || !rangeTo ? (
+              <p className="text-stone text-sm">
+                Seleccioná un rango de fechas para ver el total movido.
+              </p>
+            ) : totalMovedLoading ? (
+              <p className="text-stone text-sm">Calculando...</p>
+            ) : totalMoved ? (
+              <div className="bg-surface-elevated rounded-[20px] p-8 flex flex-col sm:flex-row gap-8">
+                <div className="flex flex-col gap-2">
+                  <p className="text-on-dark-mute text-xs font-semibold uppercase tracking-widest">
+                    Total Movido
+                  </p>
+                  <p className="text-display-md text-on-dark">
+                    ${totalMoved.totalAmount.toFixed(2)}
+                  </p>
                 </div>
-                <div>
-                  <p className="text-stone text-sm font-semibold uppercase tracking-widest">Transacciones</p>
-                  <p className="text-ink font-semibold text-2xl mt-1">{totalMoved.count}</p>
+                <div className="flex flex-col gap-2">
+                  <p className="text-on-dark-mute text-xs font-semibold uppercase tracking-widest">
+                    Transacciones
+                  </p>
+                  <p className="text-display-md text-on-dark">
+                    {totalMoved.count}
+                  </p>
                 </div>
               </div>
+            ) : (
+              <p className="text-stone text-sm">Sin datos para el rango seleccionado.</p>
             )}
           </div>
 
-          {/* Cycles */}
+          {/* Cycles — interactive graph */}
           <div className="flex flex-col gap-4">
             <h3 className="text-heading-sm text-ink">
               Ciclos en Grafo de Transferencias
             </h3>
-            {!cycles || cycles.length === 0 ? (
-              <p className="text-stone text-sm">No se detectaron ciclos</p>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {cycles.map((cycle, i) => (
-                  <li
-                    key={i}
-                    className="bg-surface-soft rounded-[12px] px-4 py-3 text-sm text-ink font-mono"
-                  >
-                    {cycle.join(' → ')}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <CyclesGraph cycles={cycles ?? []} />
           </div>
 
         </div>
