@@ -123,6 +123,53 @@
   }
 }
 
+/* ─── xyflow Controls — custom skin ────────────────────────────────────────── */
+.react-flow__controls {
+  background: var(--color-canvas-light);
+  border: 1px solid var(--color-hairline-light);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px -8px rgba(0, 0, 0, 0.08);
+  padding: 4px;
+  gap: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.react-flow__controls-button {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  width: 32px !important;
+  height: 32px !important;
+  color: var(--color-ink) !important;
+  transition: background 120ms ease;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--color-surface-soft) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
+}
+
+/* ─── xyflow edge dash-flow animation ──────────────────────────────────────── */
+@keyframes edge-flow {
+  to { stroke-dashoffset: -20; }
+}
+
+.react-flow__edge-path[stroke-dasharray] {
+  animation: edge-flow 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .react-flow__edge-path[stroke-dasharray] {
+    animation: none;
+  }
+}
+
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
 body {
   font-family: var(--font-body);
