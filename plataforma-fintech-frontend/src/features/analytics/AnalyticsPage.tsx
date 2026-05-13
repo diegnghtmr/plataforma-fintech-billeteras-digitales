@@ -328,11 +328,10 @@ export function AnalyticsPage() {
   const { data: cycles } = useCyclesQuery();
   const { data: walletCategories } = useTopWalletCategoriesQuery(walletCatLimit);
   const { data: movementByType } = useMovementByTypeQuery();
-  // datetime-local yields "YYYY-MM-DDTHH:mm" — append ":00" only when seconds are absent
-  // so that Date parsing treats it as local time consistently across browsers.
-  const toFullDatetime = (v: string) => (v.length === 16 ? `${v}:00` : v);
-  const fromIso = rangeFrom ? new Date(toFullDatetime(rangeFrom)).toISOString() : '';
-  const toIso = rangeTo ? new Date(toFullDatetime(rangeTo)).toISOString() : '';
+  // input type="date" yields "YYYY-MM-DD" — anchor "Desde" at 00:00 local and
+  // "Hasta" at 23:59:59 local so the day-range is inclusive on both ends.
+  const fromIso = rangeFrom ? new Date(`${rangeFrom}T00:00:00`).toISOString() : '';
+  const toIso = rangeTo ? new Date(`${rangeTo}T23:59:59`).toISOString() : '';
   const { data: totalMoved, isLoading: totalMovedLoading } = useTotalMovedQuery(fromIso, toIso);
 
   return (
@@ -478,7 +477,7 @@ export function AnalyticsPage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-charcoal text-sm font-semibold">Desde</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   value={rangeFrom}
                   onChange={(e) => setRangeFrom(e.target.value)}
                   className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-full max-w-[14rem]"
@@ -487,7 +486,7 @@ export function AnalyticsPage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-charcoal text-sm font-semibold">Hasta</label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   value={rangeTo}
                   onChange={(e) => setRangeTo(e.target.value)}
                   className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-full max-w-[14rem]"

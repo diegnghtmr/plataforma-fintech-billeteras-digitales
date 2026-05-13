@@ -180,13 +180,13 @@ describe('AnalyticsPage', () => {
     const { container } = render(<AnalyticsPage />, { wrapper: makeWrapper() });
 
     // Simulate user filling in the date inputs via fireEvent
-    const dateInputs = container.querySelectorAll('input[type="datetime-local"]');
+    const dateInputs = container.querySelectorAll('input[type="date"]');
     const fromInput = dateInputs[0] as HTMLInputElement;
     const toInput = dateInputs[1] as HTMLInputElement;
 
     // Simulate change events so rangeFrom/rangeTo state updates
-    fireEvent.change(fromInput, { target: { value: '2026-01-01T00:00' } });
-    fireEvent.change(toInput, { target: { value: '2026-12-31T23:59' } });
+    fireEvent.change(fromInput, { target: { value: '2026-01-01' } });
+    fireEvent.change(toInput, { target: { value: '2026-12-31' } });
 
     expect(screen.getByText('$45000.50')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
