@@ -1,7 +1,5 @@
 package com.proyectofinal.fintech.application.usecase;
 
-import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
-import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.UserRepository;
@@ -14,7 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,10 +36,10 @@ class CreateUserUseCaseTest {
     }
 
     @Test
-    void execute_happyPath_savesAndReturnsUser() {
-        when(userRepository.existsById("USR001")).thenReturn(false);
+    void execute_emptyRepo_assignsUSR001() {
+        when(userRepository.findAll()).thenReturn(List.of());
 
-        Usuario result = useCase.execute("USR001", "Juan Pérez", "juan@example.com");
+        Usuario result = useCase.execute("Juan Pérez", "juan@example.com");
 
         assertEquals("USR001", result.getId());
         assertEquals("Juan Pérez", result.getName());
@@ -54,15 +52,33 @@ class CreateUserUseCaseTest {
     }
 
     @Test
-    void execute_duplicateId_throwsDuplicatedResourceException() {
-        when(userRepository.existsById("USR001")).thenReturn(true);
+    void execute_existingUsers_incrementsId() {
+        Usuario existing = new Usuario("USR003", "Existente", "x@x.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findAll()).thenReturn(List.of(existing));
 
-        DuplicatedResourceException ex = assertThrows(
-                DuplicatedResourceException.class,
-                () -> useCase.execute("USR001", "Juan", "juan@example.com")
-        );
+        Usuario result = useCase.execute("Nuevo", "nuevo@example.com");
 
-        assertEquals(ErrorCode.DUPLICATED_RESOURCE, ex.code());
-        verify(userRepository, never()).save(any());
+        assertEquals("USR004", result.getId());
+        verify(userRepository).save(any(Usuario.class));
+    }
+
+    @Test
+    void execute_idFollowsUSRFormat() {
+        when(userRepository.findAll()).thenReturn(List.of());
+
+        Usuario result = useCase.execute("Test", "test@example.com");
+
+        assertTrue(result.getId().matches("USR\\d{3,}"),
+                "ID must match USR followed by at least 3 digits, got: " + result.getId());
+    }
+
+    @Test
+    void execute_nonUSRIdsAreIgnored_fallsBackToUSR001() {
+        Usuario existing = new Usuario("WAL001", "Other", "o@o.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findAll()).thenReturn(List.of(existing));
+
+        Usuario result = useCase.execute("Juan", "juan@example.com");
+
+        assertEquals("USR001", result.getId());
     }
 }

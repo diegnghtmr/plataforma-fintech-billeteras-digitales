@@ -1,7 +1,5 @@
 package com.proyectofinal.fintech.application.usecase;
 
-import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
-import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.UserRepository;
@@ -13,6 +11,7 @@ import java.time.Instant;
  * Use case: create a new user.
  * Plain class — ZERO Spring/Jakarta imports.
  * Clock injected for testability.
+ * ID is auto-generated in USR### format (e.g. USR001, USR002…).
  */
 public class CreateUserUseCase {
 
@@ -24,15 +23,11 @@ public class CreateUserUseCase {
         this.clock = clock;
     }
 
-    public Usuario execute(String id, String name, String email) {
-        if (userRepository.existsById(id)) {
-            throw new DuplicatedResourceException(
-                    ErrorCode.DUPLICATED_RESOURCE,
-                    "User with id=" + id + " already exists");
-        }
+    public Usuario execute(String name, String email) {
+        String nextId = generateNextId();
 
         Usuario usuario = new Usuario(
-                id,
+                nextId,
                 name,
                 email,
                 Instant.now(clock),
@@ -42,5 +37,20 @@ public class CreateUserUseCase {
 
         userRepository.save(usuario);
         return usuario;
+    }
+
+    private String generateNextId() {
+        int maxN = 0;
+        for (Usuario u : userRepository.findAll()) {
+            String id = u.getId();
+            if (id != null && id.startsWith("USR")) {
+                try {
+                    int n = Integer.parseInt(id.substring(3));
+                    if (n > maxN) maxN = n;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return String.format("USR%03d", maxN + 1);
     }
 }

@@ -735,12 +735,8 @@ components:
   schemas:
     CreateUserRequest:
       type: object
-      required: [id, name, email]
+      required: [name, email]
       properties:
-        id:
-          type: string
-          minLength: 1
-          example: USR001
         name:
           type: string
           minLength: 2

@@ -41,7 +41,7 @@ export function UsersPage() {
     mutation.mutate(data, {
       onSuccess: (result) => {
         setSelectedUser(result);
-        pushToast({ variant: 'success', message: 'Usuario creado correctamente.' });
+        pushToast({ variant: 'success', message: `Usuario ${result.id} creado correctamente.` });
       },
       onError: () => {
         pushToast({ variant: 'error', message: 'No se pudo crear el usuario.' });

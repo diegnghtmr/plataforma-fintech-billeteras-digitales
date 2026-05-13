@@ -69,7 +69,7 @@ describe('UsersPage', () => {
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByRole('textbox', { name: /id/i })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /id/i })).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /nombre/i })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
   });

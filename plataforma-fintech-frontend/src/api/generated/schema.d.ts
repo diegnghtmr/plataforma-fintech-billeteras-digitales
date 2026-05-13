@@ -473,8 +473,6 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         CreateUserRequest: {
-            /** @example USR001 */
-            id: string;
             /** @example Juan Pérez */
             name: string;
             /**

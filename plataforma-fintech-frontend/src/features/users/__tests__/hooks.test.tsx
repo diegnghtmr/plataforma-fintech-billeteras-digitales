@@ -114,7 +114,7 @@ describe('useCreateUserMutation', () => {
     );
 
     const { result } = renderHook(() => useCreateUserMutation(), { wrapper });
-    result.current.mutate({ id: 'USR001', name: 'Juan', email: 'juan@test.com' });
+    result.current.mutate({ name: 'Juan', email: 'juan@test.com' });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(invalidateSpy).toHaveBeenCalledWith(expect.objectContaining({

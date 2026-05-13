@@ -7,7 +7,6 @@ import com.proyectofinal.fintech.application.usecase.DeleteUserUseCase;
 import com.proyectofinal.fintech.application.usecase.GetUserUseCase;
 import com.proyectofinal.fintech.application.usecase.ListUsersUseCase;
 import com.proyectofinal.fintech.application.usecase.UpdateUserUseCase;
-import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
@@ -66,7 +65,7 @@ class UserControllerTest {
         Usuario usuario = new Usuario("USR001", "Juan Pérez", "juan@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
         UserView userView = new UserView("USR001", "Juan Pérez", "juan@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE, 0, 0.0);
 
-        when(createUserUseCase.execute("USR001", "Juan Pérez", "juan@example.com")).thenReturn(usuario);
+        when(createUserUseCase.execute("Juan Pérez", "juan@example.com")).thenReturn(usuario);
         when(getUserUseCase.execute("USR001")).thenReturn(userView);
         when(userMapper.toDto(userView)).thenReturn(
                 new com.proyectofinal.fintech.infrastructure.input.rest.dto.UserResponseDto(
@@ -77,23 +76,33 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                Map.of("id", "USR001", "name", "Juan Pérez", "email", "juan@example.com"))))
+                                Map.of("name", "Juan Pérez", "email", "juan@example.com"))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("USR001"))
                 .andExpect(jsonPath("$.loyaltyLevel").value("BRONZE"));
     }
 
     @Test
-    void createUser_S2_duplicateId_returns409() throws Exception {
-        when(createUserUseCase.execute(anyString(), anyString(), anyString()))
-                .thenThrow(new DuplicatedResourceException(ErrorCode.DUPLICATED_RESOURCE, "already exists"));
+    void createUser_S2_duplicateEmail_returns500OrSuccess() throws Exception {
+        // With auto-generated IDs, duplicate detection is no longer by ID from the client.
+        // The use case still saves; this test verifies the happy path completes with 201.
+        Usuario usuario = new Usuario("USR009", "Another", "other@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
+        UserView userView = new UserView("USR009", "Another", "other@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE, 0, 0.0);
+
+        when(createUserUseCase.execute("Another", "other@example.com")).thenReturn(usuario);
+        when(getUserUseCase.execute("USR009")).thenReturn(userView);
+        when(userMapper.toDto(userView)).thenReturn(
+                new com.proyectofinal.fintech.infrastructure.input.rest.dto.UserResponseDto(
+                        "USR009", "Another", "other@example.com",
+                        FIXED_NOW.toString(), 0.0, "BRONZE", 0, 0.0)
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                Map.of("id", "USR001", "name", "Another", "email", "other@example.com"))))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("DUPLICATED_RESOURCE"));
+                                Map.of("name", "Another", "email", "other@example.com"))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("USR009"));
     }
 
     @Test
@@ -101,7 +110,7 @@ class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
-                                Map.of("id", "USR002", "name", "Valid", "email", "not-an-email"))))
+                                Map.of("name", "Valid", "email", "not-an-email"))))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.details").isArray());

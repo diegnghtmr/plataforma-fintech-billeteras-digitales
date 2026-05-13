@@ -1,14 +1,16 @@
 package com.proyectofinal.fintech.infrastructure.config;
 
 import com.proyectofinal.fintech.application.usecase.CreateScheduledOperationUseCase;
-import com.proyectofinal.fintech.application.usecase.CreateUserUseCase;
 import com.proyectofinal.fintech.application.usecase.CreateWalletUseCase;
 import com.proyectofinal.fintech.application.usecase.ExternalTransferUseCase;
 import com.proyectofinal.fintech.application.usecase.InternalTransferUseCase;
 import com.proyectofinal.fintech.application.usecase.RechargeWalletUseCase;
 import com.proyectofinal.fintech.application.usecase.WithdrawWalletUseCase;
 import com.proyectofinal.fintech.domain.exception.DomainException;
+import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
+import com.proyectofinal.fintech.domain.model.Usuario;
+import com.proyectofinal.fintech.domain.port.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -32,7 +34,7 @@ public class DataSeederConfig {
 
     @Bean
     public CommandLineRunner seedDatabase(
-            CreateUserUseCase createUser,
+            UserRepository userRepository,
             CreateWalletUseCase createWallet,
             RechargeWalletUseCase recharge,
             WithdrawWalletUseCase withdraw,
@@ -48,16 +50,19 @@ public class DataSeederConfig {
 
             // ------------------------------------------------------------------
             // 1. Usuarios (Argentina / LATAM)
+            // Seeds use the repository directly to fix IDs as USR001-USR008,
+            // bypassing the use case so auto-generated IDs start at USR009+.
             // ------------------------------------------------------------------
             log.info("[seed] Creando 8 usuarios reales...");
-            safe(() -> createUser.execute("USR001", "Mariana López Pérez",   "mariana.lopez@gmail.com"));
-            safe(() -> createUser.execute("USR002", "Federico Romero",        "fede.romero@hotmail.com"));
-            safe(() -> createUser.execute("USR003", "Lucía Fernández",        "l.fernandez@outlook.com"));
-            safe(() -> createUser.execute("USR004", "Mateo Álvarez",          "mateo.alvarez@gmail.com"));
-            safe(() -> createUser.execute("USR005", "Camila Castro",          "cami.castro@yahoo.com.ar"));
-            safe(() -> createUser.execute("USR006", "Joaquín Méndez",         "j.mendez@empresa.com.ar"));
-            safe(() -> createUser.execute("USR007", "Valentina Ríos",         "vale.rios@gmail.com"));
-            safe(() -> createUser.execute("USR008", "Tomás Sosa",             "tomas.sosa@hotmail.com"));
+            Instant now = clock.instant();
+            seedUser(userRepository, "USR001", "Mariana López Pérez",   "mariana.lopez@gmail.com",   now);
+            seedUser(userRepository, "USR002", "Federico Romero",        "fede.romero@hotmail.com",   now);
+            seedUser(userRepository, "USR003", "Lucía Fernández",        "l.fernandez@outlook.com",   now);
+            seedUser(userRepository, "USR004", "Mateo Álvarez",          "mateo.alvarez@gmail.com",   now);
+            seedUser(userRepository, "USR005", "Camila Castro",          "cami.castro@yahoo.com.ar",  now);
+            seedUser(userRepository, "USR006", "Joaquín Méndez",         "j.mendez@empresa.com.ar",   now);
+            seedUser(userRepository, "USR007", "Valentina Ríos",         "vale.rios@gmail.com",       now);
+            seedUser(userRepository, "USR008", "Tomás Sosa",             "tomas.sosa@hotmail.com",    now);
 
             // ------------------------------------------------------------------
             // 2. Billeteras (tipos del PDF §4.1)
@@ -237,6 +242,16 @@ public class DataSeederConfig {
             log.info("[seed] Ciclo en grafo: USR001 → USR002 → USR003 → USR001.");
             log.info("[seed] ============================================================");
         };
+    }
+
+    /**
+     * Seeds a user with a fixed ID directly into the repository, bypassing the use case.
+     * Idempotent: skips silently if the ID already exists.
+     */
+    private void seedUser(UserRepository userRepository, String id, String name, String email, Instant registeredAt) {
+        if (!userRepository.existsById(id)) {
+            userRepository.save(new Usuario(id, name, email, registeredAt, 0.0, LoyaltyLevel.BRONZE));
+        }
     }
 
     /**
