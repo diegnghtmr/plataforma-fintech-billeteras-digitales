@@ -42,7 +42,7 @@ public class WalletController {
     @PostMapping
     public ResponseEntity<WalletResponseDto> createWallet(@PathVariable String userId,
                                                            @Valid @RequestBody CreateWalletRequestDto request) {
-        Billetera billetera = createWalletUseCase.execute(userId, request.code(), request.name(), request.type());
+        Billetera billetera = createWalletUseCase.execute(userId, request.name(), request.type());
         return ResponseEntity.status(HttpStatus.CREATED).body(walletMapper.toDto(billetera));
     }
 }

@@ -1,6 +1,5 @@
 package com.proyectofinal.fintech.application.usecase;
 
-import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.Billetera;
@@ -14,6 +13,7 @@ import java.time.Instant;
  * Use case: create a new wallet for an existing user.
  * Plain class — ZERO Spring/Jakarta imports.
  * Clock injected for testability.
+ * Wallet code is auto-generated in WAL### format (e.g. WAL001, WAL002…).
  */
 public class CreateWalletUseCase {
 
@@ -29,18 +29,14 @@ public class CreateWalletUseCase {
         this.clock = clock;
     }
 
-    public Billetera execute(String ownerId, String code, String name, String type) {
+    public Billetera execute(String ownerId, String name, String type) {
         if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException(
                     ErrorCode.USER_NOT_FOUND,
                     "User with id=" + ownerId + " not found");
         }
 
-        if (walletRepository.existsByOwnerIdAndCode(ownerId, code)) {
-            throw new DuplicatedResourceException(
-                    ErrorCode.DUPLICATED_RESOURCE,
-                    "Wallet with code=" + code + " already exists for user=" + ownerId);
-        }
+        String code = generateNextCode();
 
         Billetera billetera = new Billetera(
                 code,
@@ -55,5 +51,20 @@ public class CreateWalletUseCase {
 
         walletRepository.save(billetera);
         return billetera;
+    }
+
+    private String generateNextCode() {
+        int maxN = 0;
+        for (Billetera w : walletRepository.findAll()) {
+            String code = w.getCode();
+            if (code != null && code.startsWith("WAL") && code.length() > 3) {
+                try {
+                    int n = Integer.parseInt(code.substring(3));
+                    if (n > maxN) maxN = n;
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+        return String.format("WAL%03d", maxN + 1);
     }
 }

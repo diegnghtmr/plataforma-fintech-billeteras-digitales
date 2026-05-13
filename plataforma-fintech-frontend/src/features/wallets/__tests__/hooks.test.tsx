@@ -73,7 +73,7 @@ describe('useCreateWalletMutation', () => {
     );
 
     const { result } = renderHook(() => useCreateWalletMutation(), { wrapper });
-    result.current.mutate({ userId: 'USR001', code: 'W001', name: 'Ahorros', type: 'SAVINGS' });
+    result.current.mutate({ userId: 'USR001', name: 'Ahorros', type: 'SAVINGS' });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

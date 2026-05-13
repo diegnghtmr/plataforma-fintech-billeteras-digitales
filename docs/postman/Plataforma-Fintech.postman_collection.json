@@ -166,7 +166,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{walletA1}}\",\n  \"name\": \"Gastos diarios\",\n  \"type\": \"DAILY_EXPENSES\"\n}"
+              "raw": "{\n  \"name\": \"Gastos diarios\",\n  \"type\": \"DAILY_EXPENSES\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userIdA}}/wallets",
@@ -183,6 +183,20 @@
         },
         {
           "name": "POST /users/{userId}/wallets  (WALLET-002)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('walletA2', json.code);",
+                  "pm.environment.set('walletA2', json.code);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -193,7 +207,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{walletA2}}\",\n  \"name\": \"Ahorro\",\n  \"type\": \"SAVINGS\"\n}"
+              "raw": "{\n  \"name\": \"Ahorro\",\n  \"type\": \"SAVINGS\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userIdA}}/wallets",
@@ -210,6 +224,20 @@
         },
         {
           "name": "POST /users/USR002/wallets  (WALLET-B-01)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('walletB1', json.code);",
+                  "pm.environment.set('walletB1', json.code);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -220,7 +248,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"{{walletB1}}\",\n  \"name\": \"Principal\",\n  \"type\": \"DAILY_EXPENSES\"\n}"
+              "raw": "{\n  \"name\": \"Principal\",\n  \"type\": \"DAILY_EXPENSES\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/users/{{userIdB}}/wallets",

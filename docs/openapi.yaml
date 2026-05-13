@@ -771,11 +771,8 @@ components:
           format: double
     CreateWalletRequest:
       type: object
-      required: [code, name, type]
+      required: [name, type]
       properties:
-        code:
-          type: string
-          example: WALLET-001
         name:
           type: string
           example: Gastos diarios

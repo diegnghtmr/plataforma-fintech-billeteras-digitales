@@ -496,8 +496,6 @@ export interface components {
             totalBalance: number;
         };
         CreateWalletRequest: {
-            /** @example WALLET-001 */
-            code: string;
             /** @example Gastos diarios */
             name: string;
             /** @example DAILY_EXPENSES */

@@ -33,7 +33,7 @@ export function WalletsPage() {
     mutation.mutate(
       { userId: selectedUserId!, ...data },
       {
-        onSuccess: () => pushToast({ variant: 'success', message: 'Billetera creada correctamente.' }),
+        onSuccess: (result) => pushToast({ variant: 'success', message: `Billetera ${result.code} creada correctamente.` }),
         onError: () => pushToast({ variant: 'error', message: 'No se pudo crear la billetera.' }),
       }
     );

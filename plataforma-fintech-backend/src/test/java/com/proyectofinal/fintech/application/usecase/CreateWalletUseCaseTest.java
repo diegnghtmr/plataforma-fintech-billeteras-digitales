@@ -1,6 +1,5 @@
 package com.proyectofinal.fintech.application.usecase;
 
-import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.Billetera;
@@ -15,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,13 +42,13 @@ class CreateWalletUseCaseTest {
     }
 
     @Test
-    void execute_happyPath_savesAndReturnsBilletera() {
+    void execute_emptyRepo_generatesWAL001() {
         when(userRepository.existsById("USR001")).thenReturn(true);
-        when(walletRepository.existsByOwnerIdAndCode("USR001", "W001")).thenReturn(false);
+        when(walletRepository.findAll()).thenReturn(Collections.emptyList());
 
-        Billetera result = useCase.execute("USR001", "W001", "Ahorros", "SAVINGS");
+        Billetera result = useCase.execute("USR001", "Ahorros", "SAVINGS");
 
-        assertEquals("W001", result.getCode());
+        assertEquals("WAL001", result.getCode());
         assertEquals("Ahorros", result.getName());
         assertEquals("SAVINGS", result.getType());
         assertEquals("USR001", result.getOwnerId());
@@ -60,29 +61,51 @@ class CreateWalletUseCaseTest {
     }
 
     @Test
+    void execute_withFiveExistingWallets_generatesWAL006() {
+        when(userRepository.existsById("USR001")).thenReturn(true);
+
+        List<Billetera> existing = List.of(
+                wallet("WAL001"), wallet("WAL002"), wallet("WAL003"),
+                wallet("WAL004"), wallet("WAL005")
+        );
+        when(walletRepository.findAll()).thenReturn(existing);
+
+        Billetera result = useCase.execute("USR001", "Inversión", "INVESTMENT");
+
+        assertEquals("WAL006", result.getCode());
+        verify(walletRepository).save(any(Billetera.class));
+    }
+
+    @Test
+    void execute_ignoresNonWALCodes_generatesWAL001() {
+        when(userRepository.existsById("USR001")).thenReturn(true);
+
+        List<Billetera> existing = List.of(wallet("W001"), wallet("OTHER-123"));
+        when(walletRepository.findAll()).thenReturn(existing);
+
+        Billetera result = useCase.execute("USR001", "Ahorros", "SAVINGS");
+
+        assertEquals("WAL001", result.getCode());
+    }
+
+    @Test
     void execute_userNotFound_throwsNotFoundException() {
         when(userRepository.existsById("UNKNOWN")).thenReturn(false);
 
         NotFoundException ex = assertThrows(
                 NotFoundException.class,
-                () -> useCase.execute("UNKNOWN", "W001", "Ahorros", "SAVINGS")
+                () -> useCase.execute("UNKNOWN", "Ahorros", "SAVINGS")
         );
 
         assertEquals(ErrorCode.USER_NOT_FOUND, ex.code());
         verify(walletRepository, never()).save(any());
     }
 
-    @Test
-    void execute_duplicateCode_throwsDuplicatedResourceException() {
-        when(userRepository.existsById("USR001")).thenReturn(true);
-        when(walletRepository.existsByOwnerIdAndCode("USR001", "W001")).thenReturn(true);
+    // ---------------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------------
 
-        DuplicatedResourceException ex = assertThrows(
-                DuplicatedResourceException.class,
-                () -> useCase.execute("USR001", "W001", "Dup", "SAVINGS")
-        );
-
-        assertEquals(ErrorCode.DUPLICATED_RESOURCE, ex.code());
-        verify(walletRepository, never()).save(any());
+    private Billetera wallet(String code) {
+        return new Billetera(code, "name", "SAVINGS", "USR001", 0.0, true, FIXED_NOW, 0);
     }
 }
