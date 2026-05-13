@@ -8,12 +8,17 @@ import { UsersPage } from '../UsersPage';
 
 vi.mock('../hooks', () => ({
   useCreateUserMutation: vi.fn(),
-  useUserQuery: vi.fn(),
+  useUsersListQuery: vi.fn(),
   useUpdateUserMutation: vi.fn(),
   useDeleteUserMutation: vi.fn(),
 }));
 
-import { useCreateUserMutation, useUserQuery, useUpdateUserMutation, useDeleteUserMutation } from '../hooks';
+import {
+  useCreateUserMutation,
+  useUsersListQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from '../hooks';
 
 function makeWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -57,8 +62,8 @@ describe('UsersPage', () => {
       isError: false,
       error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({
-      data: undefined,
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [],
       isLoading: false,
     } as any);
 
@@ -69,53 +74,124 @@ describe('UsersPage', () => {
     expect(screen.getByRole('textbox', { name: /email/i })).toBeInTheDocument();
   });
 
-  it('shows user card after successful creation', () => {
-    vi.mocked(useCreateUserMutation).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
-    vi.mocked(useUserQuery).mockReturnValue({
-      data: MOCK_USER,
-      isLoading: false,
-    } as any);
-
-    render(<UsersPage />, { wrapper: makeWrapper() });
-
-    expect(screen.getByText('USR001')).toBeInTheDocument();
-    expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
-    expect(screen.getByText('Bronce')).toBeInTheDocument();
-  });
-
-  it('displays API error message on error', () => {
+  it('shows skeleton cards while loading', () => {
     vi.mocked(useCreateUserMutation).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
       isSuccess: false,
-      isError: true,
-      error: { code: 'DUPLICATED_RESOURCE', message: 'User already exists' },
+      isError: false,
+      error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({
+    vi.mocked(useUsersListQuery).mockReturnValue({
       data: undefined,
+      isLoading: true,
+    } as any);
+
+    const { container } = render(<UsersPage />, { wrapper: makeWrapper() });
+
+    expect(container.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(0);
+  });
+
+  it('shows empty state when no users exist', () => {
+    vi.mocked(useCreateUserMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [],
       isLoading: false,
     } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/user already exists/i)).toBeInTheDocument();
+    expect(screen.getByText('No hay usuarios')).toBeInTheDocument();
   });
 
-  // W2 — new tests
+  it('shows list of users from useUsersListQuery', () => {
+    vi.mocked(useCreateUserMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
-  it('shows Editar and Eliminar buttons when user is loaded', () => {
+    render(<UsersPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
+    expect(screen.getByText('USR001')).toBeInTheDocument();
+    expect(screen.getByText('Bronce')).toBeInTheDocument();
+  });
+
+  it('filters list by search query', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useCreateUserMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [
+        MOCK_USER,
+        { ...MOCK_USER, id: 'USR002', name: 'Ana López', email: 'ana@test.com' },
+      ],
+      isLoading: false,
+    } as any);
+
+    render(<UsersPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
+    expect(screen.getByText('Ana López')).toBeInTheDocument();
+
+    await user.type(screen.getByRole('textbox', { name: /buscar/i }), 'ana');
+
+    expect(screen.queryByText('Juan Pérez')).not.toBeInTheDocument();
+    expect(screen.getByText('Ana López')).toBeInTheDocument();
+  });
+
+  it('shows empty search state when search returns no results', async () => {
+    const user = userEvent.setup();
+    vi.mocked(useCreateUserMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
+
+    render(<UsersPage />, { wrapper: makeWrapper() });
+
+    await user.type(screen.getByRole('textbox', { name: /buscar/i }), 'zzz');
+
+    expect(screen.getByText('Sin resultados')).toBeInTheDocument();
+    expect(screen.getByText(/probá con otro id o nombre/i)).toBeInTheDocument();
+  });
+
+  it('clicking a user card selects it and shows Editar / Eliminar buttons', () => {
     vi.mocked(useCreateUserMutation).mockReturnValue({
       mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
+
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
 
     expect(screen.getByRole('button', { name: /^editar$/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /eliminar/i })).toBeInTheDocument();
@@ -125,10 +201,14 @@ describe('UsersPage', () => {
     vi.mocked(useCreateUserMutation).mockReturnValue({
       mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
     fireEvent.click(screen.getByRole('button', { name: /^editar$/i }));
 
     expect(screen.getByPlaceholderText(/nuevo nombre/i)).toBeInTheDocument();
@@ -142,23 +222,17 @@ describe('UsersPage', () => {
     vi.mocked(useUpdateUserMutation).mockReturnValue({
       mutate: mutateFn, isPending: false, isSuccess: false, isError: false,
     } as any);
-    // Simulate create mutation that fires onSuccess immediately to set createdUserId
     vi.mocked(useCreateUserMutation).mockReturnValue({
-      mutate: vi.fn().mockImplementation((_data: unknown, opts: { onSuccess?: (r: typeof MOCK_USER) => void }) => {
-        opts?.onSuccess?.(MOCK_USER);
-      }),
-      isPending: false, isSuccess: false, isError: false, error: null,
+      mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
-    // Fill and submit create form so createdUserId is set via onSuccess callback
-    await user.type(screen.getByRole('textbox', { name: /id/i }), 'USR001');
-    await user.type(screen.getByRole('textbox', { name: /nombre/i }), 'Juan Pérez');
-    await user.type(screen.getByRole('textbox', { name: /email/i }), 'juan@test.com');
-    await user.click(screen.getByRole('button', { name: /crear usuario/i }));
-
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
     fireEvent.click(screen.getByRole('button', { name: /^editar$/i }));
     await user.type(screen.getByPlaceholderText(/nuevo nombre/i), 'Nuevo Nombre');
     await user.type(screen.getByPlaceholderText(/nuevo email/i), 'nuevo@test.com');
@@ -174,11 +248,15 @@ describe('UsersPage', () => {
     vi.mocked(useCreateUserMutation).mockReturnValue({
       mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
-    fireEvent.click(screen.getByRole('button', { name: /eliminar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^eliminar$/i }));
 
     expect(screen.getByRole('button', { name: /confirmar eliminación/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
@@ -191,21 +269,16 @@ describe('UsersPage', () => {
       mutate: deleteFn, isPending: false, isSuccess: false, isError: false,
     } as any);
     vi.mocked(useCreateUserMutation).mockReturnValue({
-      mutate: vi.fn().mockImplementation((_data: unknown, opts: { onSuccess?: (r: typeof MOCK_USER) => void }) => {
-        opts?.onSuccess?.(MOCK_USER);
-      }),
-      isPending: false, isSuccess: false, isError: false, error: null,
+      mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
-    // Fill and submit create form so createdUserId is set to 'USR001'
-    await user.type(screen.getByRole('textbox', { name: /id/i }), 'USR001');
-    await user.type(screen.getByRole('textbox', { name: /nombre/i }), 'Juan Pérez');
-    await user.type(screen.getByRole('textbox', { name: /email/i }), 'juan@test.com');
-    await user.click(screen.getByRole('button', { name: /crear usuario/i }));
-
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
     await user.click(screen.getByRole('button', { name: /^eliminar$/i }));
     await user.click(screen.getByRole('button', { name: /confirmar eliminación/i }));
 
@@ -216,14 +289,36 @@ describe('UsersPage', () => {
     vi.mocked(useCreateUserMutation).mockReturnValue({
       mutate: vi.fn(), isPending: false, isSuccess: false, isError: false, error: null,
     } as any);
-    vi.mocked(useUserQuery).mockReturnValue({ data: MOCK_USER, isLoading: false } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [MOCK_USER],
+      isLoading: false,
+    } as any);
 
     render(<UsersPage />, { wrapper: makeWrapper() });
 
+    fireEvent.click(screen.getByRole('button', { name: /juan pérez/i }));
     fireEvent.click(screen.getByRole('button', { name: /^editar$/i }));
     expect(screen.getByPlaceholderText(/nuevo nombre/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /cancelar edición/i }));
     expect(screen.queryByPlaceholderText(/nuevo nombre/i)).not.toBeInTheDocument();
+  });
+
+  it('displays API error message when create fails', () => {
+    vi.mocked(useCreateUserMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isSuccess: false,
+      isError: true,
+      error: { code: 'DUPLICATED_RESOURCE', message: 'User already exists' },
+    } as any);
+    vi.mocked(useUsersListQuery).mockReturnValue({
+      data: [],
+      isLoading: false,
+    } as any);
+
+    render(<UsersPage />, { wrapper: makeWrapper() });
+
+    expect(screen.getByText(/user already exists/i)).toBeInTheDocument();
   });
 });

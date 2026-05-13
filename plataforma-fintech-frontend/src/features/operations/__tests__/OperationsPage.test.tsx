@@ -61,7 +61,7 @@ describe('OperationsPage', () => {
 
     render(<OperationsPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/selecciona un usuario/i)).toBeInTheDocument();
+    expect(screen.getByText(/elegí un usuario/i)).toBeInTheDocument();
   });
 
   it('renders all four operation forms when user is selected', () => {

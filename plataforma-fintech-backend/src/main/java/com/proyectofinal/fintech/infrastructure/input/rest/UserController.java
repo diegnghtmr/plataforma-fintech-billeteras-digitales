@@ -3,6 +3,7 @@ package com.proyectofinal.fintech.infrastructure.input.rest;
 import com.proyectofinal.fintech.application.usecase.CreateUserUseCase;
 import com.proyectofinal.fintech.application.usecase.DeleteUserUseCase;
 import com.proyectofinal.fintech.application.usecase.GetUserUseCase;
+import com.proyectofinal.fintech.application.usecase.ListUsersUseCase;
 import com.proyectofinal.fintech.application.usecase.UpdateUserUseCase;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.infrastructure.input.rest.dto.CreateUserRequestDto;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,20 +29,31 @@ public class UserController {
 
     private final CreateUserUseCase createUserUseCase;
     private final GetUserUseCase getUserUseCase;
+    private final ListUsersUseCase listUsersUseCase;
     private final UpdateUserUseCase updateUserUseCase;
     private final DeleteUserUseCase deleteUserUseCase;
     private final UserMapper userMapper;
 
     public UserController(CreateUserUseCase createUserUseCase,
                           GetUserUseCase getUserUseCase,
+                          ListUsersUseCase listUsersUseCase,
                           UpdateUserUseCase updateUserUseCase,
                           DeleteUserUseCase deleteUserUseCase,
                           UserMapper userMapper) {
         this.createUserUseCase = createUserUseCase;
         this.getUserUseCase = getUserUseCase;
+        this.listUsersUseCase = listUsersUseCase;
         this.updateUserUseCase = updateUserUseCase;
         this.deleteUserUseCase = deleteUserUseCase;
         this.userMapper = userMapper;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponseDto>> listUsers() {
+        List<UserResponseDto> dtos = listUsersUseCase.execute().stream()
+                .map(userMapper::toDto)
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
 
     @PostMapping

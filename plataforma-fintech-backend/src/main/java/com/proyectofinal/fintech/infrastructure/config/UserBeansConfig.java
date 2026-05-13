@@ -3,6 +3,7 @@ package com.proyectofinal.fintech.infrastructure.config;
 import com.proyectofinal.fintech.application.usecase.CreateUserUseCase;
 import com.proyectofinal.fintech.application.usecase.DeleteUserUseCase;
 import com.proyectofinal.fintech.application.usecase.GetUserUseCase;
+import com.proyectofinal.fintech.application.usecase.ListUsersUseCase;
 import com.proyectofinal.fintech.application.usecase.UpdateUserUseCase;
 import com.proyectofinal.fintech.domain.port.*;
 import com.proyectofinal.fintech.infrastructure.mapper.UserMapper;
@@ -33,6 +34,11 @@ public class UserBeansConfig {
     @Bean
     public GetUserUseCase getUserUseCase(UserRepository userRepository, WalletRepository walletRepository) {
         return new GetUserUseCase(userRepository, walletRepository);
+    }
+
+    @Bean
+    public ListUsersUseCase listUsersUseCase(UserRepository userRepository, WalletRepository walletRepository) {
+        return new ListUsersUseCase(userRepository, walletRepository);
     }
 
     @Bean

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Plus, Minus, ArrowRightLeft, Globe } from 'lucide-react';
+import { InlineLink } from '../../shared/components/InlineLink';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import {
   useRechargeMutation,
@@ -49,10 +49,8 @@ export function OperationsPage() {
           Operaciones
         </h1>
         <p className="text-body-md text-charcoal">
-          Primero selecciona un usuario en la página de{' '}
-          <Link to="/users" className="text-accent-blue-link underline">
-            Usuarios
-          </Link>
+          Primero elegí un usuario en la página de{' '}
+          <InlineLink to="/users">Usuarios</InlineLink>
           .
         </p>
       </div>

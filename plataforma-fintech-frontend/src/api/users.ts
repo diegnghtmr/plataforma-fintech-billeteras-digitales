@@ -5,6 +5,17 @@ export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
 export type UserResponse = components['schemas']['UserResponse'];
 
+export async function listUsers(): Promise<UserResponse[]> {
+  const { data, error, response } = await apiClient.GET('/users', {});
+
+  if (error !== undefined || !data) {
+    const apiError = await extractApiError(response);
+    throw apiError ?? new Error('Unknown error listing users');
+  }
+
+  return data;
+}
+
 export async function createUser(payload: CreateUserRequest): Promise<UserResponse> {
   const { data, error, response } = await apiClient.POST('/users', { body: payload });
 

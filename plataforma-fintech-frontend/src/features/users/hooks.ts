@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createUser, getUserById, updateUser, deleteUser } from '../../api/users';
+import { createUser, getUserById, listUsers, updateUser, deleteUser } from '../../api/users';
 import { queryKeys } from '../../api/query-keys';
 import type { CreateUserRequest, UpdateUserRequest } from '../../api/users';
+
+export function useUsersListQuery() {
+  return useQuery({
+    queryKey: [...queryKeys.users.all, 'list'] as const,
+    queryFn: listUsers,
+  });
+}
 
 export function useUserQuery(userId: string | undefined) {
   return useQuery({

@@ -11,7 +11,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Listar todos los usuarios */
+        get: operations["listUsers"];
         put?: never;
         /** Crear usuario */
         post: operations["createUser"];
@@ -754,6 +755,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de usuarios */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponse"][];
+                };
+            };
+        };
+    };
     createUser: {
         parameters: {
             query?: never;

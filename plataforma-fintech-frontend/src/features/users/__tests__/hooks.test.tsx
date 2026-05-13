@@ -2,17 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import { useUserQuery, useCreateUserMutation, useUpdateUserMutation, useDeleteUserMutation } from '../hooks';
+import { useUserQuery, useUsersListQuery, useCreateUserMutation, useUpdateUserMutation, useDeleteUserMutation } from '../hooks';
 
 // Mock the API module
 vi.mock('../../../api/users', () => ({
   getUserById: vi.fn(),
+  listUsers: vi.fn(),
   createUser: vi.fn(),
   updateUser: vi.fn(),
   deleteUser: vi.fn(),
 }));
 
-import { getUserById, createUser, updateUser, deleteUser } from '../../../api/users';
+import { getUserById, listUsers, createUser, updateUser, deleteUser } from '../../../api/users';
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -62,6 +63,22 @@ describe('useUserQuery', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toEqual(apiError);
+  });
+});
+
+describe('useUsersListQuery', () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('fetches and returns the list of users', async () => {
+    const mockUsers = [
+      { id: 'USR001', name: 'Juan', email: 'juan@test.com', registeredAt: '2026-01-01T00:00:00Z', points: 0, loyaltyLevel: 'BRONZE' as const, walletCount: 0, totalBalance: 0 },
+    ];
+    vi.mocked(listUsers).mockResolvedValue(mockUsers);
+
+    const { result } = renderHook(() => useUsersListQuery(), { wrapper: makeWrapper() });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(mockUsers);
   });
 });
 

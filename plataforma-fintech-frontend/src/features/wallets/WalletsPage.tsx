@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { useUserWalletsQuery, useCreateWalletMutation } from './hooks';
+import { InlineLink } from '../../shared/components/InlineLink';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { WalletForm } from './WalletForm';
 import { WalletList } from './WalletList';
@@ -22,9 +22,7 @@ export function WalletsPage() {
         </h1>
         <p className="text-body-md text-charcoal">
           Primero seleccioná un usuario en la página de{' '}
-          <Link to="/users" className="text-accent-blue-link underline">
-            Usuarios
-          </Link>
+          <InlineLink to="/users">Usuarios</InlineLink>
           .
         </p>
       </div>

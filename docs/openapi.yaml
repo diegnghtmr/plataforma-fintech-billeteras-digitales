@@ -20,6 +20,19 @@ tags:
   - name: Fraud
 paths:
   /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: Listar todos los usuarios
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
     post:
       tags: [Users]
       operationId: createUser
