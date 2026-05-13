@@ -3,6 +3,8 @@ import { useCreateUserMutation, useUserQuery, useUpdateUserMutation, useDeleteUs
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { UserForm } from './UserForm';
 import { UserCard } from './UserCard';
+import { Button } from '../../shared/components/Button';
+import { Card } from '../../shared/components/Card';
 import type { CreateUserFormData } from './schemas';
 
 export function UsersPage() {
@@ -47,87 +49,112 @@ export function UsersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-lg">
-      <h2 className="text-canvas-fg text-xl font-bold">Usuarios</h2>
-
-      <UserForm onSubmit={handleSubmit} isPending={mutation.isPending} />
-
-      {mutation.isError && mutation.error && (
-        <p className="text-danger text-sm">
-          {(mutation.error as { message?: string })?.message ?? 'Error desconocido'}
+    <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+      {/* Hero band */}
+      <div className="mb-12">
+        <h1
+          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Usuarios
+        </h1>
+        <p className="text-base text-charcoal">
+          Gestiona usuarios, sus billeteras y nivel de fidelización.
         </p>
-      )}
+      </div>
 
-      {user && (
-        <>
-          <UserCard user={user} onSelect={(id) => setSelectedUserId(id)} />
+      <div className="flex flex-col gap-8 max-w-lg">
+        {/* Create user form */}
+        <Card variant="light">
+          <h2 className="text-xl font-medium text-ink mb-6"
+            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}>
+            Crear usuario
+          </h2>
+          <UserForm onSubmit={handleSubmit} isPending={mutation.isPending} />
+        </Card>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowEditForm((v) => !v)}
-              className="px-3 py-1 rounded text-sm bg-surface text-surface-fg border border-surface-fg/20 hover:opacity-90"
-            >
-              {showEditForm ? 'Cancelar edición' : 'Editar'}
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm((v) => !v)}
-              className="px-3 py-1 rounded text-sm bg-danger text-danger-fg hover:opacity-90"
-            >
-              Eliminar
-            </button>
-          </div>
+        {mutation.isError && mutation.error && (
+          <p className="text-accent-danger text-sm">
+            {(mutation.error as { message?: string })?.message ?? 'Error desconocido'}
+          </p>
+        )}
 
-          {showEditForm && (
-            <div className="bg-surface rounded-lg p-4 flex flex-col gap-3">
-              <h3 className="text-surface-fg font-semibold text-sm">Editar usuario</h3>
-              <input
-                type="text"
-                placeholder="Nuevo nombre"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="bg-canvas text-canvas-fg border border-surface-fg/20 rounded px-3 py-2 text-sm"
-              />
-              <input
-                type="email"
-                placeholder="Nuevo email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                className="bg-canvas text-canvas-fg border border-surface-fg/20 rounded px-3 py-2 text-sm"
-              />
-              <button
-                onClick={handleUpdate}
-                disabled={updateMutation.isPending}
-                className="bg-accent text-accent-fg rounded px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+        {user && (
+          <>
+            <UserCard user={user} onSelect={(id) => setSelectedUserId(id)} />
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline-light"
+                onClick={() => setShowEditForm((v) => !v)}
+                className="h-10 px-5 text-sm"
               >
-                {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
-              </button>
+                {showEditForm ? 'Cancelar edición' : 'Editar'}
+              </Button>
+              <Button
+                variant="soft"
+                onClick={() => setShowDeleteConfirm((v) => !v)}
+                className="h-10 px-5 text-sm text-accent-danger hover:opacity-80"
+              >
+                Eliminar
+              </Button>
             </div>
-          )}
 
-          {showDeleteConfirm && (
-            <div className="bg-surface rounded-lg p-4 flex flex-col gap-3 border border-danger">
-              <p className="text-surface-fg text-sm">
-                ¿Eliminar usuario <strong>{user.id}</strong> y todos sus datos?
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  className="px-3 py-1 rounded text-sm bg-danger text-danger-fg hover:opacity-90 disabled:opacity-50"
+            {showEditForm && (
+              <Card variant="light" className="flex flex-col gap-4">
+                <h3 className="text-ink font-semibold">Editar usuario</h3>
+                <input
+                  type="text"
+                  placeholder="Nuevo nombre"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-canvas-light text-ink border border-hairline-light rounded-[12px] px-4 h-14 text-base focus:outline-none focus:border-brand"
+                />
+                <input
+                  type="email"
+                  placeholder="Nuevo email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full bg-canvas-light text-ink border border-hairline-light rounded-[12px] px-4 h-14 text-base focus:outline-none focus:border-brand"
+                />
+                <Button
+                  variant="dark"
+                  onClick={handleUpdate}
+                  disabled={updateMutation.isPending}
+                  className="h-12 self-start"
                 >
-                  {deleteMutation.isPending ? 'Eliminando...' : 'Confirmar eliminación'}
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-3 py-1 rounded text-sm bg-surface text-surface-fg border border-surface-fg/20"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
+                  {updateMutation.isPending ? 'Guardando...' : 'Guardar cambios'}
+                </Button>
+              </Card>
+            )}
+
+            {showDeleteConfirm && (
+              <Card variant="light" className="border-accent-danger flex flex-col gap-4">
+                <p className="text-ink text-sm">
+                  ¿Eliminar usuario <strong>{user.id}</strong> y todos sus datos?
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="soft"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="h-10 px-5 text-sm text-accent-danger hover:opacity-80"
+                  >
+                    {deleteMutation.isPending ? 'Eliminando...' : 'Confirmar eliminación'}
+                  </Button>
+                  <Button
+                    variant="outline-light"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="h-10 px-5 text-sm"
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -20,7 +20,7 @@ export function WalletForm({ onSubmit, isPending }: WalletFormProps) {
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <Field label="Código" error={errors.code?.message}>
         <Input {...register('code')} placeholder="WALLET-001" />
       </Field>
@@ -30,7 +30,7 @@ export function WalletForm({ onSubmit, isPending }: WalletFormProps) {
       <Field label="Tipo" error={errors.type?.message}>
         <Input {...register('type')} placeholder="SAVINGS" />
       </Field>
-      <Button type="submit" disabled={isPending}>
+      <Button variant="dark" type="submit" disabled={isPending} className="self-start">
         {isPending ? 'Creando...' : 'Crear billetera'}
       </Button>
     </form>

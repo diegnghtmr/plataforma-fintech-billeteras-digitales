@@ -16,9 +16,14 @@ export function NotificationsPage() {
 
   if (!selectedUserId) {
     return (
-      <div className="flex flex-col gap-4 text-canvas-fg">
-        <h2 className="text-xl font-bold">Alertas / Notificaciones</h2>
-        <p className="text-surface-fg/70">
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+        <h1
+          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-4"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Alertas y notificaciones
+        </h1>
+        <p className="text-base text-charcoal">
           Por favor selecciona un usuario para ver sus notificaciones.
         </p>
       </div>
@@ -26,49 +31,59 @@ export function NotificationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-canvas-fg text-xl font-bold">
-          Alertas — <span className="text-accent">{selectedUserId}</span>
-        </h2>
+    <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+      {/* Hero */}
+      <div className="mb-12 flex items-start justify-between flex-wrap gap-4">
+        <div>
+          <h1
+            className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
+            style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+          >
+            Alertas y notificaciones
+          </h1>
+          <p className="text-base text-charcoal">
+            Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
+          </p>
+        </div>
 
-        <label className="flex items-center gap-2 text-surface-fg text-sm cursor-pointer">
+        {/* Unread filter toggle */}
+        <label className="flex items-center gap-2 text-ink text-sm font-semibold cursor-pointer mt-2">
           <input
             type="checkbox"
             aria-label="Solo no leídas"
             checked={unreadOnly}
             onChange={(e) => setUnreadOnly(e.target.checked)}
-            className="rounded"
+            className="rounded border-hairline-light accent-brand"
           />
           Solo no leídas
         </label>
       </div>
 
       {isLoading ? (
-        <p className="text-surface-fg/70 text-sm">Cargando...</p>
+        <p className="text-stone text-sm">Cargando...</p>
       ) : notifications.length === 0 ? (
-        <p className="text-surface-fg/70 text-sm">
+        <p className="text-stone text-sm">
           {unreadOnly ? 'No hay notificaciones sin leer.' : 'No hay notificaciones.'}
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {notifications.map((n: NotificationResponse) => (
             <div
               key={n.id}
-              className={`bg-surface rounded-lg p-4 flex items-start justify-between gap-4 ${
+              className={`bg-surface-card border border-hairline-light rounded-[20px] p-8 flex items-start justify-between gap-6 ${
                 n.read ? 'opacity-60' : ''
               }`}
             >
-              <div className="flex flex-col gap-1 flex-1">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 flex-1">
+                <div className="flex items-center gap-3 flex-wrap">
                   <SeverityBadge severity={n.severity as 'INFO' | 'WARNING' | 'CRITICAL'} />
-                  <span className="text-surface-fg font-semibold text-sm">{n.title}</span>
+                  <span className="text-ink font-semibold">{n.title}</span>
                   {n.read && (
-                    <span className="text-xs text-surface-fg/50">(leída)</span>
+                    <span className="text-xs text-stone">(leída)</span>
                   )}
                 </div>
-                <p className="text-surface-fg/70 text-sm">{n.message}</p>
-                <span className="text-xs text-surface-fg/40">
+                <p className="text-charcoal text-sm">{n.message}</p>
+                <span className="text-xs text-stone">
                   {new Date(n.createdAt).toLocaleString()}
                 </span>
               </div>
@@ -78,7 +93,7 @@ export function NotificationsPage() {
                   onClick={() => markReadMutation.mutate(n.id)}
                   disabled={markReadMutation.isPending}
                   aria-label="Marcar como leída"
-                  className="px-3 py-1 rounded text-xs bg-accent text-accent-fg hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
+                  className="inline-flex items-center justify-center rounded-full text-xs font-semibold tracking-wide px-4 py-2 h-9 bg-surface-soft text-ink hover:opacity-90 disabled:opacity-50 whitespace-nowrap shrink-0"
                 >
                   Marcar como leída
                 </button>

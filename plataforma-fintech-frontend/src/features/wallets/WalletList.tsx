@@ -9,32 +9,35 @@ interface WalletListProps {
 
 export function WalletList({ wallets, onSelect }: WalletListProps) {
   if (wallets.length === 0) {
-    return <p className="text-surface-fg/60 text-sm">No hay billeteras aún.</p>;
+    return <p className="text-stone text-sm">No hay billeteras aún.</p>;
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {wallets.map((wallet) => (
-        <Card key={wallet.code} className="flex flex-col gap-2">
+        <Card key={wallet.code} variant="light" className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-surface-fg font-semibold">{wallet.name}</span>
+            <div className="flex items-center gap-3">
+              <span className="text-ink font-semibold">{wallet.name}</span>
+              <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-surface-soft text-charcoal">
+                {wallet.type}
+              </span>
+            </div>
             {onSelect && (
-              <Button variant="ghost" onClick={() => onSelect(wallet.code)}>
+              <Button variant="pill-sm" onClick={() => onSelect(wallet.code)}>
                 Seleccionar
               </Button>
             )}
           </div>
-          <dl className="grid grid-cols-2 gap-1 text-sm text-surface-fg/80">
-            <dt className="font-medium">Código</dt>
-            <dd>{wallet.code}</dd>
-            <dt className="font-medium">Tipo</dt>
-            <dd>{wallet.type}</dd>
-            <dt className="font-medium">Balance</dt>
-            <dd className="text-accent">{wallet.balance.toFixed(2)}</dd>
-            <dt className="font-medium">Activa</dt>
-            <dd>{wallet.active ? 'Sí' : 'No'}</dd>
-            <dt className="font-medium">Transacciones</dt>
-            <dd>{wallet.transactionCount}</dd>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <dt className="text-stone font-medium">Código</dt>
+            <dd className="text-ink font-medium">{wallet.code}</dd>
+            <dt className="text-stone font-medium">Balance</dt>
+            <dd className="text-ink font-semibold">{wallet.balance.toFixed(2)}</dd>
+            <dt className="text-stone font-medium">Activa</dt>
+            <dd className="text-ink">{wallet.active ? 'Sí' : 'No'}</dd>
+            <dt className="text-stone font-medium">Transacciones</dt>
+            <dd className="text-ink">{wallet.transactionCount}</dd>
           </dl>
         </Card>
       ))}

@@ -1,5 +1,6 @@
 import { Card } from '../../shared/components/Card';
 import { Button } from '../../shared/components/Button';
+import { LoyaltyBadge } from '../points/LoyaltyBadge';
 import type { UserResponse } from '../../api/users';
 
 interface UserCardProps {
@@ -9,30 +10,31 @@ interface UserCardProps {
 
 export function UserCard({ user, onSelect }: UserCardProps) {
   return (
-    <Card className="flex flex-col gap-2">
+    <Card variant="light" className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <span className="text-surface-fg font-semibold">{user.name}</span>
-        {onSelect && (
-          <Button variant="ghost" onClick={() => onSelect(user.id)}>
-            Seleccionar
-          </Button>
-        )}
+        <span className="text-ink font-semibold text-base">{user.name}</span>
+        <div className="flex items-center gap-2">
+          <LoyaltyBadge level={user.loyaltyLevel} />
+          {onSelect && (
+            <Button variant="pill-sm" onClick={() => onSelect(user.id)}>
+              Seleccionar
+            </Button>
+          )}
+        </div>
       </div>
-      <dl className="grid grid-cols-2 gap-1 text-sm text-surface-fg/80">
-        <dt className="font-medium">ID</dt>
-        <dd>{user.id}</dd>
-        <dt className="font-medium">Email</dt>
-        <dd>{user.email}</dd>
-        <dt className="font-medium">Registrado</dt>
-        <dd>{new Date(user.registeredAt).toLocaleDateString()}</dd>
-        <dt className="font-medium">Puntos</dt>
-        <dd>{user.points}</dd>
-        <dt className="font-medium">Nivel</dt>
-        <dd>{user.loyaltyLevel}</dd>
-        <dt className="font-medium">Billeteras</dt>
-        <dd>{user.walletCount}</dd>
-        <dt className="font-medium">Balance total</dt>
-        <dd>{user.totalBalance.toFixed(2)}</dd>
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <dt className="text-stone font-medium">ID</dt>
+        <dd className="text-ink font-medium">{user.id}</dd>
+        <dt className="text-stone font-medium">Email</dt>
+        <dd className="text-ink">{user.email}</dd>
+        <dt className="text-stone font-medium">Registrado</dt>
+        <dd className="text-ink">{new Date(user.registeredAt).toLocaleDateString()}</dd>
+        <dt className="text-stone font-medium">Puntos</dt>
+        <dd className="text-ink font-semibold">{user.points}</dd>
+        <dt className="text-stone font-medium">Billeteras</dt>
+        <dd className="text-ink">{user.walletCount}</dd>
+        <dt className="text-stone font-medium">Balance total</dt>
+        <dd className="text-ink font-semibold">{user.totalBalance.toFixed(2)}</dd>
       </dl>
     </Card>
   );

@@ -24,8 +24,8 @@ export function TransactionFilters({
   onStatusChange,
 }: TransactionFiltersProps) {
   return (
-    <div className="flex gap-4 mb-4">
-      <label className="flex flex-col gap-1 text-sm text-surface-fg">
+    <div className="flex gap-4 flex-wrap mb-4">
+      <label className="flex flex-col gap-1.5 text-sm text-charcoal font-semibold">
         <span id="type-filter-label">Tipo</span>
         <select
           aria-label="Tipo"
@@ -33,7 +33,7 @@ export function TransactionFilters({
           onChange={(e) =>
             onTypeChange(e.target.value ? (e.target.value as TransactionType) : undefined)
           }
-          className="border border-surface-fg/20 rounded px-2 py-1 bg-canvas text-canvas-fg text-sm"
+          className="border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
         >
           <option value="">Todos</option>
           {TRANSACTION_TYPES.map((t) => (
@@ -44,7 +44,7 @@ export function TransactionFilters({
         </select>
       </label>
 
-      <label className="flex flex-col gap-1 text-sm text-surface-fg">
+      <label className="flex flex-col gap-1.5 text-sm text-charcoal font-semibold">
         <span>Estado</span>
         <select
           aria-label="Estado"
@@ -52,7 +52,7 @@ export function TransactionFilters({
           onChange={(e) =>
             onStatusChange(e.target.value ? (e.target.value as TransactionStatus) : undefined)
           }
-          className="border border-surface-fg/20 rounded px-2 py-1 bg-canvas text-canvas-fg text-sm"
+          className="border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
         >
           <option value="">Todos</option>
           {TRANSACTION_STATUSES.map((s) => (

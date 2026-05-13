@@ -70,9 +70,9 @@ export function ExternalTransferForm({
         <Input {...register('description')} placeholder="Envío de fondos" />
       </Field>
       {errorMessage && (
-        <p className="text-red-500 text-sm" role="alert">{errorMessage}</p>
+        <p className="text-accent-danger text-sm" role="alert">{errorMessage}</p>
       )}
-      <Button type="submit" disabled={isPending}>
+      <Button variant="dark" type="submit" disabled={isPending} className="self-start">
         {isPending ? 'Procesando...' : 'Transferir a otro usuario'}
       </Button>
     </form>

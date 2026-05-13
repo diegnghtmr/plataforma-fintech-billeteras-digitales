@@ -19,14 +19,23 @@ export function PointsCard({ points, loyaltyLevel }: PointsCardProps) {
   const hint = next ? `Faltan ${(next.threshold - points).toFixed(0)} puntos para ${next.level}` : null;
 
   return (
-    <div className="bg-surface rounded-lg p-4 flex flex-col gap-2">
-      <h3 className="text-surface-fg font-semibold text-sm uppercase tracking-wide">Mis Puntos</h3>
-      <div className="flex items-center gap-3">
-        <span className="text-canvas-fg text-3xl font-bold">{points.toFixed(2)}</span>
+    <div className="bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-4">
+      <h3
+        className="text-on-dark-mute text-sm font-semibold uppercase tracking-widest"
+      >
+        Mis Puntos
+      </h3>
+      <div className="flex items-center gap-4">
+        <span
+          className="text-on-dark font-medium leading-none"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif", fontSize: '48px' }}
+        >
+          {points.toFixed(2)}
+        </span>
         <LoyaltyBadge level={loyaltyLevel} />
       </div>
       {hint && (
-        <p className="text-surface-fg/70 text-sm">{hint}</p>
+        <p className="text-on-dark-mute text-sm">{hint}</p>
       )}
     </div>
   );

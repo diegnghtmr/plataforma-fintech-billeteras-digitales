@@ -8,7 +8,6 @@ import type { TransactionType as StoreTransactionType, TransactionStatus as Stor
 export function TransactionsPage() {
   const selectedUserId = useSelectionStore((s) => s.selectedUserId);
 
-  // W1: read filters from Zustand store instead of local useState
   const transactionFilters = useAppStore((s) => s.transactionFilters);
   const setTransactionFilters = useAppStore((s) => s.setTransactionFilters);
 
@@ -19,7 +18,6 @@ export function TransactionsPage() {
     ...(statusFilter !== undefined ? { status: statusFilter } : {}),
   };
 
-  // W1+W2: when walletId filter is set, use wallet-scoped query; otherwise user-scoped
   const userQuery = useUserTransactionsQuery(
     !walletIdFilter ? (selectedUserId ?? '') : '',
     !walletIdFilter && Object.keys(queryFilters).length > 0 ? queryFilters : undefined
@@ -35,7 +33,6 @@ export function TransactionsPage() {
   const reverseMutation = useReverseTransactionMutation();
 
   function handleTypeChange(value: StoreTransactionType | undefined) {
-    // W1: merge into store; omit the key entirely when clearing (exactOptionalPropertyTypes-safe)
     const next = { ...transactionFilters };
     if (value !== undefined) {
       next.type = value;
@@ -57,20 +54,32 @@ export function TransactionsPage() {
 
   if (!selectedUserId) {
     return (
-      <div className="text-surface-fg text-sm">
-        Selecciona un usuario desde la sección de{' '}
-        <a href="/users" className="text-accent underline">
-          Usuarios
-        </a>{' '}
-        para ver su historial de transacciones.
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+        <p className="text-charcoal text-sm">
+          Selecciona un usuario desde la sección de{' '}
+          <a href="/users" className="text-accent-blue-link underline">
+            Usuarios
+          </a>{' '}
+          para ver su historial de transacciones.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-bold text-canvas-fg">Historial de transacciones</h2>
-      <p className="text-sm text-surface-fg">Usuario: {selectedUserId}</p>
+    <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+      {/* Hero */}
+      <div className="mb-12">
+        <h1
+          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Historial y reversión
+        </h1>
+        <p className="text-base text-charcoal">
+          Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
+        </p>
+      </div>
 
       <TransactionFilters
         type={typeFilter}
@@ -80,27 +89,27 @@ export function TransactionsPage() {
       />
 
       {isLoading && (
-        <p className="text-surface-fg text-sm">Cargando transacciones...</p>
+        <p className="text-stone text-sm">Cargando transacciones...</p>
       )}
 
       {!isLoading && (!transactions || transactions.length === 0) && (
-        <p className="text-surface-fg text-sm">No hay transacciones que mostrar.</p>
+        <p className="text-stone text-sm">No hay transacciones que mostrar.</p>
       )}
 
       {transactions && transactions.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-surface-fg/10">
+        <div className="overflow-x-auto rounded-[20px] border border-hairline-light">
           <table className="w-full">
-            <thead className="bg-surface text-sm text-surface-fg">
+            <thead className="bg-surface-soft text-sm text-stone">
               <tr>
-                <th className="py-2 px-3 text-left">ID</th>
-                <th className="py-2 px-3 text-left">Fecha</th>
-                <th className="py-2 px-3 text-left">Tipo</th>
-                <th className="py-2 px-3 text-left">Estado</th>
-                <th className="py-2 px-3 text-right">Monto</th>
-                <th className="py-2 px-3 text-left">Origen</th>
-                <th className="py-2 px-3 text-left">Destino</th>
-                <th className="py-2 px-3 text-center">Reversible</th>
-                <th className="py-2 px-3">Acciones</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">ID</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">Fecha</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">Tipo</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">Estado</th>
+                <th className="py-3 px-3 text-right font-semibold tracking-wide">Monto</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">Origen</th>
+                <th className="py-3 px-3 text-left font-semibold tracking-wide">Destino</th>
+                <th className="py-3 px-3 text-center font-semibold tracking-wide">Reversible</th>
+                <th className="py-3 px-3 font-semibold tracking-wide">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -112,7 +121,6 @@ export function TransactionsPage() {
                     reverseMutation.mutate({
                       transactionId: txId,
                       userId: selectedUserId,
-                      // W2: pass walletId so byWallet invalidation fires when scoped to a wallet
                       ...(walletIdFilter ? { walletId: walletIdFilter } : {}),
                     })
                   }
@@ -125,7 +133,7 @@ export function TransactionsPage() {
       )}
 
       {reverseMutation.isError && (
-        <p className="text-red-500 text-sm">
+        <p className="text-accent-danger text-sm">
           Error al revertir:{' '}
           {(reverseMutation.error as { message?: string })?.message ?? 'Error desconocido'}
         </p>

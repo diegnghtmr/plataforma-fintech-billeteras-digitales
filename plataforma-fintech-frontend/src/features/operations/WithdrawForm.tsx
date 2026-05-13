@@ -52,9 +52,9 @@ export function WithdrawForm({ userId, walletId, onSubmit, isPending, error }: W
         <Input {...register('description')} placeholder="Retiro de efectivo" />
       </Field>
       {errorMessage && (
-        <p className="text-red-500 text-sm" role="alert">{errorMessage}</p>
+        <p className="text-accent-danger text-sm" role="alert">{errorMessage}</p>
       )}
-      <Button type="submit" disabled={isPending}>
+      <Button variant="dark" type="submit" disabled={isPending} className="self-start">
         {isPending ? 'Procesando...' : 'Retirar'}
       </Button>
     </form>

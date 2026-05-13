@@ -20,67 +20,82 @@ export function FraudPage() {
   );
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
-      <h2 className="text-canvas-fg text-xl font-bold">Fraude</h2>
+    <>
+      {/* Hero — dark band */}
+      <section className="bg-canvas-dark py-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
+          <h1
+            className="text-on-dark font-medium leading-none tracking-tight mb-4"
+            style={{
+              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
+              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+            }}
+          >
+            Eventos sospechosos
+          </h1>
+          <p className="text-on-dark-mute text-lg max-w-xl">
+            Monitoreo de fraude en tiempo real. Filtrá por usuario o nivel de severidad.
+          </p>
 
-      {/* Filter form */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <input
-          type="text"
-          placeholder="Usuario ID"
-          value={userIdFilter}
-          onChange={(e) => setUserIdFilter(e.target.value)}
-          className="bg-surface text-surface-fg text-sm rounded px-3 py-1.5 border border-surface-fg/20 w-48"
-        />
-        <select
-          value={severityFilter}
-          onChange={(e) => setSeverityFilter(e.target.value as SeverityOption)}
-          className="bg-surface text-surface-fg text-sm rounded px-2 py-1.5 border border-surface-fg/20"
-        >
-          <option value="">Todas las severidades</option>
-          {SEVERITY_OPTIONS.filter(Boolean).map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
+          {/* Filters inline in hero */}
+          <div className="flex flex-wrap gap-4 mt-8">
+            <input
+              type="text"
+              placeholder="Usuario ID"
+              value={userIdFilter}
+              onChange={(e) => setUserIdFilter(e.target.value)}
+              className="bg-surface-deep text-on-dark border border-hairline-dark rounded-[12px] px-4 h-12 text-sm focus:outline-none focus:border-on-dark w-48 placeholder:text-on-dark-mute"
+            />
+            <select
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value as SeverityOption)}
+              className="bg-surface-deep text-on-dark border border-hairline-dark rounded-[12px] px-4 h-12 text-sm focus:outline-none focus:border-on-dark"
+            >
+              <option value="">Todas las severidades</option>
+              {SEVERITY_OPTIONS.filter(Boolean).map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
 
-      {/* Events table */}
-      {!events || events.length === 0 ? (
-        <p className="text-surface-fg/60 text-sm">No hay eventos de fraude</p>
-      ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-surface-fg/60 text-left">
-              <th className="pb-2">ID</th>
-              <th className="pb-2">Usuario</th>
-              <th className="pb-2">Tipo</th>
-              <th className="pb-2">Severidad</th>
-              <th className="pb-2">Descripción</th>
-              <th className="pb-2">Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr key={event.id} className="border-t border-surface-fg/10">
-                <td className="py-1.5 text-surface-fg/70 font-mono text-xs">{event.id}</td>
-                <td className="py-1.5 text-surface-fg/70 font-mono text-xs">{event.userId}</td>
-                <td className="py-1.5 text-canvas-fg">{event.type}</td>
-                <td className="py-1.5">
-                  <FraudSeverityBadge
-                    severity={event.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'}
-                  />
-                </td>
-                <td className="py-1.5 text-surface-fg/80">{event.description}</td>
-                <td className="py-1.5 text-surface-fg/60 text-xs">
-                  {new Date(event.createdAt).toLocaleString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+      {/* Events — dark canvas */}
+      <section className="bg-canvas-dark pb-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
+          {!events || events.length === 0 ? (
+            <p className="text-on-dark-mute text-sm">No hay eventos de fraude</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  className="bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-3"
+                >
+                  <div className="flex items-start gap-4 flex-wrap">
+                    <FraudSeverityBadge
+                      severity={event.severity as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'}
+                    />
+                    <span className="text-on-dark font-semibold">{event.description}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm">
+                    <span className="text-on-dark-mute">Tipo</span>
+                    <span className="text-on-dark font-medium">{event.type}</span>
+                    <span className="text-on-dark-mute">Usuario</span>
+                    <span className="text-on-dark font-mono text-xs">{event.userId}</span>
+                    <span className="text-on-dark-mute">Transacción</span>
+                    <span className="text-on-dark font-mono text-xs">{event.transactionId ?? '—'}</span>
+                    <span className="text-on-dark-mute">Fecha</span>
+                    <span className="text-stone text-xs">
+                      {new Date(event.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }

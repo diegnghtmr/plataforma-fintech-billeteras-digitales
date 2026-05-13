@@ -11,6 +11,7 @@ import { RechargeForm } from './RechargeForm';
 import { WithdrawForm } from './WithdrawForm';
 import { InternalTransferForm } from './InternalTransferForm';
 import { ExternalTransferForm } from './ExternalTransferForm';
+import { Card } from '../../shared/components/Card';
 import type { ApiError } from '../../api/error';
 import type { MoneyOperationFormData } from './schemas';
 import type { InternalTransferFormData } from './schemas';
@@ -41,11 +42,16 @@ export function OperationsPage() {
 
   if (!selectedUserId) {
     return (
-      <div className="flex flex-col gap-4 text-canvas-fg">
-        <h2 className="text-xl font-bold">Operaciones</h2>
-        <p className="text-surface-fg/70">
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+        <h1
+          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-4"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Operaciones
+        </h1>
+        <p className="text-base text-charcoal">
           Primero selecciona un usuario en la página de{' '}
-          <Link to="/users" className="text-accent underline">
+          <Link to="/users" className="text-accent-blue-link underline">
             Usuarios
           </Link>
           .
@@ -75,68 +81,81 @@ export function OperationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 max-w-lg">
-      <h2 className="text-canvas-fg text-xl font-bold">
-        Operaciones — <span className="text-accent">{selectedUserId}</span>
-      </h2>
-
-      {/* Tab navigation */}
-      <div className="flex gap-2 border-b border-surface-fg/20 pb-2">
-        {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 rounded-t text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? 'bg-accent text-accent-fg'
-                : 'text-surface-fg hover:bg-surface-fg/10'
-            }`}
-          >
-            {TAB_LABELS[tab]}
-          </button>
-        ))}
+    <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+      {/* Hero */}
+      <div className="mb-12">
+        <h1
+          className="text-4xl sm:text-5xl lg:text-[48px] font-medium leading-none tracking-tight text-ink mb-3"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Operaciones
+        </h1>
+        <p className="text-base text-charcoal">
+          Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
+        </p>
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'recharge' && (
-        <RechargeForm
-          userId={selectedUserId}
-          walletId={selectedWalletId ?? ''}
-          onSubmit={handleRecharge}
-          isPending={rechargeMutation.isPending}
-          error={rechargeMutation.isError ? asApiError(rechargeMutation.error) : null}
-        />
-      )}
+      <div className="max-w-lg flex flex-col gap-6">
+        {/* Tab navigation */}
+        <div className="flex gap-2 flex-wrap">
+          {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`inline-flex items-center justify-center rounded-full text-sm font-semibold tracking-wide px-4 py-2 h-9 transition-colors ${
+                activeTab === tab
+                  ? 'bg-canvas-dark text-on-dark'
+                  : 'bg-surface-soft text-ink hover:opacity-90'
+              }`}
+            >
+              {TAB_LABELS[tab]}
+            </button>
+          ))}
+        </div>
 
-      {activeTab === 'withdraw' && (
-        <WithdrawForm
-          userId={selectedUserId}
-          walletId={selectedWalletId ?? ''}
-          onSubmit={handleWithdraw}
-          isPending={withdrawMutation.isPending}
-          error={withdrawMutation.isError ? asApiError(withdrawMutation.error) : null}
-        />
-      )}
+        {/* Tab content */}
+        <Card variant="light">
+          {activeTab === 'recharge' && (
+            <RechargeForm
+              userId={selectedUserId}
+              walletId={selectedWalletId ?? ''}
+              onSubmit={handleRecharge}
+              isPending={rechargeMutation.isPending}
+              error={rechargeMutation.isError ? asApiError(rechargeMutation.error) : null}
+            />
+          )}
 
-      {activeTab === 'internal' && (
-        <InternalTransferForm
-          userId={selectedUserId}
-          defaultSourceWalletId={selectedWalletId ?? ''}
-          onSubmit={handleInternal}
-          isPending={internalMutation.isPending}
-          error={internalMutation.isError ? asApiError(internalMutation.error) : null}
-        />
-      )}
+          {activeTab === 'withdraw' && (
+            <WithdrawForm
+              userId={selectedUserId}
+              walletId={selectedWalletId ?? ''}
+              onSubmit={handleWithdraw}
+              isPending={withdrawMutation.isPending}
+              error={withdrawMutation.isError ? asApiError(withdrawMutation.error) : null}
+            />
+          )}
 
-      {activeTab === 'external' && (
-        <ExternalTransferForm
-          defaultSourceUserId={selectedUserId}
-          defaultSourceWalletId={selectedWalletId ?? ''}
-          onSubmit={handleExternal}
-          isPending={externalMutation.isPending}
-          error={externalMutation.isError ? asApiError(externalMutation.error) : null}
-        />
-      )}
+          {activeTab === 'internal' && (
+            <InternalTransferForm
+              userId={selectedUserId}
+              defaultSourceWalletId={selectedWalletId ?? ''}
+              onSubmit={handleInternal}
+              isPending={internalMutation.isPending}
+              error={internalMutation.isError ? asApiError(internalMutation.error) : null}
+            />
+          )}
+
+          {activeTab === 'external' && (
+            <ExternalTransferForm
+              defaultSourceUserId={selectedUserId}
+              defaultSourceWalletId={selectedWalletId ?? ''}
+              onSubmit={handleExternal}
+              isPending={externalMutation.isPending}
+              error={externalMutation.isError ? asApiError(externalMutation.error) : null}
+            />
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

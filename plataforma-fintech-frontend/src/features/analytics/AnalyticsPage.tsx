@@ -14,9 +14,12 @@ import {
 const LIMIT_OPTIONS = [5, 10, 25, 50] as const;
 type LimitOption = (typeof LIMIT_OPTIONS)[number];
 
+const selectCls =
+  'border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand';
+
 function SummaryCards({ summary }: { summary: Record<string, number> | undefined }) {
   if (!summary) {
-    return <p className="text-surface-fg/60 text-sm">Cargando resumen...</p>;
+    return <p className="text-stone text-sm">Cargando resumen...</p>;
   }
 
   const cards = [
@@ -29,14 +32,22 @@ function SummaryCards({ summary }: { summary: Record<string, number> | undefined
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="bg-surface rounded-lg p-4 border border-surface-fg/10"
+          className="bg-surface-elevated rounded-[20px] p-8 flex flex-col gap-3"
         >
-          <p className="text-surface-fg/60 text-xs">{card.label}</p>
-          <p className="text-canvas-fg font-bold text-xl">{card.value}</p>
+          <p className="text-on-dark-mute text-sm font-semibold uppercase tracking-widest">{card.label}</p>
+          <p
+            className="text-on-dark font-medium leading-none"
+            style={{
+              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
+              fontSize: '2.5rem',
+            }}
+          >
+            {card.value}
+          </p>
         </div>
       ))}
     </div>
@@ -55,42 +66,47 @@ function MetricTable({
   onLimitChange: (v: LimitOption) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-canvas-fg font-semibold">{title}</h3>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h3
+          className="text-xl font-medium text-ink"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          {title}
+        </h3>
         <select
           value={limit}
           onChange={(e) => onLimitChange(Number(e.target.value) as LimitOption)}
-          className="bg-surface text-surface-fg text-sm rounded px-2 py-1 border border-surface-fg/20"
+          className={selectCls}
         >
           {LIMIT_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
+            <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
       </div>
       {!items || items.length === 0 ? (
-        <p className="text-surface-fg/60 text-sm">Sin datos</p>
+        <p className="text-stone text-sm">Sin datos</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-surface-fg/60 text-left">
-              <th className="pb-1">ID</th>
-              <th className="pb-1">Nombre</th>
-              <th className="pb-1 text-right">Valor</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id} className="border-t border-surface-fg/10">
-                <td className="py-1 text-surface-fg/70 font-mono text-xs">{item.id}</td>
-                <td className="py-1 text-canvas-fg">{item.label}</td>
-                <td className="py-1 text-right text-canvas-fg font-semibold">{item.value}</td>
+        <div className="rounded-[20px] border border-hairline-light overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-soft">
+              <tr className="text-stone border-b border-hairline-light">
+                <th className="py-3 px-4 text-left font-semibold tracking-wide">ID</th>
+                <th className="py-3 px-4 text-left font-semibold tracking-wide">Nombre</th>
+                <th className="py-3 px-4 text-right font-semibold tracking-wide">Valor</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} className="border-b border-hairline-light">
+                  <td className="py-3 px-4 text-stone font-mono text-xs">{item.id}</td>
+                  <td className="py-3 px-4 text-ink">{item.label}</td>
+                  <td className="py-3 px-4 text-right text-ink font-semibold">{item.value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -106,43 +122,50 @@ function FrequentRoutesTable({
   onMinTransfersChange: (v: number) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <h3 className="text-canvas-fg font-semibold">Rutas Frecuentes</h3>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h3
+          className="text-xl font-medium text-ink"
+          style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+        >
+          Rutas Frecuentes
+        </h3>
         <div className="flex items-center gap-2">
-          <label className="text-surface-fg/70 text-sm">Min. transferencias:</label>
+          <label className="text-stone text-sm">Min. transferencias:</label>
           <input
             type="number"
             min={1}
             value={minTransfers}
             onChange={(e) => onMinTransfersChange(Math.max(1, Number(e.target.value)))}
-            className="bg-surface text-surface-fg text-sm rounded px-2 py-1 border border-surface-fg/20 w-16"
+            className="border border-hairline-light rounded-[12px] px-3 py-2 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand w-20"
           />
         </div>
       </div>
       {!routes || routes.length === 0 ? (
-        <p className="text-surface-fg/60 text-sm">Sin rutas frecuentes</p>
+        <p className="text-stone text-sm">Sin rutas frecuentes</p>
       ) : (
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-surface-fg/60 text-left">
-              <th className="pb-1">Origen</th>
-              <th className="pb-1">Destino</th>
-              <th className="pb-1 text-right">Transferencias</th>
-              <th className="pb-1 text-right">Monto Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {routes.map((r) => (
-              <tr key={`${r.sourceUserId}-${r.targetUserId}`} className="border-t border-surface-fg/10">
-                <td className="py-1 text-surface-fg/70 font-mono text-xs">{r.sourceUserId}</td>
-                <td className="py-1 text-surface-fg/70 font-mono text-xs">{r.targetUserId}</td>
-                <td className="py-1 text-right text-canvas-fg">{r.transferCount}</td>
-                <td className="py-1 text-right text-canvas-fg">${r.totalAmount.toFixed(2)}</td>
+        <div className="rounded-[20px] border border-hairline-light overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-soft">
+              <tr className="text-stone border-b border-hairline-light">
+                <th className="py-3 px-4 text-left font-semibold tracking-wide">Origen</th>
+                <th className="py-3 px-4 text-left font-semibold tracking-wide">Destino</th>
+                <th className="py-3 px-4 text-right font-semibold tracking-wide">Transferencias</th>
+                <th className="py-3 px-4 text-right font-semibold tracking-wide">Monto Total</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {routes.map((r) => (
+                <tr key={`${r.sourceUserId}-${r.targetUserId}`} className="border-b border-hairline-light">
+                  <td className="py-3 px-4 text-stone font-mono text-xs">{r.sourceUserId}</td>
+                  <td className="py-3 px-4 text-stone font-mono text-xs">{r.targetUserId}</td>
+                  <td className="py-3 px-4 text-right text-ink">{r.transferCount}</td>
+                  <td className="py-3 px-4 text-right text-ink font-semibold">${r.totalAmount.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
@@ -170,150 +193,189 @@ export function AnalyticsPage() {
   const { data: totalMoved } = useTotalMovedQuery(fromIso, toIso);
 
   return (
-    <div className="flex flex-col gap-6 max-w-3xl">
-      <h2 className="text-canvas-fg text-xl font-bold">Analítica</h2>
-
-      <section className="flex flex-col gap-3">
-        <h3 className="text-canvas-fg font-semibold">Resumen</h3>
-        <SummaryCards summary={summary as Record<string, number> | undefined} />
-      </section>
-
-      <section>
-        <MetricTable
-          title="Top Usuarios"
-          items={topUsers}
-          limit={usersLimit}
-          onLimitChange={setUsersLimit}
-        />
-      </section>
-
-      <section>
-        <MetricTable
-          title="Top Billeteras"
-          items={topWallets}
-          limit={walletsLimit}
-          onLimitChange={setWalletsLimit}
-        />
-      </section>
-
-      <section>
-        <FrequentRoutesTable
-          routes={routes}
-          minTransfers={minTransfers}
-          onMinTransfersChange={setMinTransfers}
-        />
-      </section>
-
-      {/* Top Transactions */}
-      <section className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <h3 className="text-canvas-fg font-semibold">Top Transacciones por Valor</h3>
-          <select
-            value={txLimit}
-            onChange={(e) => setTxLimit(Number(e.target.value) as LimitOption)}
-            className="bg-surface text-surface-fg text-sm rounded px-2 py-1 border border-surface-fg/20"
+    <>
+      {/* Hero — dark band */}
+      <section className="bg-canvas-dark py-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12">
+          <h1
+            className="text-on-dark font-medium leading-none tracking-tight mb-4"
+            style={{
+              fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif",
+              fontSize: 'clamp(2.5rem, 6vw, 5rem)',
+            }}
           >
-            {LIMIT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
+            Analítica financiera
+          </h1>
+          <p className="text-on-dark-mute text-lg max-w-xl">
+            Métricas en tiempo real sobre usuarios, billeteras, transacciones y patrones de fraude.
+          </p>
         </div>
-        {!topTransactions || topTransactions.length === 0 ? (
-          <p className="text-surface-fg/60 text-sm">Sin datos</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-surface-fg/60 text-left">
-                <th className="pb-1">ID</th>
-                <th className="pb-1">Tipo</th>
-                <th className="pb-1 text-right">Monto</th>
-                <th className="pb-1">Riesgo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topTransactions.map((tx) => (
-                <tr key={tx.id} className="border-t border-surface-fg/10">
-                  <td className="py-1 text-surface-fg/70 font-mono text-xs">{tx.id}</td>
-                  <td className="py-1 text-canvas-fg text-xs">{tx.type}</td>
-                  <td className="py-1 text-right text-canvas-fg font-semibold">${tx.amount.toFixed(2)}</td>
-                  <td className="py-1 text-xs text-surface-fg/70">{tx.riskLevel}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </section>
 
-      {/* Movement by Type */}
-      <section>
-        <MetricTable
-          title="Movimientos por Tipo"
-          items={movementByType}
-          limit={10}
-          onLimitChange={() => {}}
-        />
-      </section>
-
-      {/* Top Wallet Categories */}
-      <section>
-        <MetricTable
-          title="Categorías de Billetera"
-          items={walletCategories}
-          limit={walletCatLimit}
-          onLimitChange={setWalletCatLimit}
-        />
-      </section>
-
-      {/* Total Moved in Range */}
-      <section className="flex flex-col gap-2">
-        <h3 className="text-canvas-fg font-semibold">Total Movido en Rango</h3>
-        <div className="flex gap-3 flex-wrap">
-          <div className="flex flex-col gap-1">
-            <label className="text-surface-fg/70 text-xs">Desde</label>
-            <input
-              type="datetime-local"
-              value={rangeFrom}
-              onChange={(e) => setRangeFrom(e.target.value)}
-              className="bg-surface text-surface-fg text-sm rounded px-2 py-1 border border-surface-fg/20"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-surface-fg/70 text-xs">Hasta</label>
-            <input
-              type="datetime-local"
-              value={rangeTo}
-              onChange={(e) => setRangeTo(e.target.value)}
-              className="bg-surface text-surface-fg text-sm rounded px-2 py-1 border border-surface-fg/20"
-            />
-          </div>
+      {/* Summary stat cards — dark band */}
+      <section className="bg-canvas-dark pb-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 flex flex-col gap-6">
+          <h2
+            className="text-on-dark-mute text-sm font-semibold uppercase tracking-widest"
+            aria-label="Resumen"
+          >
+            Resumen
+          </h2>
+          <SummaryCards summary={summary as Record<string, number> | undefined} />
         </div>
-        {totalMoved && (
-          <div className="bg-surface rounded-lg p-4 flex gap-6">
-            <div>
-              <p className="text-surface-fg/60 text-xs">Total</p>
-              <p className="text-canvas-fg font-bold">${totalMoved.totalAmount.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-surface-fg/60 text-xs">Transacciones</p>
-              <p className="text-canvas-fg font-bold">{totalMoved.count}</p>
-            </div>
-          </div>
-        )}
       </section>
 
-      {/* Cycles */}
-      <section className="flex flex-col gap-2">
-        <h3 className="text-canvas-fg font-semibold">Ciclos en Grafo de Transferencias</h3>
-        {!cycles || cycles.length === 0 ? (
-          <p className="text-surface-fg/60 text-sm">No se detectaron ciclos</p>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {cycles.map((cycle, i) => (
-              <li key={i} className="bg-surface rounded px-3 py-2 text-sm text-canvas-fg font-mono">
-                {cycle.join(' → ')}
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* Detail sections — light catalogue band */}
+      <section className="bg-canvas-light py-[88px]">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 flex flex-col gap-12">
+
+          <MetricTable
+            title="Top Usuarios"
+            items={topUsers}
+            limit={usersLimit}
+            onLimitChange={setUsersLimit}
+          />
+
+          <MetricTable
+            title="Top Billeteras"
+            items={topWallets}
+            limit={walletsLimit}
+            onLimitChange={setWalletsLimit}
+          />
+
+          <FrequentRoutesTable
+            routes={routes}
+            minTransfers={minTransfers}
+            onMinTransfersChange={setMinTransfers}
+          />
+
+          {/* Top Transactions */}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h3
+                className="text-xl font-medium text-ink"
+                style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+              >
+                Top Transacciones por Valor
+              </h3>
+              <select
+                value={txLimit}
+                onChange={(e) => setTxLimit(Number(e.target.value) as LimitOption)}
+                className={selectCls}
+              >
+                {LIMIT_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+            </div>
+            {!topTransactions || topTransactions.length === 0 ? (
+              <p className="text-stone text-sm">Sin datos</p>
+            ) : (
+              <div className="rounded-[20px] border border-hairline-light overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-surface-soft">
+                    <tr className="text-stone border-b border-hairline-light">
+                      <th className="py-3 px-4 text-left font-semibold tracking-wide">ID</th>
+                      <th className="py-3 px-4 text-left font-semibold tracking-wide">Tipo</th>
+                      <th className="py-3 px-4 text-right font-semibold tracking-wide">Monto</th>
+                      <th className="py-3 px-4 text-left font-semibold tracking-wide">Riesgo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topTransactions.map((tx) => (
+                      <tr key={tx.id} className="border-b border-hairline-light">
+                        <td className="py-3 px-4 text-stone font-mono text-xs">{tx.id}</td>
+                        <td className="py-3 px-4 text-charcoal text-xs">{tx.type}</td>
+                        <td className="py-3 px-4 text-right text-ink font-semibold">${tx.amount.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-xs text-stone">{tx.riskLevel}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <MetricTable
+            title="Movimientos por Tipo"
+            items={movementByType}
+            limit={10}
+            onLimitChange={() => {}}
+          />
+
+          <MetricTable
+            title="Categorías de Billetera"
+            items={walletCategories}
+            limit={walletCatLimit}
+            onLimitChange={setWalletCatLimit}
+          />
+
+          {/* Total Moved in Range */}
+          <div className="flex flex-col gap-4">
+            <h3
+              className="text-xl font-medium text-ink"
+              style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+            >
+              Total Movido en Rango
+            </h3>
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-charcoal text-sm font-semibold">Desde</label>
+                <input
+                  type="datetime-local"
+                  value={rangeFrom}
+                  onChange={(e) => setRangeFrom(e.target.value)}
+                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-charcoal text-sm font-semibold">Hasta</label>
+                <input
+                  type="datetime-local"
+                  value={rangeTo}
+                  onChange={(e) => setRangeTo(e.target.value)}
+                  className="border border-hairline-light rounded-[12px] px-3 h-14 bg-canvas-light text-ink text-sm focus:outline-none focus:border-brand"
+                />
+              </div>
+            </div>
+            {totalMoved && (
+              <div className="bg-surface-card border border-hairline-light rounded-[20px] p-8 flex gap-8">
+                <div>
+                  <p className="text-stone text-sm font-semibold uppercase tracking-widest">Total</p>
+                  <p className="text-ink font-semibold text-2xl mt-1">${totalMoved.totalAmount.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-stone text-sm font-semibold uppercase tracking-widest">Transacciones</p>
+                  <p className="text-ink font-semibold text-2xl mt-1">{totalMoved.count}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Cycles */}
+          <div className="flex flex-col gap-4">
+            <h3
+              className="text-xl font-medium text-ink"
+              style={{ fontFamily: "'Inter Tight', 'Inter', system-ui, sans-serif" }}
+            >
+              Ciclos en Grafo de Transferencias
+            </h3>
+            {!cycles || cycles.length === 0 ? (
+              <p className="text-stone text-sm">No se detectaron ciclos</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {cycles.map((cycle, i) => (
+                  <li
+                    key={i}
+                    className="bg-surface-soft rounded-[12px] px-4 py-3 text-sm text-ink font-mono"
+                  >
+                    {cycle.join(' → ')}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+        </div>
       </section>
-    </div>
+    </>
   );
 }

@@ -41,7 +41,7 @@ export function RechargeForm({ userId, walletId, onSubmit, isPending, error }: R
   return (
     <form
       onSubmit={handleSubmit(handleFormSubmit)}
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-5"
       data-testid="recharge-form"
     >
       <Field label="Monto" error={errors.amount?.message}>
@@ -57,9 +57,9 @@ export function RechargeForm({ userId, walletId, onSubmit, isPending, error }: R
         <Input {...register('description')} placeholder="Recarga inicial" />
       </Field>
       {errorMessage && (
-        <p className="text-red-500 text-sm" role="alert">{errorMessage}</p>
+        <p className="text-accent-danger text-sm" role="alert">{errorMessage}</p>
       )}
-      <Button type="submit" disabled={isPending}>
+      <Button variant="dark" type="submit" disabled={isPending} className="self-start">
         {isPending ? 'Procesando...' : 'Recargar'}
       </Button>
     </form>

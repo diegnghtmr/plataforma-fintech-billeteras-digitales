@@ -1,23 +1,89 @@
 @import "tailwindcss";
 
-@theme {
-  --color-canvas: #0f172a;
-  --color-canvas-fg: #f8fafc;
-  --color-surface: #1e293b;
-  --color-surface-fg: #e2e8f0;
-  --color-accent: #6366f1;
-  --color-accent-fg: #ffffff;
-  --color-info: #3b82f6;
-  --color-info-fg: #ffffff;
-  --color-warn: #f59e0b;
-  --color-warn-fg: #ffffff;
-  --color-danger: #ef4444;
-  --color-danger-fg: #ffffff;
-  --font-sans: ui-sans-serif, system-ui, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Inter+Tight:wght@500&display=swap');
 
-  /* Loyalty level semantic tokens (SDD 07) */
-  --color-bronze: #cd7f32;
-  --color-silver: #c0c0c0;
-  --color-gold: #ffd700;
-  --color-platinum: #e5e4e2;
+@theme {
+  /* Brand */
+  --color-brand: #494fdf;
+  --color-brand-bright: #4f55f1;
+  --color-brand-deep: #3a40c4;
+  --color-on-brand: #ffffff;
+
+  /* Text — light mode */
+  --color-ink: #191c1f;
+  --color-body: #1f2226;
+  --color-charcoal: #3a3d40;
+  --color-mute: #505a63;
+  --color-ash: #5c5e60;
+  --color-stone: #8d969e;
+  --color-faint: #c9c9cd;
+
+  /* Canvas */
+  --color-canvas-light: #ffffff;
+  --color-canvas-dark: #000000;
+
+  /* Surfaces */
+  --color-surface-soft: #f4f4f4;
+  --color-surface-card: #ffffff;
+  --color-surface-deep: #0a0a0a;
+  --color-surface-elevated: #16181a;
+
+  /* On-dark text */
+  --color-on-dark: #ffffff;
+  --color-on-dark-mute: rgba(255, 255, 255, 0.72);
+
+  /* Hairlines */
+  --color-hairline-light: #e2e2e7;
+  --color-hairline-dark: rgba(255, 255, 255, 0.12);
+  --color-hairline-strong: #191c1f;
+
+  /* Wide accent palette — iconography / badges only, NEVER button surfaces */
+  --color-accent-teal: #00a87e;
+  --color-accent-light-blue: #007bc2;
+  --color-accent-blue-link: #376cd5;
+  --color-accent-light-green: #428619;
+  --color-accent-green-text: #006400;
+  --color-accent-yellow: #b09000;
+  --color-accent-warning: #ec7e00;
+  --color-accent-pink: #e61e49;
+  --color-accent-danger: #e23b4a;
+  --color-accent-deep-red: #8b0000;
+  --color-accent-brown: #936d62;
+
+  /* Border radius */
+  --radius-none: 0px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-display: 'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Legacy shims — kept so old Tailwind utilities resolve without error */
+  /* These map to the nearest new token; no new usage should reference them */
+  --color-canvas: #000000;
+  --color-canvas-fg: #ffffff;
+  --color-surface: #16181a;
+  --color-surface-fg: rgba(255, 255, 255, 0.72);
+  --color-accent: #494fdf;
+  --color-accent-fg: #ffffff;
+  --color-info: #007bc2;
+  --color-info-fg: #ffffff;
+  --color-warn: #b09000;
+  --color-warn-fg: #ffffff;
+  --color-danger: #e23b4a;
+  --color-danger-fg: #ffffff;
+  --color-bronze: #936d62;
+  --color-silver: #8d969e;
+  --color-gold: #b09000;
+  --color-platinum: #494fdf;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-canvas-light);
 }

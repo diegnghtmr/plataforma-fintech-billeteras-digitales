@@ -1,10 +1,10 @@
 type FraudSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
 const SEVERITY_CLASSES: Record<FraudSeverity, string> = {
-  LOW: 'bg-info text-info-fg',
-  MEDIUM: 'bg-warn text-warn-fg',
-  HIGH: 'bg-danger text-danger-fg',
-  CRITICAL: 'bg-danger text-danger-fg font-bold',
+  LOW: 'text-accent-light-green bg-accent-light-green/15',
+  MEDIUM: 'text-accent-yellow bg-accent-yellow/15',
+  HIGH: 'text-accent-warning bg-accent-warning/15',
+  CRITICAL: 'text-accent-danger bg-accent-danger/15 font-bold',
 };
 
 interface FraudSeverityBadgeProps {
@@ -13,7 +13,9 @@ interface FraudSeverityBadgeProps {
 
 export function FraudSeverityBadge({ severity }: FraudSeverityBadgeProps) {
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-semibold ${SEVERITY_CLASSES[severity]}`}>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${SEVERITY_CLASSES[severity]}`}
+    >
       {severity}
     </span>
   );
