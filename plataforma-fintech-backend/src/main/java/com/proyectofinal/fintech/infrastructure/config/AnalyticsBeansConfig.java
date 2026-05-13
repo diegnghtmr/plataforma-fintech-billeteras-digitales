@@ -20,9 +20,11 @@ public class AnalyticsBeansConfig {
             WalletRepository walletRepository,
             TransactionRepository transactionRepository,
             FraudEventRepository fraudEventRepository,
-            NotificationRepository notificationRepository) {
+            NotificationRepository notificationRepository,
+            ScheduledOperationRepository scheduledOperationRepository) {
         return new GetAnalyticsSummaryUseCase(userRepository, walletRepository,
-                transactionRepository, fraudEventRepository, notificationRepository);
+                transactionRepository, fraudEventRepository, notificationRepository,
+                scheduledOperationRepository);
     }
 
     @Bean

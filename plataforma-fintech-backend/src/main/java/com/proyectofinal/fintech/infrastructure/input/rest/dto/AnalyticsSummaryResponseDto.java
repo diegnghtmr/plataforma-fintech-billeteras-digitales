@@ -9,5 +9,6 @@ public record AnalyticsSummaryResponseDto(
         long totalTransactions,
         double totalMovedAmount,
         long fraudEventCount,
-        long unreadNotificationCount
+        long unreadNotificationCount,
+        long pendingScheduledOperations
 ) {}

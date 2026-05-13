@@ -646,6 +646,7 @@ export interface components {
             totalMovedAmount: number;
             fraudEventCount: number;
             unreadNotificationCount: number;
+            pendingScheduledOperations: number;
         };
         MetricItemResponse: {
             id: string;

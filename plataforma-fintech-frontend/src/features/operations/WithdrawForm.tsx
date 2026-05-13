@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DollarSign, FileText } from 'lucide-react';
 import { moneyOperationSchema, type MoneyOperationFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
@@ -44,12 +45,13 @@ export function WithdrawForm({ userId, walletId, onSubmit, isPending, error }: W
         <Input
           type="number"
           step="0.01"
+          leftIcon={DollarSign}
           {...register('amount', { valueAsNumber: true })}
           placeholder="0.00"
         />
       </Field>
       <Field label="Descripción (opcional)" error={errors.description?.message}>
-        <Input {...register('description')} placeholder="Retiro de efectivo" />
+        <Input leftIcon={FileText} {...register('description')} placeholder="Retiro de efectivo" />
       </Field>
       {errorMessage && (
         <p className="text-accent-danger text-sm" role="alert">{errorMessage}</p>

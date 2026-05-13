@@ -19,7 +19,7 @@ class AnalyticsMapperTest {
 
     @Test
     void toDto_analyticsSummaryView_mapsAllFields() {
-        AnalyticsSummaryView view = new AnalyticsSummaryView(3, 5, 10, 800.0, 2, 4);
+        AnalyticsSummaryView view = new AnalyticsSummaryView(3, 5, 10, 800.0, 2, 4, 7);
         AnalyticsSummaryResponseDto dto = mapper.toDto(view);
 
         assertThat(dto.totalUsers()).isEqualTo(3);
@@ -28,6 +28,7 @@ class AnalyticsMapperTest {
         assertThat(dto.totalMovedAmount()).isEqualTo(800.0);
         assertThat(dto.fraudEventCount()).isEqualTo(2);
         assertThat(dto.unreadNotificationCount()).isEqualTo(4);
+        assertThat(dto.pendingScheduledOperations()).isEqualTo(7);
     }
 
     @Test

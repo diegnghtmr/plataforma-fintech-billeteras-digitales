@@ -1039,6 +1039,7 @@ components:
         - totalMovedAmount
         - fraudEventCount
         - unreadNotificationCount
+        - pendingScheduledOperations
       properties:
         totalUsers:
           type: integer
@@ -1052,6 +1053,8 @@ components:
         fraudEventCount:
           type: integer
         unreadNotificationCount:
+          type: integer
+        pendingScheduledOperations:
           type: integer
     MetricItemResponse:
       type: object

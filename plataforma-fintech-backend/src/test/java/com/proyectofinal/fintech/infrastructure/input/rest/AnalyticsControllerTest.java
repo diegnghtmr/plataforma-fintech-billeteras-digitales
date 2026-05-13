@@ -58,8 +58,8 @@ class AnalyticsControllerTest {
     private TransactionMapper transactionMapper;
 
     @Test
-    void getSummary_returns200WithSixFields() throws Exception {
-        AnalyticsSummaryView view = new AnalyticsSummaryView(3, 5, 10, 800.0, 2, 4);
+    void getSummary_returns200WithAllFields() throws Exception {
+        AnalyticsSummaryView view = new AnalyticsSummaryView(3, 5, 10, 800.0, 2, 4, 7);
         when(getAnalyticsSummaryUseCase.execute()).thenReturn(view);
         when(analyticsMapper.toDto(view)).thenCallRealMethod();
 
@@ -70,7 +70,8 @@ class AnalyticsControllerTest {
                 .andExpect(jsonPath("$.totalTransactions").value(10))
                 .andExpect(jsonPath("$.totalMovedAmount").value(800.0))
                 .andExpect(jsonPath("$.fraudEventCount").value(2))
-                .andExpect(jsonPath("$.unreadNotificationCount").value(4));
+                .andExpect(jsonPath("$.unreadNotificationCount").value(4))
+                .andExpect(jsonPath("$.pendingScheduledOperations").value(7));
     }
 
     @Test

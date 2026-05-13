@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Zap,
   Trophy,
@@ -9,54 +9,19 @@ import {
   Globe,
   ArrowRight,
 } from 'lucide-react';
-import { apiClient } from '../../api/client';
+import { getAnalyticsSummary } from '../../api/analytics';
 
-/* ─── Live stats via TanStack Query ────────────────────────────────────────── */
+/* ─── Live stats via TanStack Query (single aggregate endpoint) ─────────────── */
 
 function useHomepageStats() {
-  const results = useQueries({
-    queries: [
-      {
-        queryKey: ['homepage-stat', 'users'],
-        queryFn: async () => {
-          const { data } = await apiClient.GET('/users' as never);
-          return Array.isArray(data) ? (data as unknown[]).length : 0;
-        },
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ['homepage-stat', 'wallets'],
-        queryFn: async () => {
-          // No global wallets endpoint — show placeholder
-          return null;
-        },
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ['homepage-stat', 'transactions'],
-        queryFn: async () => {
-          const { data } = await apiClient.GET('/transactions/all' as never);
-          return Array.isArray(data) ? (data as unknown[]).length : 0;
-        },
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ['homepage-stat', 'scheduled'],
-        queryFn: async () => {
-          const { data } = await apiClient.GET('/scheduled-operations' as never);
-          return Array.isArray(data) ? (data as unknown[]).length : 0;
-        },
-        staleTime: 60_000,
-      },
-    ],
+  return useQuery({
+    queryKey: ['analytics', 'summary'],
+    queryFn: getAnalyticsSummary,
+    staleTime: 60_000,
   });
-
-  return results;
 }
 
 /* ─── Stats strip ───────────────────────────────────────────────────────────── */
-
-const STAT_LABELS = ['Usuarios', 'Billeteras', 'Transacciones', 'Operaciones'];
 
 function StatCard({ label, value }: { label: string; value: number | null | undefined }) {
   const display = value === null || value === undefined ? '—' : value.toLocaleString();
@@ -105,8 +70,15 @@ const FEATURES = [
 
 /* ─── Page ──────────────────────────────────────────────────────────────────── */
 
+const STAT_DEFS = [
+  { label: 'Usuarios', key: 'totalUsers' },
+  { label: 'Billeteras', key: 'totalWallets' },
+  { label: 'Transacciones', key: 'totalTransactions' },
+  { label: 'Pendientes', key: 'pendingScheduledOperations' },
+] as const;
+
 export function HomePage() {
-  const statsResults = useHomepageStats();
+  const { data: summary, isError } = useHomepageStats();
 
   return (
     <>
@@ -144,11 +116,11 @@ export function HomePage() {
 
           {/* Stats strip */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16">
-            {STAT_LABELS.map((label, i) => (
+            {STAT_DEFS.map(({ label, key }) => (
               <StatCard
                 key={label}
                 label={label}
-                value={statsResults[i]?.isError ? null : statsResults[i]?.data as number | null | undefined}
+                value={isError ? null : summary?.[key]}
               />
             ))}
           </div>

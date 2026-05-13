@@ -52,7 +52,7 @@ export function Modal({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[100] bg-canvas-dark/60 backdrop-blur-sm"
+        className="modal-backdrop-enter fixed inset-0 z-[100] bg-canvas-dark/60 backdrop-blur-sm"
         aria-hidden="true"
         onClick={onClose}
       />
@@ -69,6 +69,7 @@ export function Modal({
       >
         <div
           className="
+            modal-panel-enter
             pointer-events-auto w-full max-w-md bg-surface-card rounded-[20px] p-8
             border border-hairline-light flex flex-col gap-6
           "

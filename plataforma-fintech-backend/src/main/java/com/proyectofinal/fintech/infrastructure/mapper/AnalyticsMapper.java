@@ -19,7 +19,8 @@ public class AnalyticsMapper {
                 view.totalTransactions(),
                 view.totalMovedAmount(),
                 view.fraudEventCount(),
-                view.unreadNotificationCount()
+                view.unreadNotificationCount(),
+                view.pendingScheduledOperations()
         );
     }
 

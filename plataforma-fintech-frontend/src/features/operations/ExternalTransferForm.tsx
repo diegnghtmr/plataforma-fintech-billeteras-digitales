@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { DollarSign, User, Wallet } from 'lucide-react';
 import { externalTransferSchema, type ExternalTransferFormData } from './schemas';
 import { Button } from '../../shared/components/Button';
 import { Input } from '../../shared/components/Input';
@@ -47,21 +48,22 @@ export function ExternalTransferForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <Field label="Usuario origen" error={errors.sourceUserId?.message}>
-        <Input {...register('sourceUserId')} placeholder="USR001" />
+        <Input leftIcon={User} {...register('sourceUserId')} placeholder="USR001" />
       </Field>
       <Field label="Billetera origen" error={errors.sourceWalletId?.message}>
-        <Input {...register('sourceWalletId')} placeholder="W001" />
+        <Input leftIcon={Wallet} {...register('sourceWalletId')} placeholder="W001" />
       </Field>
       <Field label="Usuario destino" error={errors.targetUserId?.message}>
-        <Input {...register('targetUserId')} placeholder="USR002" />
+        <Input leftIcon={User} {...register('targetUserId')} placeholder="USR002" />
       </Field>
       <Field label="Billetera destino" error={errors.targetWalletId?.message}>
-        <Input {...register('targetWalletId')} placeholder="W002" />
+        <Input leftIcon={Wallet} {...register('targetWalletId')} placeholder="W002" />
       </Field>
       <Field label="Monto" error={errors.amount?.message}>
         <Input
           type="number"
           step="0.01"
+          leftIcon={DollarSign}
           {...register('amount', { valueAsNumber: true })}
           placeholder="0.00"
         />

@@ -24,17 +24,20 @@ public class GetAnalyticsSummaryUseCase {
     private final TransactionRepository transactionRepository;
     private final FraudEventRepository fraudEventRepository;
     private final NotificationRepository notificationRepository;
+    private final ScheduledOperationRepository scheduledOperationRepository;
 
     public GetAnalyticsSummaryUseCase(UserRepository userRepository,
                                        WalletRepository walletRepository,
                                        TransactionRepository transactionRepository,
                                        FraudEventRepository fraudEventRepository,
-                                       NotificationRepository notificationRepository) {
+                                       NotificationRepository notificationRepository,
+                                       ScheduledOperationRepository scheduledOperationRepository) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.fraudEventRepository = fraudEventRepository;
         this.notificationRepository = notificationRepository;
+        this.scheduledOperationRepository = scheduledOperationRepository;
     }
 
     public AnalyticsSummaryView execute() {
@@ -62,9 +65,17 @@ public class GetAnalyticsSummaryUseCase {
 
         long fraudEventCount = fraudEventRepository.count();
 
+        long pendingScheduledOperations = 0;
+        for (OperacionProgramada op : scheduledOperationRepository.findAll()) {
+            if (op.getStatus() == ScheduledOperationStatus.PENDING) {
+                pendingScheduledOperations++;
+            }
+        }
+
         return new AnalyticsSummaryView(
                 totalUsers, totalWallets, totalTransactions,
-                totalMovedAmount, fraudEventCount, unreadNotificationCount
+                totalMovedAmount, fraudEventCount, unreadNotificationCount,
+                pendingScheduledOperations
         );
     }
 }

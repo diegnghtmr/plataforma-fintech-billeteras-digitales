@@ -12,6 +12,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Instant;
 import java.util.List;
 
+import com.proyectofinal.fintech.domain.model.OperacionProgramada;
+import com.proyectofinal.fintech.domain.model.ScheduledOperationStatus;
+import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +35,8 @@ class GetAnalyticsSummaryUseCaseTest {
     private FraudEventRepository fraudEventRepository;
     @Mock
     private NotificationRepository notificationRepository;
+    @Mock
+    private ScheduledOperationRepository scheduledOperationRepository;
 
     private GetAnalyticsSummaryUseCase useCase;
     private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
@@ -38,7 +44,8 @@ class GetAnalyticsSummaryUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new GetAnalyticsSummaryUseCase(userRepository, walletRepository,
-                transactionRepository, fraudEventRepository, notificationRepository);
+                transactionRepository, fraudEventRepository, notificationRepository,
+                scheduledOperationRepository);
     }
 
     private Usuario makeUser(String id) {
@@ -87,6 +94,13 @@ class GetAnalyticsSummaryUseCaseTest {
         ));
         when(notificationRepository.findByUserId("USR_C", true)).thenReturn(List.of());
 
+        // Pending scheduled operations (2 PENDING, 1 EXECUTED — only PENDING counts)
+        when(scheduledOperationRepository.findAll()).thenReturn(List.of(
+                makeScheduledOp("SO1", ScheduledOperationStatus.PENDING),
+                makeScheduledOp("SO2", ScheduledOperationStatus.PENDING),
+                makeScheduledOp("SO3", ScheduledOperationStatus.EXECUTED)
+        ));
+
         AnalyticsSummaryView summary = useCase.execute();
 
         assertThat(summary.totalUsers()).isEqualTo(3);
@@ -96,6 +110,7 @@ class GetAnalyticsSummaryUseCaseTest {
         assertThat(summary.totalMovedAmount()).isEqualTo(800.0);
         assertThat(summary.fraudEventCount()).isEqualTo(2);
         assertThat(summary.unreadNotificationCount()).isEqualTo(3);
+        assertThat(summary.pendingScheduledOperations()).isEqualTo(2);
     }
 
     @Test
@@ -104,6 +119,7 @@ class GetAnalyticsSummaryUseCaseTest {
         when(walletRepository.countByOwnerId("USR_A")).thenReturn(1);
         when(notificationRepository.findByUserId("USR_A", true)).thenReturn(List.of());
         when(fraudEventRepository.count()).thenReturn(0);
+        when(scheduledOperationRepository.findAll()).thenReturn(List.of());
 
         when(transactionRepository.findAll()).thenReturn(List.of(
                 makeTx("T1", TransactionType.EXTERNAL_TRANSFER_SENT, 500.0, TransactionStatus.SUCCESSFUL),
@@ -113,5 +129,28 @@ class GetAnalyticsSummaryUseCaseTest {
         AnalyticsSummaryView summary = useCase.execute();
         // Only SENT counts, not RECEIVED
         assertThat(summary.totalMovedAmount()).isEqualTo(500.0);
+    }
+
+    @Test
+    void execute_pendingScheduledOperations_excludesExecutedAndCancelled() {
+        when(userRepository.findAll()).thenReturn(List.of());
+        when(transactionRepository.findAll()).thenReturn(List.of());
+        when(fraudEventRepository.count()).thenReturn(0);
+
+        when(scheduledOperationRepository.findAll()).thenReturn(List.of(
+                makeScheduledOp("SO1", ScheduledOperationStatus.PENDING),
+                makeScheduledOp("SO2", ScheduledOperationStatus.EXECUTED),
+                makeScheduledOp("SO3", ScheduledOperationStatus.CANCELLED),
+                makeScheduledOp("SO4", ScheduledOperationStatus.FAILED),
+                makeScheduledOp("SO5", ScheduledOperationStatus.PENDING)
+        ));
+
+        AnalyticsSummaryView summary = useCase.execute();
+        assertThat(summary.pendingScheduledOperations()).isEqualTo(2);
+    }
+
+    private OperacionProgramada makeScheduledOp(String id, ScheduledOperationStatus status) {
+        return new OperacionProgramada(id, ScheduledOperationType.RECHARGE, status,
+                "USR_A", "W1", null, null, 100.0, NOW, null);
     }
 }
