@@ -53,17 +53,19 @@ export function WalletsPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-8 max-w-2xl">
-        <WalletList wallets={wallets} onSelect={(code) => setSelectedWalletId(code)} />
-
-        <div className="border-t border-hairline-light pt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] gap-8 items-start">
+        <aside className="lg:sticky lg:top-24">
           <Card variant="light">
             <h2 className="text-heading-sm text-ink mb-6">
               Crear billetera
             </h2>
             <WalletForm onSubmit={handleSubmit} isPending={mutation.isPending} />
           </Card>
-        </div>
+        </aside>
+
+        <section className="min-w-0">
+          <WalletList wallets={wallets} onSelect={(code) => setSelectedWalletId(code)} />
+        </section>
       </div>
     </div>
   );

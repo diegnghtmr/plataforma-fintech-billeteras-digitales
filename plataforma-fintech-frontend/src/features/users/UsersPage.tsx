@@ -76,7 +76,7 @@ export function UsersPage() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-8 max-w-lg">
+      <div className="flex flex-col gap-8 max-w-2xl">
         {/* Create user form */}
         <Card variant="light">
           <h2 className="text-heading-sm text-ink mb-6">

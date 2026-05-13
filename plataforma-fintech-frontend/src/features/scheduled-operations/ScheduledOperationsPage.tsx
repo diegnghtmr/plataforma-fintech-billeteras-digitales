@@ -124,70 +124,73 @@ export function ScheduledOperationsPage() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] gap-8 items-start">
         {/* Create form */}
-        <Card variant="light" className="max-w-lg">
-          <h2 className="text-heading-sm text-ink mb-6">
-            Nueva operación programada
-          </h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="type" className={labelCls}>Tipo</label>
-              <select
-                id="type"
-                aria-label="Tipo"
-                {...register('type')}
-                className={inputCls}
-              >
-                {SCHEDULED_OPERATION_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              {errors.type && <span className={errorCls}>{errors.type.message}</span>}
-            </div>
+        <aside className="lg:sticky lg:top-24">
+          <Card variant="light">
+            <h2 className="text-heading-sm text-ink mb-6">
+              Nueva operación programada
+            </h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="type" className={labelCls}>Tipo</label>
+                <select
+                  id="type"
+                  aria-label="Tipo"
+                  {...register('type')}
+                  className={inputCls}
+                >
+                  {SCHEDULED_OPERATION_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                {errors.type && <span className={errorCls}>{errors.type.message}</span>}
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="sourceUserId" className={labelCls}>Usuario origen</label>
-              <input id="sourceUserId" {...register('sourceUserId')} className={inputCls} />
-              {errors.sourceUserId && <span className={errorCls}>{errors.sourceUserId.message}</span>}
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="sourceUserId" className={labelCls}>Usuario origen</label>
+                <input id="sourceUserId" {...register('sourceUserId')} className={inputCls} />
+                {errors.sourceUserId && <span className={errorCls}>{errors.sourceUserId.message}</span>}
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="sourceWalletId" className={labelCls}>Billetera origen</label>
-              <input id="sourceWalletId" {...register('sourceWalletId')} className={inputCls} />
-              {errors.sourceWalletId && <span className={errorCls}>{errors.sourceWalletId.message}</span>}
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="sourceWalletId" className={labelCls}>Billetera origen</label>
+                <input id="sourceWalletId" {...register('sourceWalletId')} className={inputCls} />
+                {errors.sourceWalletId && <span className={errorCls}>{errors.sourceWalletId.message}</span>}
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="amount" className={labelCls}>Monto</label>
-              <input
-                id="amount"
-                type="number"
-                step="0.01"
-                {...register('amount', { valueAsNumber: true })}
-                className={inputCls}
-              />
-              {errors.amount && <span className={errorCls}>{errors.amount.message}</span>}
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="amount" className={labelCls}>Monto</label>
+                <input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  {...register('amount', { valueAsNumber: true })}
+                  className={inputCls}
+                />
+                {errors.amount && <span className={errorCls}>{errors.amount.message}</span>}
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="scheduledAt" className={labelCls}>Fecha programada</label>
-              <input
-                id="scheduledAt"
-                type="datetime-local"
-                {...register('scheduledAt')}
-                className={inputCls}
-              />
-              {errors.scheduledAt && <span className={errorCls}>{errors.scheduledAt.message}</span>}
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="scheduledAt" className={labelCls}>Fecha programada</label>
+                <input
+                  id="scheduledAt"
+                  type="datetime-local"
+                  {...register('scheduledAt')}
+                  className={inputCls}
+                />
+                {errors.scheduledAt && <span className={errorCls}>{errors.scheduledAt.message}</span>}
+              </div>
 
-            <Button variant="dark" type="submit" disabled={createMutation.isPending} className="self-start">
-              {createMutation.isPending ? 'Creando...' : 'Crear operación'}
-            </Button>
-          </form>
-        </Card>
+              <Button variant="dark" type="submit" disabled={createMutation.isPending} className="self-start">
+                {createMutation.isPending ? 'Creando...' : 'Crear operación'}
+              </Button>
+            </form>
+          </Card>
+        </aside>
 
         {/* Operations table */}
+        <section className="min-w-0">
         <Modal
           open={cancelTarget !== null}
           onClose={() => setCancelTarget(null)}
@@ -251,6 +254,7 @@ export function ScheduledOperationsPage() {
             </div>
           )}
         </div>
+        </section>
       </div>
     </div>
   );

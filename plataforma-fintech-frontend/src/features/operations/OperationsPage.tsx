@@ -115,7 +115,7 @@ export function OperationsPage() {
         </p>
       </div>
 
-      <div className="max-w-lg flex flex-col gap-6">
+      <div className="max-w-2xl flex flex-col gap-6">
         {/* Tab navigation */}
         <div className="flex gap-2 flex-wrap">
           {(Object.keys(TAB_CONFIG) as Tab[]).map((tab) => {
