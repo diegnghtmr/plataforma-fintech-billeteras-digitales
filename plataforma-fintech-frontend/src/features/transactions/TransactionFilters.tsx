@@ -1,4 +1,5 @@
 import type { TransactionType, TransactionStatus } from '../../api/transactions';
+import { labelOperationType, labelOperationStatus } from '../../shared/i18n/enum-labels';
 
 interface TransactionFiltersProps {
   type?: TransactionType | undefined;
@@ -38,7 +39,7 @@ export function TransactionFilters({
           <option value="">Todos</option>
           {TRANSACTION_TYPES.map((t) => (
             <option key={t} value={t}>
-              {t}
+              {labelOperationType(t)}
             </option>
           ))}
         </select>
@@ -57,7 +58,7 @@ export function TransactionFilters({
           <option value="">Todos</option>
           {TRANSACTION_STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {labelOperationStatus(s)}
             </option>
           ))}
         </select>

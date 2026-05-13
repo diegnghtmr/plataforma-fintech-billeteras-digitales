@@ -3,6 +3,7 @@ import { ShieldAlert } from 'lucide-react';
 import { useFraudEventsQuery } from './hooks';
 import { FraudSeverityBadge } from './FraudSeverityBadge';
 import { EmptyState } from '../../shared/components/EmptyState';
+import { labelFraudSeverity } from '../../shared/i18n/enum-labels';
 import type { FraudSeverity } from '../../api/fraud';
 
 const SEVERITY_OPTIONS = ['', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
@@ -49,7 +50,7 @@ export function FraudPage() {
             >
               <option value="">Todas las severidades</option>
               {SEVERITY_OPTIONS.filter(Boolean).map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>{labelFraudSeverity(s)}</option>
               ))}
             </select>
           </div>

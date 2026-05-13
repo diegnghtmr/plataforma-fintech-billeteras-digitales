@@ -68,8 +68,8 @@ describe('PointsPage', () => {
 
     // 1500.00 appears in both PointsCard and RankingTable
     expect(screen.getAllByText('1500.00').length).toBeGreaterThanOrEqual(1);
-    // SILVER badge appears (may appear in both PointsCard and ranking row)
-    expect(screen.getAllByText('SILVER').length).toBeGreaterThanOrEqual(1);
+    // 'Plata' badge appears (may appear in both PointsCard and ranking row)
+    expect(screen.getAllByText('Plata').length).toBeGreaterThanOrEqual(1);
     // Hint: Faltan X para GOLD
     expect(screen.getByText(/faltan/i)).toBeInTheDocument();
   });

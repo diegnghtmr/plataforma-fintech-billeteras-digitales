@@ -1,4 +1,5 @@
 import { Info, AlertTriangle, AlertOctagon } from 'lucide-react';
+import { labelNotificationSeverity } from '../../shared/i18n/enum-labels';
 
 type NotificationSeverity = 'INFO' | 'WARNING' | 'CRITICAL';
 
@@ -24,7 +25,7 @@ export function SeverityBadge({ severity }: SeverityBadgeProps) {
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${className}`}
     >
       <Icon size={12} strokeWidth={2} />
-      {severity}
+      {labelNotificationSeverity(severity)}
     </span>
   );
 }

@@ -1,5 +1,6 @@
 import { Undo2 } from 'lucide-react';
 import type { TransactionResponse } from '../../api/transactions';
+import { labelOperationType, labelOperationStatus } from '../../shared/i18n/enum-labels';
 
 interface TransactionRowProps {
   tx: TransactionResponse;
@@ -16,10 +17,10 @@ export function TransactionRow({ tx, onReverse, isReverting }: TransactionRowPro
       <td className="py-2.5 px-3 text-stone">{new Date(tx.timestamp).toLocaleString()}</td>
       <td className="py-2.5 px-3">
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-soft text-charcoal">
-          {tx.type}
+          {labelOperationType(tx.type)}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-mute">{tx.status}</td>
+      <td className="py-2.5 px-3 text-mute">{labelOperationStatus(tx.status)}</td>
       <td className="py-2.5 px-3 text-right font-semibold text-ink">{tx.amount.toFixed(2)}</td>
       <td className="py-2.5 px-3 text-stone font-mono text-xs">{tx.sourceWalletId ?? '—'}</td>
       <td className="py-2.5 px-3 text-stone font-mono text-xs">{tx.targetWalletId ?? '—'}</td>

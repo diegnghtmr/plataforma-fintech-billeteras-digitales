@@ -117,8 +117,8 @@ describe('TransactionsPage', () => {
     render(<TransactionsPage />, { wrapper: makeWrapper() });
 
     expect(screen.getByText('TX-000001')).toBeInTheDocument();
-    // RECHARGE appears in both filter select options and table rows; use getAllByText
-    expect(screen.getAllByText('RECHARGE').length).toBeGreaterThanOrEqual(1);
+    // 'Recarga' appears in both filter select options and table rows; use getAllByText
+    expect(screen.getAllByText('Recarga').length).toBeGreaterThanOrEqual(1);
   });
 
   it('Revertir button is ENABLED when reversible=true and status=SUCCESSFUL', () => {

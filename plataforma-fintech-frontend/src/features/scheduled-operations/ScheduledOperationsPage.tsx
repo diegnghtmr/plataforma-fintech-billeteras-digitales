@@ -14,6 +14,7 @@ import {
   SCHEDULED_OPERATION_TYPES,
   type CreateScheduledOperationFormData,
 } from './schemas';
+import { labelOperationType, labelOperationStatus } from '../../shared/i18n/enum-labels';
 import { Card } from '../../shared/components/Card';
 import { Button } from '../../shared/components/Button';
 import { Modal } from '../../shared/components/Modal';
@@ -141,7 +142,7 @@ export function ScheduledOperationsPage() {
                   className={inputCls}
                 >
                   {SCHEDULED_OPERATION_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>{labelOperationType(t)}</option>
                   ))}
                 </select>
                 {errors.type && <span className={errorCls}>{errors.type.message}</span>}
@@ -232,8 +233,8 @@ export function ScheduledOperationsPage() {
                   {operations.map((op: ScheduledOperationResponse) => (
                     <tr key={op.id} className="border-b border-hairline-light">
                       <td className="py-3 px-4 font-mono text-xs text-stone">{op.id}</td>
-                      <td className="py-3 px-4 text-charcoal">{op.type}</td>
-                      <td className="py-3 px-4 text-charcoal">{op.status}</td>
+                      <td className="py-3 px-4 text-charcoal">{labelOperationType(op.type)}</td>
+                      <td className="py-3 px-4 text-charcoal">{labelOperationStatus(op.status)}</td>
                       <td className="py-3 px-4 font-semibold">{op.amount.toFixed(2)}</td>
                       <td className="py-3 px-4 text-xs text-stone">
                         {new Date(op.scheduledAt).toLocaleString()}

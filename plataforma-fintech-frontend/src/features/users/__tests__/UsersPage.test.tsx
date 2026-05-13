@@ -86,7 +86,7 @@ describe('UsersPage', () => {
 
     expect(screen.getByText('USR001')).toBeInTheDocument();
     expect(screen.getByText('Juan Pérez')).toBeInTheDocument();
-    expect(screen.getByText('BRONZE')).toBeInTheDocument();
+    expect(screen.getByText('Bronce')).toBeInTheDocument();
   });
 
   it('displays API error message on error', () => {

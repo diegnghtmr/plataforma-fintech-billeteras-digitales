@@ -1,4 +1,5 @@
 import type { TransactionResponse } from '../../api/transactions';
+import { labelOperationType, labelOperationStatus } from '../../shared/i18n/enum-labels';
 
 interface TransactionDetailProps {
   tx: TransactionResponse;
@@ -12,9 +13,9 @@ export function TransactionDetail({ tx }: TransactionDetailProps) {
         <dt className="text-surface-fg">ID</dt>
         <dd className="font-mono text-canvas-fg">{tx.id}</dd>
         <dt className="text-surface-fg">Tipo</dt>
-        <dd className="text-canvas-fg">{tx.type}</dd>
+        <dd className="text-canvas-fg">{labelOperationType(tx.type)}</dd>
         <dt className="text-surface-fg">Estado</dt>
-        <dd className="text-canvas-fg">{tx.status}</dd>
+        <dd className="text-canvas-fg">{labelOperationStatus(tx.status)}</dd>
         <dt className="text-surface-fg">Monto</dt>
         <dd className="text-canvas-fg">{tx.amount.toFixed(2)}</dd>
         <dt className="text-surface-fg">Billetera origen</dt>

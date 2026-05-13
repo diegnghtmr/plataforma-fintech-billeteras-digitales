@@ -1,4 +1,5 @@
 import { Info, AlertTriangle, AlertOctagon, ShieldAlert } from 'lucide-react';
+import { labelFraudSeverity } from '../../shared/i18n/enum-labels';
 
 type FraudSeverity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
@@ -20,7 +21,7 @@ export function FraudSeverityBadge({ severity }: FraudSeverityBadgeProps) {
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${className}`}
     >
       <Icon size={12} strokeWidth={2} />
-      {severity}
+      {labelFraudSeverity(severity)}
     </span>
   );
 }

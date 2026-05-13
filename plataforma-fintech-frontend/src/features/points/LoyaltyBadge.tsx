@@ -1,5 +1,6 @@
 import { Crown, Award, Star, Gem } from 'lucide-react';
 import type { components } from '../../api/generated/schema';
+import { labelLoyaltyLevel } from '../../shared/i18n/enum-labels';
 
 type LoyaltyLevel = components['schemas']['LoyaltyLevel'];
 
@@ -23,7 +24,7 @@ export function LoyaltyBadge({ level }: LoyaltyBadgeProps) {
       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${className}`}
     >
       <Icon size={12} strokeWidth={2} />
-      {level}
+      {labelLoyaltyLevel(level)}
     </span>
   );
 }

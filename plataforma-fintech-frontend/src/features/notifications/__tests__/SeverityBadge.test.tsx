@@ -8,19 +8,19 @@ import { SeverityBadge } from '../SeverityBadge';
 describe('SeverityBadge', () => {
   it('renders INFO with info color class', () => {
     render(<SeverityBadge severity="INFO" />);
-    const badge = screen.getByText('INFO');
+    const badge = screen.getByText('Información');
     expect(badge.className).toContain('bg-info');
   });
 
   it('renders WARNING with warn color class', () => {
     render(<SeverityBadge severity="WARNING" />);
-    const badge = screen.getByText('WARNING');
+    const badge = screen.getByText('Advertencia');
     expect(badge.className).toContain('bg-warn');
   });
 
   it('renders CRITICAL with danger color class', () => {
     render(<SeverityBadge severity="CRITICAL" />);
-    const badge = screen.getByText('CRITICAL');
+    const badge = screen.getByText('Crítica');
     expect(badge.className).toContain('bg-danger');
   });
 });

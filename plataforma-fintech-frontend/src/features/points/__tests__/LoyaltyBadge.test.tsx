@@ -5,22 +5,22 @@ import { LoyaltyBadge } from '../LoyaltyBadge';
 describe('LoyaltyBadge', () => {
   it('renders BRONZE badge with correct text', () => {
     render(<LoyaltyBadge level="BRONZE" />);
-    expect(screen.getByText('BRONZE')).toBeInTheDocument();
+    expect(screen.getByText('Bronce')).toBeInTheDocument();
   });
 
   it('renders SILVER badge with correct text', () => {
     render(<LoyaltyBadge level="SILVER" />);
-    expect(screen.getByText('SILVER')).toBeInTheDocument();
+    expect(screen.getByText('Plata')).toBeInTheDocument();
   });
 
   it('renders GOLD badge with correct text', () => {
     render(<LoyaltyBadge level="GOLD" />);
-    expect(screen.getByText('GOLD')).toBeInTheDocument();
+    expect(screen.getByText('Oro')).toBeInTheDocument();
   });
 
   it('renders PLATINUM badge with correct text', () => {
     render(<LoyaltyBadge level="PLATINUM" />);
-    expect(screen.getByText('PLATINUM')).toBeInTheDocument();
+    expect(screen.getByText('Platino')).toBeInTheDocument();
   });
 
   it('has accessible aria-label', () => {
