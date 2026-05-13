@@ -188,7 +188,7 @@ export function AnalyticsPage() {
           <h1 className="text-display-xl text-on-dark mb-4">
             Analítica financiera
           </h1>
-          <p className="text-body-lg text-on-dark-mute max-w-xl">
+          <p className="text-body-lg text-on-dark-mute w-full max-w-[36rem]">
             Métricas en tiempo real sobre usuarios, billeteras, transacciones y patrones de fraude.
           </p>
         </div>

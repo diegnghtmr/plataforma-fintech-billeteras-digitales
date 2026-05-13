@@ -20,7 +20,7 @@ export function EmptyState({
       <div className="flex items-center justify-center w-16 h-16 rounded-full bg-surface-soft">
         <Icon size={28} className="text-stone" strokeWidth={1.5} />
       </div>
-      <div className="flex flex-col gap-1.5 max-w-xs">
+      <div className="flex flex-col gap-1.5 w-full max-w-[20rem]">
         <p className="text-heading-sm text-ink">{title}</p>
         {description && (
           <p className="text-body-sm text-stone">{description}</p>

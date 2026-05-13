@@ -30,7 +30,7 @@ export function FraudPage() {
           <h1 className="text-display-xl text-on-dark mb-4">
             Eventos sospechosos
           </h1>
-          <p className="text-body-lg text-on-dark-mute max-w-xl">
+          <p className="text-body-lg text-on-dark-mute w-full max-w-[36rem]">
             Monitoreo de fraude en tiempo real. Filtrá por usuario o nivel de severidad.
           </p>
 

@@ -22,7 +22,7 @@ export function PointsPage() {
           <h1 className="text-display-xl text-on-dark mb-4">
             Tus puntos
           </h1>
-          <p className="text-body-lg text-on-dark-mute max-w-xl">
+          <p className="text-body-lg text-on-dark-mute w-full max-w-[36rem]">
             Consulta tu nivel de fidelización, puntos acumulados y posición en el ranking global.
           </p>
         </div>
