@@ -67,6 +67,15 @@ classDiagram
         +frequentRoutes(min) Iterable~Route~
         +findCycles() List~List~String~~
     }
+    class `Conjunto~T~` {
+        <<O(1) avg add/contains>>
+        +add(v) void
+        +contains(v) boolean
+        +size() int
+        +isEmpty() boolean
+        +iterator() Iterator~T~
+        +of(values)$ Conjunto~T~
+    }
     class Usuario {
         -id String
         -name String

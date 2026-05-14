@@ -14,7 +14,7 @@ La restricción académica central es que **ningún componente de dominio o apli
 |--------|-------------|
 | `domain/model` | Entidades puras: Usuario, Billetera, Transaccion, OperacionProgramada, Notificacion, FraudEvent |
 | `domain/service` | PuntosCalculator, LoyaltyLevelCalculator, FraudDetector |
-| `domain/structures` | TablaHash, MiLista, Pila, ColaSimple, ColaPrioridad, ArbolBST, GrafoTransferencias |
+| `domain/structures` | TablaHash, MiLista, Pila, ColaSimple, ColaPrioridad, ArbolBST, GrafoTransferencias, Conjunto |
 | `domain/port` | Interfaces de repositorio y generadores de ID (output ports) |
 | `application/usecase` | 25+ casos de uso: operaciones de billetera, analytics, CRUD usuario, programadas |
 | `application/service` | NotificationEmitter |
@@ -177,6 +177,34 @@ La restricción académica central es que **ningún componente de dominio o apli
 
 ---
 
+### 3.8 Conjunto\<T\>
+
+**Definición**: Conjunto (set) genérico sin orden garantizado, implementado como thin wrapper sobre `TablaHash<T, Boolean>`. Cierra el último hueco de pureza hexagonal: reemplaza `java.util.HashSet` y `Set.of(...)` en capas `domain/` y `application/`.
+
+**Operaciones y Big-O**:
+
+| Operación | Caso promedio | Caso peor |
+|-----------|--------------|-----------|
+| `add(v)` | O(1) | O(n) |
+| `contains(v)` | O(1) | O(n) |
+| `size()` | O(1) | O(1) |
+| `isEmpty()` | O(1) | O(1) |
+| `iterator()` / `Conjunto.of(...)` | O(capacity + size) | O(capacity + size) |
+
+**Justificación**: La restricción académica prohíbe `HashSet` / `Set.of()` en dominio y aplicación. `Conjunto<T>` provee la misma semántica de pertenencia (O(1) amortizado) usando exclusivamente la estructura propia `TablaHash` como almacenamiento interno. El factory estático `Conjunto.of(T... values)` reemplaza idiomáticamente `Set.of(...)` en constantes estáticas de use cases.
+
+**Rutas de código reales**:
+- `domain/structures/Conjunto.java` — implementación
+- `domain/service/FraudDetector.checkUnusualHours()` — `Conjunto<Integer> hoursSeen` reemplaza `HashSet<Integer>`
+- `application/usecase/GetTopUsersUseCase.OUTGOING_TYPES` — `Conjunto.of(RECHARGE, WITHDRAWAL, ...)` reemplaza `Set.of(...)`
+- `application/usecase/GetAnalyticsSummaryUseCase.MOVED_AMOUNT_TYPES` — ídem
+
+**Alternativas consideradas**: `java.util.HashSet` (prohibida). `TablaHash<T, Boolean>` directo (más verboso en sitios de uso; wrapper justificado). `MiLista<T>` con búsqueda lineal (O(n) en `contains` — inaceptable para membership tests repetidos).
+
+**Trade-off**: Mismo comportamiento de colisiones que `TablaHash`. Aceptable en el contexto académico donde los conjuntos son pequeños (≤24 horas del día en `FraudDetector`, ≤4 tipos de transacción en los use cases de analytics).
+
+---
+
 ## 4. Tabla de Cumplimiento PDF (§4 Requisitos)
 
 | Requisito PDF | Estado | Referencia de implementación |
@@ -188,6 +216,7 @@ La restricción académica central es que **ningún componente de dominio o apli
 | ColaPrioridad propia | ✅ CUMPLE | `domain/structures/ColaPrioridad.java` |
 | ArbolBST propio | ✅ CUMPLE | `domain/structures/ArbolBST.java` |
 | GrafoTransferencias | ✅ CUMPLE | `domain/structures/GrafoTransferencias.java` |
+| Conjunto propio para membership tests | ✅ CUMPLE | `domain/structures/Conjunto.java` |
 | Detección de ciclos en grafo | ✅ CUMPLE | `GrafoTransferencias.findCycles()` |
 | Puntos: floor(amount/100)*rate | ✅ CUMPLE | `PuntosCalculator.compute()` |
 | Niveles: ≤500 BRONZE, 501-1000 SILVER, 1001-5000 GOLD, >5000 PLATINUM | ✅ CUMPLE | `LoyaltyLevelCalculator.from()` |
@@ -214,7 +243,7 @@ La restricción académica central es que **ningún componente de dominio o apli
 | Movimientos por tipo | ✅ CUMPLE | `GetMovementByTypeUseCase` |
 | Total movido en rango | ✅ CUMPLE | `GetTotalMovedInRangeUseCase` |
 | Frontend React con TanStack Query | ✅ CUMPLE | `plataforma-fintech-frontend/src/` |
-| Tests ≥420 backend | ✅ CUMPLE | **479 tests** (./mvnw test — 2026-05-14) |
+| Tests ≥420 backend | ✅ CUMPLE | **493 tests** (./mvnw test — 2026-05-14) |
 | Tests ≥200 frontend | ✅ CUMPLE | **309 tests** (vitest run — 2026-05-14) |
 
 ### ADRs referenciados
@@ -253,3 +282,4 @@ Los benchmarks de estructuras propias se ejecutan on-demand con `./mvnw test -Ds
 | `ArrayList` de JDK en boundary de infraestructura | Necesario para interop con Spring y serialización JSON (responses REST devuelven `List<T>`) | Aceptado por ADR-9.1: boundary translation. Las estructuras internas siguen siendo propias. |
 | DFS iterativo en `GrafoTransferencias.findCycles()`: usa `TablaHash<String,Integer>` para coloreo, `Pila<String>` para back-stack y `MiLista<String>` para reconstrucción de ciclos. Boundary helper retorna `ArrayList` para serialización REST. | Integración total de estructuras propias en el algoritmo DFS | `ArrayList` solo en el boundary de infraestructura para serialización JSON |
 | FE: 206 tests cubriendo hooks, páginas y componentes compartidos | Cobertura completa de hooks, páginas y componentes | — |
+| `Conjunto<T>` propio en lugar de `HashSet` / `Set.of()` en domain+application | Pureza hexagonal estricta: ninguna JDK collection en lógica interna | Overhead mínimo de indirección; justificado porque los conjuntos son pequeños en este contexto académico |

@@ -8,11 +8,11 @@ import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.TransactionRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.structures.ArbolBST;
+import com.proyectofinal.fintech.domain.structures.Conjunto;
 import com.proyectofinal.fintech.domain.structures.TablaHash;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Returns top N users ranked by number of OUTGOING SUCCESSFUL transactions.
@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public class GetTopUsersUseCase {
 
-    private static final Set<TransactionType> OUTGOING_TYPES = Set.of(
+    private static final Conjunto<TransactionType> OUTGOING_TYPES = Conjunto.of(
             TransactionType.RECHARGE,
             TransactionType.WITHDRAWAL,
             TransactionType.INTERNAL_TRANSFER,

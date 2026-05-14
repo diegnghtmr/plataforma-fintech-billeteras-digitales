@@ -7,13 +7,13 @@ import com.proyectofinal.fintech.domain.model.Transaccion;
 import com.proyectofinal.fintech.domain.model.TransactionStatus;
 import com.proyectofinal.fintech.domain.port.FraudEventIdGenerator;
 import com.proyectofinal.fintech.domain.port.TransactionRepository;
+import com.proyectofinal.fintech.domain.structures.Conjunto;
 import com.proyectofinal.fintech.domain.structures.MiLista;
 import com.proyectofinal.fintech.domain.structures.TablaHash;
 
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Optional;
 
 /**
@@ -279,13 +279,11 @@ public class FraudDetector {
      * Rule F — OFF_HOURS.
      * Guard: history < 20 → skip.
      * Builds set of seen hours from history. If current tx hour not in set → emits LOW.
-     * HashSet<Integer> is a tolerated JDK boundary use — no own Conjunto exists.
      */
     private Optional<FraudEvent> checkUnusualHours(Transaccion tx, MiLista<Transaccion> hist) {
         if (hist.size() < OFF_HOURS_MIN_HISTORY) return Optional.empty();
 
-        // HashSet<Integer> is a tolerated JDK boundary use — no own Conjunto exists
-        HashSet<Integer> hoursSeen = new HashSet<>();
+        Conjunto<Integer> hoursSeen = new Conjunto<>();
         for (Transaccion t : hist) {
             hoursSeen.add(t.getTimestamp().atZone(java.time.ZoneOffset.UTC).getHour());
         }

@@ -3,8 +3,7 @@ package com.proyectofinal.fintech.application.usecase;
 import com.proyectofinal.fintech.application.result.AnalyticsSummaryView;
 import com.proyectofinal.fintech.domain.model.*;
 import com.proyectofinal.fintech.domain.port.*;
-
-import java.util.Set;
+import com.proyectofinal.fintech.domain.structures.Conjunto;
 
 /**
  * Aggregates analytics summary counts.
@@ -12,7 +11,7 @@ import java.util.Set;
  */
 public class GetAnalyticsSummaryUseCase {
 
-    private static final Set<TransactionType> MOVED_AMOUNT_TYPES = Set.of(
+    private static final Conjunto<TransactionType> MOVED_AMOUNT_TYPES = Conjunto.of(
             TransactionType.RECHARGE,
             TransactionType.WITHDRAWAL,
             TransactionType.INTERNAL_TRANSFER,
