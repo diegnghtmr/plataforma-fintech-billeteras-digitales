@@ -1,17 +1,16 @@
 import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest';
 import { drawNode, drawLink, drawDotBackground } from '../cyclesGraphCanvas';
-import type { CycleGraphNode } from '../cyclesGraphUtils';
+import { GRAPH_TOKENS, type CycleGraphNode } from '../cyclesGraphUtils';
 
 type MockCtx = {
   beginPath: MockInstance;
   arc: MockInstance;
+  arcTo: MockInstance;
   fill: MockInstance;
   stroke: MockInstance;
   moveTo: MockInstance;
   lineTo: MockInstance;
   closePath: MockInstance;
-  quadraticCurveTo: MockInstance;
-  fillRect: MockInstance;
   setLineDash: MockInstance;
   save: MockInstance;
   restore: MockInstance;
@@ -19,10 +18,10 @@ type MockCtx = {
   rotate: MockInstance;
   fillText: MockInstance;
   measureText: MockInstance;
-  createRadialGradient: MockInstance;
-  fillStyle: string | CanvasGradient | CanvasPattern;
-  strokeStyle: string | CanvasGradient | CanvasPattern;
+  fillStyle: string;
+  strokeStyle: string;
   lineWidth: number;
+  lineCap: CanvasLineCap;
   font: string;
   textAlign: CanvasTextAlign;
   textBaseline: CanvasTextBaseline;
@@ -33,13 +32,12 @@ function createMockCtx(): MockCtx {
   return {
     beginPath: vi.fn(),
     arc: vi.fn(),
+    arcTo: vi.fn(),
     fill: vi.fn(),
     stroke: vi.fn(),
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     closePath: vi.fn(),
-    quadraticCurveTo: vi.fn(),
-    fillRect: vi.fn(),
     setLineDash: vi.fn(),
     save: vi.fn(),
     restore: vi.fn(),
@@ -47,10 +45,10 @@ function createMockCtx(): MockCtx {
     rotate: vi.fn(),
     fillText: vi.fn(),
     measureText: vi.fn(() => ({ width: 20 })),
-    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
     fillStyle: '',
     strokeStyle: '',
     lineWidth: 0,
+    lineCap: 'butt' as CanvasLineCap,
     font: '',
     textAlign: 'center' as CanvasTextAlign,
     textBaseline: 'middle' as CanvasTextBaseline,
@@ -59,14 +57,13 @@ function createMockCtx(): MockCtx {
 }
 
 const baseNode: CycleGraphNode = {
-  id: 'A',
+  id: 'USR001',
   cycleIndex: 0,
   positionInCycle: 1,
   x: 50,
   y: 50,
 };
 
-// Helper to get canvas from MockCtx
 function asCtx(ctx: MockCtx): CanvasRenderingContext2D {
   return ctx as unknown as CanvasRenderingContext2D;
 }
@@ -78,40 +75,43 @@ describe('drawNode', () => {
     ctx = createMockCtx();
   });
 
-  it('calls arc at least 4 times (3 halos + main circle)', () => {
-    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
-    expect(ctx.arc.mock.calls.length).toBeGreaterThanOrEqual(4);
+  it('draws a flat disc — exactly one arc + fill + stroke', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'default', opacity: 1 });
+    // Distill aesthetic: a single disc, not a halo+rim+ring stack
+    expect(ctx.arc.mock.calls.length).toBe(1);
+    expect(ctx.fill).toHaveBeenCalled();
+    expect(ctx.stroke).toHaveBeenCalled();
   });
 
-  it('calls createRadialGradient at least 2 times (node fill + badge)', () => {
-    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
-    expect(ctx.createRadialGradient.mock.calls.length).toBeGreaterThanOrEqual(2);
+  it('renders the node id as plain text via fillText (no pill background)', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'default', opacity: 1 });
+    expect(ctx.fillText).toHaveBeenCalled();
+    const fillTextCall = ctx.fillText.mock.calls[0] as [string, number, number];
+    expect(fillTextCall[0]).toBe('USR001');
+    // No rounded-rect pill ⇒ no arcTo calls
+    expect(ctx.arcTo).not.toHaveBeenCalled();
   });
 
-  it('sets globalAlpha to the opacity value', () => {
-    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 0.5, isSelected: false, isHovered: false, showBadge: false });
-    // globalAlpha will have been set during the draw call
-    // We check it was called with 0.5 at some point (save/restore pattern)
+  it('does not call measureText — label is not pill-sized any more', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'default', opacity: 1 });
+    expect(ctx.measureText).not.toHaveBeenCalled();
+  });
+
+  it('still draws exactly one disc when selected (no halo)', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'selected', opacity: 1 });
+    // Selected differs by colour + radius, not by extra arcs
+    expect(ctx.arc.mock.calls.length).toBe(1);
+  });
+
+  it('uses the distill label font for the text', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'default', opacity: 1 });
+    expect(ctx.font).toBe(GRAPH_TOKENS.node.label.font);
+  });
+
+  it('wraps drawing with save/restore so opacity stays local', () => {
+    drawNode(asCtx(ctx), baseNode, { state: 'dimmed', opacity: 0.2 });
     expect(ctx.save).toHaveBeenCalled();
     expect(ctx.restore).toHaveBeenCalled();
-  });
-
-  it('uses larger halo radii when isSelected is true', () => {
-    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: true, isHovered: false, showBadge: false });
-    // isSelected → halos at r+4, r+8, r+12
-    // arc is called with radius as 3rd arg; find halo calls
-    const arcCalls = ctx.arc.mock.calls as unknown[][];
-    // r+12 = 26 should appear
-    const hasLargeHalo = arcCalls.some((call) => call[2] === 14 + 12);
-    expect(hasLargeHalo).toBe(true);
-  });
-
-  it('uses smaller halo radii when not selected', () => {
-    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: false });
-    const arcCalls = ctx.arc.mock.calls as unknown[][];
-    // r+8 = 22 should appear (default halo max)
-    const hasNormalHalo = arcCalls.some((call) => call[2] === 14 + 8);
-    expect(hasNormalHalo).toBe(true);
   });
 });
 
@@ -122,32 +122,21 @@ describe('drawLink', () => {
     ctx = createMockCtx();
   });
 
-  it('calls setLineDash with [6, 4]', () => {
+  it('draws a solid (no-dash) line', () => {
     drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
       opacity: 1,
-      width: 2.5,
-      color: '#494fdf',
-      dashPattern: [6, 4],
+      width: 1,
+      color: GRAPH_TOKENS.edge.strokeDefault,
     });
-    expect(ctx.setLineDash).toHaveBeenCalledWith([6, 4]);
-  });
-
-  it('calls stroke to draw the line', () => {
-    drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
-      opacity: 1,
-      width: 2.5,
-      color: '#494fdf',
-      dashPattern: [6, 4],
-    });
+    expect(ctx.setLineDash).toHaveBeenCalledWith([]);
     expect(ctx.stroke).toHaveBeenCalled();
   });
 
   it('draws an arrowhead with moveTo + lineTo + closePath + fill', () => {
     drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
       opacity: 1,
-      width: 2.5,
-      color: '#494fdf',
-      dashPattern: [6, 4],
+      width: 1,
+      color: GRAPH_TOKENS.edge.strokeDefault,
     });
     expect(ctx.moveTo).toHaveBeenCalled();
     expect(ctx.lineTo.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -157,7 +146,7 @@ describe('drawLink', () => {
 });
 
 describe('drawDotBackground', () => {
-  it('calls arc exactly (width/dotSpacing) × (height/dotSpacing) times', () => {
+  it('is a no-op in the current visual language (flat background)', () => {
     const ctx = createMockCtx();
     drawDotBackground(asCtx(ctx), 480, 320, {
       width: 480,
@@ -165,7 +154,7 @@ describe('drawDotBackground', () => {
       dotSpacing: 20,
       dotColor: 'rgba(73,79,223,0.06)',
     });
-    // 24 × 16 = 384 dots
-    expect(ctx.arc.mock.calls.length).toBe(384);
+    expect(ctx.arc.mock.calls.length).toBe(0);
+    expect(ctx.fill).not.toHaveBeenCalled();
   });
 });

@@ -2,6 +2,7 @@ package com.proyectofinal.fintech.application.usecase;
 
 import com.proyectofinal.fintech.application.service.NotificationEmitter;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
+import com.proyectofinal.fintech.domain.exception.DomainException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.*;
@@ -57,6 +58,15 @@ public class WithdrawWalletUseCase {
     }
 
     public Transaccion execute(String userId, String walletId, double amount, String description) {
+        try {
+            return executeInternal(userId, walletId, amount, description);
+        } catch (DomainException e) {
+            notificationEmitter.emitOperationRejected(userId, e.getMessage());
+            throw e;
+        }
+    }
+
+    private Transaccion executeInternal(String userId, String walletId, double amount, String description) {
         if (amount <= 0) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
                     "Amount must be greater than zero; got: " + amount);

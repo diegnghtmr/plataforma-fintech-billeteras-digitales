@@ -13,7 +13,7 @@ export function Field({ label, error, success, children }: FieldProps) {
     <div className="flex flex-col gap-1.5">
       <label className="text-charcoal text-body-sm font-semibold tracking-wide">{label}</label>
       <div
-        className={`rounded-md overflow-hidden ${
+        className={`rounded-md ${
           error
             ? 'border-l-4 border-l-accent-danger'
             : success

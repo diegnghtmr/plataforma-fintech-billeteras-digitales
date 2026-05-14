@@ -186,4 +186,12 @@ class WithdrawWalletUseCaseTest {
 
         verify(fraudRepository, times(1)).save(fakeEvent);
     }
+
+    // T3.3.3 — domain validation failure → OPERATION_REJECTED notification emitted
+    @Test
+    void execute_validationFailure_emitsOperationRejected() {
+        assertThatThrownBy(() -> useCase.execute("USR001", "W001", -1.0, null))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(notificationEmitter, times(1)).emitOperationRejected(eq("USR001"), any());
+    }
 }

@@ -14,22 +14,22 @@ describe('useAppStore — transactionFilters slice', () => {
     expect(filters).toEqual({});
   });
 
-  it('setTransactionFilters merges partial type filter', () => {
+  it('setTransactionFilters sets type', () => {
     useAppStore.getState().setTransactionFilters({ type: 'RECHARGE' });
     expect(useAppStore.getState().transactionFilters.type).toBe('RECHARGE');
   });
 
-  it('setTransactionFilters merges partial status filter', () => {
+  it('setTransactionFilters sets status', () => {
     useAppStore.getState().setTransactionFilters({ status: 'SUCCESSFUL' });
     expect(useAppStore.getState().transactionFilters.status).toBe('SUCCESSFUL');
   });
 
-  it('setTransactionFilters merges without removing existing keys', () => {
-    useAppStore.getState().setTransactionFilters({ type: 'RECHARGE' });
+  it('setTransactionFilters replaces previous state (omitted keys are cleared)', () => {
+    useAppStore.getState().setTransactionFilters({ type: 'RECHARGE', status: 'SUCCESSFUL' });
     useAppStore.getState().setTransactionFilters({ status: 'SUCCESSFUL' });
 
     const filters = useAppStore.getState().transactionFilters;
-    expect(filters.type).toBe('RECHARGE');
+    expect(filters.type).toBeUndefined();
     expect(filters.status).toBe('SUCCESSFUL');
   });
 

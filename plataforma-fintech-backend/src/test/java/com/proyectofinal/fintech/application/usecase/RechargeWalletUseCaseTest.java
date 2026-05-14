@@ -198,6 +198,14 @@ class RechargeWalletUseCaseTest {
         verify(notificationEmitter, times(1)).emitLevelUp("USR001", LoyaltyLevel.SILVER);
     }
 
+    // T3.3.3 — domain validation failure → OPERATION_REJECTED notification emitted
+    @Test
+    void execute_validationFailure_emitsOperationRejected() {
+        assertThatThrownBy(() -> useCase.execute("USR001", "W001", -1.0, null))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(notificationEmitter, times(1)).emitOperationRejected(eq("USR001"), any());
+    }
+
     @Test
     void execute_withDescription_propagatesDescription() {
         Usuario user = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);

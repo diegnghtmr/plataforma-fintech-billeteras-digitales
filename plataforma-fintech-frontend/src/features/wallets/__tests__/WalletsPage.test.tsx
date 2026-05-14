@@ -68,7 +68,7 @@ describe('WalletsPage', () => {
     render(<WalletsPage />, { wrapper: makeWrapper() });
 
     expect(screen.getByText('W001')).toBeInTheDocument();
-    expect(screen.getByText('Ahorros')).toBeInTheDocument();
+    expect(screen.getAllByText('Ahorros').length).toBeGreaterThan(0);
   });
 
   it('renders "Seleccionar" button per wallet card', () => {

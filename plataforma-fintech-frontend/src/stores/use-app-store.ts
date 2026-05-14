@@ -11,21 +11,14 @@ export interface TransactionFilters {
 
 interface AppState {
   transactionFilters: TransactionFilters;
-  setTransactionFilters: (partial: Partial<TransactionFilters>) => void;
+  setTransactionFilters: (next: TransactionFilters) => void;
   resetFilters: () => void;
 }
 
-/**
- * Application-level store for UI state (filters, selections).
- * Server state (data) MUST NOT be duplicated here — lives in TanStack Query.
- */
 export const useAppStore = create<AppState>((set) => ({
   transactionFilters: {},
 
-  setTransactionFilters: (partial) =>
-    set((state) => ({
-      transactionFilters: { ...state.transactionFilters, ...partial },
-    })),
+  setTransactionFilters: (next) => set({ transactionFilters: next }),
 
   resetFilters: () => set({ transactionFilters: {} }),
 }));

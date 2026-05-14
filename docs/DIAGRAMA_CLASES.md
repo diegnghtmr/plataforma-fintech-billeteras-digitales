@@ -385,7 +385,7 @@ classDiagram
     class NotificationEmitter {
         +emitLowBalance(userId, code) void
         +emitLevelUp(userId, level) void
-        +emitScheduledNear(userId, opId) void
+        +emitScheduledNear(userId, opId, scheduledAt) void
         +emitScheduledExecuted(userId, opId) void
         +emitScheduledRejected(userId, opId, reason) void
     }

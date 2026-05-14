@@ -50,13 +50,28 @@ public class ExecuteDueScheduledOperationsUseCase {
 
     /**
      * Executes all due PENDING scheduled operations.
+     * BEFORE the due-now dispatch loop, emits SCHEDULED_REMINDER for operations
+     * that are within 1 hour (but not yet due) and not yet reminded (idempotent).
      *
      * @return ExecutionReport with counts and ids of executed/failed operations
      */
     public ExecutionReport execute() {
         Instant now = Instant.now(clock);
+        Instant horizon = now.plusSeconds(3600L); // 1 hour ahead
         List<String> executedIds = new ArrayList<>();
         List<String> failedIds = new ArrayList<>();
+
+        // SCHEDULED_REMINDER loop: emit for upcoming PENDING ops within 1h window
+        for (OperacionProgramada op : scheduledRepo.findPendingInPriorityOrder()) {
+            Instant scheduledAt = op.getScheduledAt();
+            if (scheduledAt.isAfter(now) && scheduledAt.isBefore(horizon)
+                    && op.getStatus() == com.proyectofinal.fintech.domain.model.ScheduledOperationStatus.PENDING) {
+                if (!scheduledRepo.isReminded(op.getId())) {
+                    notificationEmitter.emitScheduledNear(op.getSourceUserId(), op.getId(), op.getScheduledAt());
+                    scheduledRepo.markReminded(op.getId());
+                }
+            }
+        }
 
         for (OperacionProgramada op : scheduledRepo.findPendingInPriorityOrder()) {
             // Skip future operations

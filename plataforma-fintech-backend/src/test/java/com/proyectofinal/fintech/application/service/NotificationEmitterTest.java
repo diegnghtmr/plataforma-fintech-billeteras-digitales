@@ -72,17 +72,19 @@ class NotificationEmitterTest {
     }
 
     @Test
-    void emitScheduledNear_savesTransactionInfo() {
-        emitter.emitScheduledNear("USR001", "OP-001");
+    void emitScheduledNear_savesScheduledReminderInfo() {
+        Instant scheduledAt = Instant.parse("2026-06-01T10:00:00Z");
+        emitter.emitScheduledNear("USR001", "OP-001", scheduledAt);
 
         ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificationRepository).save(captor.capture());
 
         Notificacion n = captor.getValue();
         assertThat(n.getUserId()).isEqualTo("USR001");
-        assertThat(n.getType()).isEqualTo(NotificationType.TRANSACTION);
+        assertThat(n.getType()).isEqualTo(NotificationType.SCHEDULED_REMINDER); // REQ-3.4
         assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.INFO);
         assertThat(n.getTitle()).contains("próxima");
+        assertThat(n.getMessage()).contains("2026-06-01T10:00:00Z"); // scheduledAt in message
     }
 
     @Test
@@ -99,14 +101,14 @@ class NotificationEmitterTest {
     }
 
     @Test
-    void emitScheduledRejected_savesTransactionWarning() {
+    void emitScheduledRejected_savesOperationRejectedWarning() {
         emitter.emitScheduledRejected("USR001", "OP-001", "fondos insuficientes");
 
         ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
         verify(notificationRepository).save(captor.capture());
 
         Notificacion n = captor.getValue();
-        assertThat(n.getType()).isEqualTo(NotificationType.TRANSACTION);
+        assertThat(n.getType()).isEqualTo(NotificationType.OPERATION_REJECTED); // REQ-3.5
         assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.WARNING);
         assertThat(n.getTitle()).contains("rechazada");
     }

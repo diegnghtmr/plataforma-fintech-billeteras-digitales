@@ -11,12 +11,23 @@ describe('AmountInput', () => {
     expect(input.parentElement?.querySelector('span')).toBeInTheDocument();
   });
 
-  it('renders as type="number" with inputMode="decimal"', () => {
+  it('renders as type="text" with inputMode="decimal"', () => {
     render(<AmountInput placeholder="0.00" />);
     const input = screen.getByPlaceholderText('0.00');
-    expect(input).toHaveAttribute('type', 'number');
+    expect(input).toHaveAttribute('type', 'text');
     expect(input).toHaveAttribute('inputMode', 'decimal');
   });
+
+  it.each(['a', 'f', 'F', 'z', '$', '@', ' '])(
+    'blocks the non-numeric "%s" key',
+    (key) => {
+      render(<AmountInput placeholder="0.00" />);
+      const input = screen.getByPlaceholderText('0.00');
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      input.dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+    }
+  );
 
   it.each(['e', 'E', '+', '-', ','])(
     'blocks the "%s" key',

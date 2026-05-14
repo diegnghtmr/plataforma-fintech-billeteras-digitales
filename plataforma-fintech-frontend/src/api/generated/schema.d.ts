@@ -687,7 +687,7 @@ export interface components {
         /** @enum {string} */
         ScheduledOperationStatus: "PENDING" | "EXECUTED" | "CANCELLED" | "FAILED";
         /** @enum {string} */
-        NotificationType: "LOW_BALANCE" | "TRANSACTION" | "FRAUD_ALERT" | "POINTS_LEVEL" | "SYSTEM";
+        NotificationType: "LOW_BALANCE" | "TRANSACTION" | "FRAUD_ALERT" | "POINTS_LEVEL" | "SYSTEM" | "SCHEDULED_REMINDER" | "OPERATION_REJECTED" | "BENEFIT_REDEEMED";
         /** @enum {string} */
         NotificationSeverity: "INFO" | "WARNING" | "CRITICAL";
         /** @enum {string} */

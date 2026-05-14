@@ -4,8 +4,71 @@ import {
   deriveNeighbors,
   resolveNodeOpacity,
   resolveLinkOpacity,
+  resolveNodeState,
+  resolveNodeStyle,
+  GRAPH_TOKENS,
   type CycleGraphLink,
 } from '../cyclesGraphUtils';
+
+// ---------------------------------------------------------------------------
+// resolveNodeState — maps ego-centric selection to a visual state
+// ---------------------------------------------------------------------------
+
+describe('resolveNodeState', () => {
+  const neighbors = new Set(['A', 'C']);
+
+  it('returns "default" when there is no selection', () => {
+    expect(resolveNodeState('B', null, new Set())).toBe('default');
+  });
+
+  it('returns "selected" for the selected node', () => {
+    expect(resolveNodeState('B', 'B', neighbors)).toBe('selected');
+  });
+
+  it('returns "neighbor" for a neighbor of the selected node', () => {
+    expect(resolveNodeState('A', 'B', neighbors)).toBe('neighbor');
+    expect(resolveNodeState('C', 'B', neighbors)).toBe('neighbor');
+  });
+
+  it('returns "dimmed" for an unrelated node when selection is active', () => {
+    expect(resolveNodeState('X', 'B', neighbors)).toBe('dimmed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resolveNodeStyle — distill aesthetic tokens
+// ---------------------------------------------------------------------------
+
+describe('resolveNodeStyle', () => {
+  it('returns the pale grey resting palette for "default"', () => {
+    const s = resolveNodeStyle('default');
+    expect(s.fill).toBe(GRAPH_TOKENS.node.fillDefault);
+    expect(s.stroke).toBe(GRAPH_TOKENS.node.stroke);
+    expect(s.radius).toBe(GRAPH_TOKENS.node.radius);
+  });
+
+  it('returns the cobalt accent palette for "selected"', () => {
+    const s = resolveNodeStyle('selected');
+    expect(s.fill).toBe(GRAPH_TOKENS.node.fillSelected);
+    expect(s.stroke).toBe(GRAPH_TOKENS.node.strokeSelected);
+    expect(s.radius).toBe(GRAPH_TOKENS.node.radiusSelected);
+  });
+
+  it('returns a pale cobalt tint for "neighbor"', () => {
+    const s = resolveNodeStyle('neighbor');
+    expect(s.fill).toBe(GRAPH_TOKENS.node.fillNeighbor);
+    expect(s.stroke).toBe(GRAPH_TOKENS.node.stroke);
+  });
+
+  it('returns a very pale grey for "dimmed"', () => {
+    const s = resolveNodeStyle('dimmed');
+    expect(s.fill).toBe(GRAPH_TOKENS.node.fillDimmed);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildGraphData
+// ---------------------------------------------------------------------------
 
 describe('buildGraphData', () => {
   it('returns empty nodes and links for empty input', () => {
@@ -96,8 +159,8 @@ describe('resolveNodeOpacity', () => {
     expect(resolveNodeOpacity('C', 'B', neighbors)).toBe(1.0);
   });
 
-  it('returns 0.25 for an unrelated node', () => {
-    expect(resolveNodeOpacity('X', 'B', new Set(['A']))).toBe(0.25);
+  it('returns 0.2 for an unrelated node (distill-restraint fade)', () => {
+    expect(resolveNodeOpacity('X', 'B', new Set(['A']))).toBe(0.2);
   });
 });
 
@@ -124,7 +187,10 @@ describe('resolveLinkOpacity', () => {
     expect(resolveLinkOpacity('X', 'C', 'B', neighbors)).toBe(1.0);
   });
 
-  it('returns 0.18 when both endpoints are unrelated', () => {
-    expect(resolveLinkOpacity('X', 'Y', 'B', new Set(['A']))).toBe(0.18);
+  it('returns the dimmed token (0.2) when both endpoints are unrelated', () => {
+    expect(resolveLinkOpacity('X', 'Y', 'B', new Set(['A']))).toBe(
+      GRAPH_TOKENS.edge.opacityDimmed,
+    );
+    expect(resolveLinkOpacity('X', 'Y', 'B', new Set(['A']))).toBe(0.2);
   });
 });

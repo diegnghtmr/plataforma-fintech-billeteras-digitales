@@ -10,7 +10,7 @@ describe('createScheduledOperationSchema', () => {
     sourceUserId: 'USR001',
     sourceWalletId: 'W001',
     amount: 100,
-    scheduledAt: '2027-01-01T00:00',
+    scheduledAt: '2027-01-01',
   };
 
   it('valid RECHARGE passes', () => {

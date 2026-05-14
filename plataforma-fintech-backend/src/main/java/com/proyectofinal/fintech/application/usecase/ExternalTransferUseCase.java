@@ -3,6 +3,7 @@ package com.proyectofinal.fintech.application.usecase;
 import com.proyectofinal.fintech.application.result.ExternalTransferResult;
 import com.proyectofinal.fintech.application.service.NotificationEmitter;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
+import com.proyectofinal.fintech.domain.exception.DomainException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.*;
@@ -65,6 +66,17 @@ public class ExternalTransferUseCase {
     public ExternalTransferResult execute(String sourceUserId, String sourceWalletId,
                                            String targetUserId, String targetWalletId,
                                            double amount, String description) {
+        try {
+            return executeInternal(sourceUserId, sourceWalletId, targetUserId, targetWalletId, amount, description);
+        } catch (DomainException e) {
+            notificationEmitter.emitOperationRejected(sourceUserId, e.getMessage());
+            throw e;
+        }
+    }
+
+    private ExternalTransferResult executeInternal(String sourceUserId, String sourceWalletId,
+                                                    String targetUserId, String targetWalletId,
+                                                    double amount, String description) {
         if (sourceUserId.equals(targetUserId)) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
                     "Source and target users must be different");

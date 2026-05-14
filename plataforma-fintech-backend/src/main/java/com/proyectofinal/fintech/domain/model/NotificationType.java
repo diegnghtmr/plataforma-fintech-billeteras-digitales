@@ -5,5 +5,9 @@ public enum NotificationType {
     TRANSACTION,
     FRAUD_ALERT,
     POINTS_LEVEL,
-    SYSTEM
+    SYSTEM,
+    SCHEDULED_REMINDER,
+    OPERATION_REJECTED,
+    /** REQ-3.6: enum-only slot — reserved for future benefit-redemption flow (not yet implemented). */
+    BENEFIT_REDEEMED
 }

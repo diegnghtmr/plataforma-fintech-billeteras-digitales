@@ -22,7 +22,7 @@ import {
   useMovementByTypeQuery,
   useTotalMovedQuery,
 } from './hooks';
-import { labelOperationType, labelWalletType } from '../../shared/i18n/enum-labels';
+import { labelOperationType, labelWalletType, labelFraudSeverity } from '../../shared/i18n/enum-labels';
 import { CyclesGraph } from './CyclesGraph';
 import { TransferNetworkGraph } from './TransferNetworkGraph';
 
@@ -446,9 +446,9 @@ export function AnalyticsPage() {
                     {topTransactions.map((tx) => (
                       <tr key={tx.id} className="border-b border-hairline-light">
                         <td className="py-3 px-4 text-stone font-mono text-xs">{tx.id}</td>
-                        <td className="py-3 px-4 text-charcoal text-xs">{tx.type}</td>
+                        <td className="py-3 px-4 text-charcoal text-xs">{labelOperationType(tx.type)}</td>
                         <td className="py-3 px-4 text-right text-ink font-semibold">${tx.amount.toFixed(2)}</td>
-                        <td className="py-3 px-4 text-xs text-stone">{tx.riskLevel}</td>
+                        <td className="py-3 px-4 text-xs text-stone">{labelFraudSeverity(tx.riskLevel)}</td>
                       </tr>
                     ))}
                   </tbody>

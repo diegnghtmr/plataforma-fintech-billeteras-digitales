@@ -2,6 +2,7 @@ package com.proyectofinal.fintech.application.usecase;
 
 import com.proyectofinal.fintech.application.service.NotificationEmitter;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
+import com.proyectofinal.fintech.domain.exception.DomainException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.*;
@@ -58,6 +59,16 @@ public class InternalTransferUseCase {
 
     public Transaccion execute(String userId, String sourceWalletId, String targetWalletId,
                                 double amount, String description) {
+        try {
+            return executeInternal(userId, sourceWalletId, targetWalletId, amount, description);
+        } catch (DomainException e) {
+            notificationEmitter.emitOperationRejected(userId, e.getMessage());
+            throw e;
+        }
+    }
+
+    private Transaccion executeInternal(String userId, String sourceWalletId, String targetWalletId,
+                                         double amount, String description) {
         if (sourceWalletId.equals(targetWalletId)) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
                     "Source and target wallets must be different");

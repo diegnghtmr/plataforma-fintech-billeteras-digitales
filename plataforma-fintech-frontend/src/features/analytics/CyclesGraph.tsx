@@ -39,7 +39,7 @@ export function CyclesGraph({ cycles }: CyclesGraphProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="flex flex-col gap-6 w-full">
       {cycles.map((cycle, i) => (
         <CyclePanel key={i} cycle={cycle} cycleIndex={i} />
       ))}

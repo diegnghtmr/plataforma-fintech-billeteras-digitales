@@ -98,6 +98,18 @@ class InMemoryScheduledOperationRepositoryTest {
         assertEquals(0, pending.size());
     }
 
+    // T3.2.2 — markReminded + isReminded idempotency
+    @Test
+    void isReminded_initiallyFalse() {
+        assertFalse(repo.isReminded("SOP-000001"));
+    }
+
+    @Test
+    void markReminded_thenIsRemindedTrue() {
+        repo.markReminded("SOP-000001");
+        assertTrue(repo.isReminded("SOP-000001"));
+    }
+
     private <T> List<T> toList(Iterable<T> iterable) {
         List<T> list = new ArrayList<>();
         for (T item : iterable) {

@@ -83,9 +83,12 @@ export function ScheduledOperationsPage() {
   }));
 
   const onSubmit: SubmitHandler<CreateScheduledOperationFormData> = (data) => {
+    const now = new Date();
+    const scheduled = new Date(`${data.scheduledAt}T00:00:00`);
+    scheduled.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
     const payload = stripUndefined({
       ...data,
-      scheduledAt: new Date(data.scheduledAt).toISOString(),
+      scheduledAt: scheduled.toISOString(),
     }) as CreateScheduledOperationRequest;
     createMutation.mutate(payload, {
       onSuccess: () => {
@@ -232,7 +235,7 @@ export function ScheduledOperationsPage() {
                 <label htmlFor="scheduledAt" className={labelCls}>Fecha programada</label>
                 <input
                   id="scheduledAt"
-                  type="datetime-local"
+                  type="date"
                   {...register('scheduledAt')}
                   className={inputCls}
                 />
@@ -293,7 +296,7 @@ export function ScheduledOperationsPage() {
                       <td className="py-3 px-4 text-charcoal">{labelOperationStatus(op.status)}</td>
                       <td className="py-3 px-4 font-semibold">{op.amount.toFixed(2)}</td>
                       <td className="py-3 px-4 text-xs text-stone">
-                        {new Date(op.scheduledAt).toLocaleString()}
+                        {new Date(op.scheduledAt).toLocaleDateString()}
                       </td>
                       <td className="py-3 px-4">
                         <button

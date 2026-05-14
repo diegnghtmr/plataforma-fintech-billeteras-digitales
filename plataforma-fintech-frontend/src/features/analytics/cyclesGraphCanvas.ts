@@ -1,5 +1,12 @@
 import type { NodeObject } from 'react-force-graph-2d';
-import type { CycleGraphNode, DrawNodeOpts, DrawLinkOpts, DrawBackgroundOpts } from './cyclesGraphUtils';
+import {
+  resolveNodeStyle,
+  GRAPH_TOKENS,
+  type CycleGraphNode,
+  type DrawNodeOpts,
+  type DrawLinkOpts,
+  type DrawBackgroundOpts,
+} from './cyclesGraphUtils';
 
 // ---------------------------------------------------------------------------
 // Private helpers
@@ -14,7 +21,9 @@ function resolveCoord(x: string | NodeObject | number | undefined): { x: number;
 }
 
 // ---------------------------------------------------------------------------
-// drawNode
+// drawNode — distill.pub-style: pale grey disc, thin dark stroke, plain text
+// label below (no pill background). Selected = cobalt fill; neighbor = pale
+// cobalt tint. The accent appears only on the focused ego.
 // ---------------------------------------------------------------------------
 
 export function drawNode(
@@ -22,75 +31,37 @@ export function drawNode(
   node: CycleGraphNode,
   opts: DrawNodeOpts,
 ): void {
-  const { radius, opacity, isSelected, isHovered, showBadge } = opts;
+  const { state, opacity } = opts;
+  const style = resolveNodeStyle(state);
   const nx = node.x ?? 0;
   const ny = node.y ?? 0;
 
   ctx.save();
   ctx.globalAlpha = opacity;
 
-  // Halo radii: expanded when selected or hovered
-  const haloActive = isSelected || isHovered;
-  const haloOffsets = haloActive ? [4, 8, 12] : [2, 4, 8];
-  const haloAlpha = haloActive ? 0.14 : 0.08;
-
-  for (const offset of haloOffsets) {
-    ctx.beginPath();
-    ctx.arc(nx, ny, radius + offset, 0, 2 * Math.PI);
-    ctx.strokeStyle = `rgba(73,79,223,${haloAlpha})`;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-  }
-
-  // Node fill — radial gradient white → #f4f4f4
-  const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, radius);
-  grad.addColorStop(0, '#ffffff');
-  grad.addColorStop(1, '#f4f4f4');
-
+  // Main disc — flat fill, thin dark stroke
   ctx.beginPath();
-  ctx.arc(nx, ny, radius, 0, 2 * Math.PI);
-  ctx.fillStyle = grad;
+  ctx.arc(nx, ny, style.radius, 0, 2 * Math.PI);
+  ctx.fillStyle = style.fill;
   ctx.fill();
-
-  // 2px cobalt border
-  ctx.strokeStyle = '#494fdf';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = style.stroke;
+  ctx.lineWidth = style.strokeWidth;
   ctx.stroke();
 
-  // Position badge
-  if (showBadge) {
-    const bx = nx + radius * 0.7;
-    const by = ny - radius * 0.7;
-    const br = 11; // 22px diameter
-
-    const badgeGrad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
-    badgeGrad.addColorStop(0, '#4f55f1');
-    badgeGrad.addColorStop(0.6, '#494fdf');
-    badgeGrad.addColorStop(1, '#3a40c4');
-
-    ctx.beginPath();
-    ctx.arc(bx, by, br, 0, 2 * Math.PI);
-    ctx.fillStyle = badgeGrad;
-    ctx.fill();
-
-    // White border
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Badge number
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 9px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(node.positionInCycle), bx, by);
-  }
+  // Label — plain text below the node (no pill, just glyphs on canvas)
+  ctx.font = GRAPH_TOKENS.node.label.font;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'top';
+  const labelY = ny + style.radius + 6;
+  ctx.fillStyle = style.labelColor;
+  ctx.fillText(node.id, nx, labelY);
 
   ctx.restore();
 }
 
 // ---------------------------------------------------------------------------
-// drawArrowhead
+// drawArrowhead — small filled triangle. Distill keeps these tiny so the
+// direction reads without the arrow becoming visual furniture.
 // ---------------------------------------------------------------------------
 
 function drawArrowhead(
@@ -115,7 +86,7 @@ function drawArrowhead(
 }
 
 // ---------------------------------------------------------------------------
-// drawLink
+// drawLink — 1px solid line, small arrowhead, dark grey by default
 // ---------------------------------------------------------------------------
 
 export function drawLink(
@@ -124,7 +95,7 @@ export function drawLink(
   target: { x: number; y: number } | string | NodeObject,
   opts: DrawLinkOpts,
 ): void {
-  const { opacity, width, color, dashPattern } = opts;
+  const { opacity, width, color } = opts;
 
   const srcPos =
     typeof source === 'object' && 'x' in source && typeof (source as { x: unknown }).x === 'number'
@@ -136,55 +107,47 @@ export function drawLink(
       ? (target as { x: number; y: number })
       : resolveCoord(target as string | NodeObject | number | undefined);
 
+  // Trim by ~radius so the line meets the node edge, not its center.
+  const dx = tgtPos.x - srcPos.x;
+  const dy = tgtPos.y - srcPos.y;
+  const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+  const trim = GRAPH_TOKENS.node.radius + 2;
+  const ux = dx / dist;
+  const uy = dy / dist;
+  const x1 = srcPos.x + ux * trim;
+  const y1 = srcPos.y + uy * trim;
+  const x2 = tgtPos.x - ux * trim;
+  const y2 = tgtPos.y - uy * trim;
+
   ctx.save();
   ctx.globalAlpha = opacity;
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
-  ctx.setLineDash(dashPattern);
+  ctx.lineCap = 'butt'; // distill uses crisp ends, not rounded caps
+  ctx.setLineDash([]);
 
   ctx.beginPath();
-  ctx.moveTo(srcPos.x, srcPos.y);
-  ctx.lineTo(tgtPos.x, tgtPos.y);
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
   ctx.stroke();
 
-  // Arrow at the target end
-  const dx = tgtPos.x - srcPos.x;
-  const dy = tgtPos.y - srcPos.y;
+  // Small arrowhead at the trimmed target end
   const angle = Math.atan2(dy, dx);
-  const arrowSize = 8;
-
-  ctx.setLineDash([]);
-  drawArrowhead(ctx, tgtPos.x, tgtPos.y, angle, arrowSize, color);
+  drawArrowhead(ctx, x2, y2, angle, GRAPH_TOKENS.edge.arrowSize, color);
 
   ctx.restore();
 }
 
 // ---------------------------------------------------------------------------
-// drawDotBackground
+// drawDotBackground — kept for API compatibility; renders nothing.
+// Distill backgrounds are flat — the card provides the surface.
 // ---------------------------------------------------------------------------
 
 export function drawDotBackground(
-  ctx: CanvasRenderingContext2D,
+  _ctx: CanvasRenderingContext2D,
   _canvasWidth: number,
   _canvasHeight: number,
-  opts: DrawBackgroundOpts,
+  _opts: DrawBackgroundOpts,
 ): void {
-  const { width, height, dotSpacing, dotColor } = opts;
-  const cols = Math.floor(width / dotSpacing);
-  const rows = Math.floor(height / dotSpacing);
-
-  ctx.save();
-  ctx.fillStyle = dotColor;
-
-  for (let col = 0; col < cols; col++) {
-    for (let row = 0; row < rows; row++) {
-      const x = col * dotSpacing + dotSpacing / 2;
-      const y = row * dotSpacing + dotSpacing / 2;
-      ctx.beginPath();
-      ctx.arc(x, y, 1.2, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  }
-
-  ctx.restore();
+  // Intentionally a no-op — flat background is part of the distill aesthetic.
 }

@@ -1137,7 +1137,7 @@ components:
       enum: [PENDING, EXECUTED, CANCELLED, FAILED]
     NotificationType:
       type: string
-      enum: [LOW_BALANCE, TRANSACTION, FRAUD_ALERT, POINTS_LEVEL, SYSTEM]
+      enum: [LOW_BALANCE, TRANSACTION, FRAUD_ALERT, POINTS_LEVEL, SYSTEM, SCHEDULED_REMINDER, OPERATION_REJECTED, BENEFIT_REDEEMED]
     NotificationSeverity:
       type: string
       enum: [INFO, WARNING, CRITICAL]

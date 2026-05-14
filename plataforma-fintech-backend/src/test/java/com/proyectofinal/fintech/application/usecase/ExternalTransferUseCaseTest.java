@@ -231,4 +231,13 @@ class ExternalTransferUseCaseTest {
                 .satisfies(ex -> assertThat(((NotFoundException) ex).code())
                         .isEqualTo(ErrorCode.USER_NOT_FOUND));
     }
+
+    // T3.3.3 — domain validation failure → OPERATION_REJECTED notification emitted
+    @Test
+    void execute_validationFailure_emitsOperationRejected() {
+        // same source and target user → VALIDATION_ERROR
+        assertThatThrownBy(() -> useCase.execute("USR_A", "W_A", "USR_A", "W_B", 100.0, null))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(notificationEmitter, times(1)).emitOperationRejected(eq("USR_A"), any());
+    }
 }

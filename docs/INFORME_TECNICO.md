@@ -193,10 +193,18 @@ La restricción académica central es que **ningún componente de dominio o apli
 | Niveles: ≤500 BRONZE, 501-1000 SILVER, 1001-5000 GOLD, >5000 PLATINUM | ✅ CUMPLE | `LoyaltyLevelCalculator.from()` |
 | FraudDetector velocidad ≥3 tx en 60s | ✅ CUMPLE | `FraudDetector.detect()` Rule B |
 | FraudDetector monto >10000 | ✅ CUMPLE | `FraudDetector.detect()` Rule A |
+| **Regla C — REPEATED_DESTINATION (destino repetido)** | ✅ CUMPLE | `FraudDetector.checkRepeatedDestination()` — severity HIGH, ventana 5 min, umbral ≥3 |
+| **Regla D — WALLET_FRAGMENTATION (fragmentación de monto)** | ✅ CUMPLE | `FraudDetector.checkAmountFragmentation()` — severity HIGH, ventana 2 min, ≥3 billeteras y >5000 |
+| **Regla E — FREQUENCY_BURST (pico de frecuencia)** | ✅ CUMPLE | `FraudDetector.checkFrequencySpike()` — severity MEDIUM, ≥10 historial, last1h ≥ 5× promedio |
+| **Regla F — OFF_HOURS (horario inusual)** | ✅ CUMPLE | `FraudDetector.checkUnusualHours()` — severity LOW, ≥20 historial, hora no vista antes |
+| **Benchmarks comparativos estructuras propias vs JDK** | ✅ CUMPLE | `StructureBenchmarkTest.java` + `docs/BENCHMARK_REPORT.md` — 4 pares × 3 tamaños = 24 mediciones (ver §8) |
 | Notificaciones LOW_BALANCE, POINTS_LEVEL, TRANSACTION | ✅ CUMPLE | `NotificationEmitter` |
+| **Notificación SCHEDULED_REMINDER** | ✅ CUMPLE | `NotificationEmitter.emitScheduledNear(userId, opId, scheduledAt)` — emitida por `ExecuteDueScheduledOperationsUseCase` (idempotente via `remindersSent`; incluye fecha programada en el cuerpo del mensaje) |
+| **Notificación OPERATION_REJECTED** | ✅ CUMPLE | `NotificationEmitter.emitOperationRejected()` + `emitScheduledRejected()` — emitida en rutas de fallo de los 4 use cases de transferencia |
+| **Notificación BENEFIT_REDEEMED** | ✅ CUMPLE (enum-only) | `NotificationType.BENEFIT_REDEEMED` — slot de compatibilidad futura; no tiene emitter ni use case (ADR-7.2, REQ-3.6) |
 | ColaPrioridad para operaciones programadas | ✅ CUMPLE | `InMemoryScheduledOperationRepository.findPendingInPriorityOrder()` |
 | Arquitectura Hexagonal | ✅ CUMPLE | Capas domain / application / infrastructure separadas |
-| ZERO Spring/Jakarta en domain y application | ✅ CUMPLE | Verificado con `grep` en CI |
+| ZERO Spring/Jakarta en domain y application | ✅ CUMPLE | Verificado con `rg` en CI |
 | CRUD usuario completo (create, get, update, delete) | ✅ CUMPLE | `UserController`, `UpdateUserUseCase`, `DeleteUserUseCase` |
 | Cascade delete al eliminar usuario | ✅ CUMPLE | `DeleteUserUseCase.execute()` — orden: tx → wallet → sched → notif → fraud → user |
 | Top transacciones por valor (ArbolBST) | ✅ CUMPLE | `GetTopTransactionsUseCase` |
@@ -206,8 +214,17 @@ La restricción académica central es que **ningún componente de dominio o apli
 | Movimientos por tipo | ✅ CUMPLE | `GetMovementByTypeUseCase` |
 | Total movido en rango | ✅ CUMPLE | `GetTotalMovedInRangeUseCase` |
 | Frontend React con TanStack Query | ✅ CUMPLE | `plataforma-fintech-frontend/src/` |
-| Tests ≥420 backend | ✅ CUMPLE | 447 tests (./mvnw test) |
-| Tests ≥200 frontend | ✅ CUMPLE | 206 tests (npm test -- --run) |
+| Tests ≥420 backend | ✅ CUMPLE | **479 tests** (./mvnw test — 2026-05-14) |
+| Tests ≥200 frontend | ✅ CUMPLE | **309 tests** (vitest run — 2026-05-14) |
+
+### ADRs referenciados
+
+- **ADR-7.1** — First-match-wins preservado en `FraudDetector.detect()` (`Optional<FraudEvent>` — cadena A→B→C→D→E→F).
+- **ADR-7.2** — `FraudType` como clase de constantes String (no enum) para no romper el wire format de `FraudEvent.type`.
+
+### §8 — Nota sobre Benchmarks
+
+Los benchmarks de estructuras propias se ejecutan on-demand con `./mvnw test -Dsurefire.excludedGroups= -Dgroups=benchmark`. Están excluidos del run normal para no penalizar el tiempo de CI. Los resultados detallados (4 pares, 3 tamaños, mediana de 5 iteraciones con warmup de 3) se encuentran en `docs/BENCHMARK_REPORT.md`.
 
 ---
 

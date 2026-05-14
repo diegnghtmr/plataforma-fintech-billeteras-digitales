@@ -25,6 +25,23 @@ public class InMemoryScheduledOperationRepository implements ScheduledOperationR
 
     private final TablaHash<String, OperacionProgramada> byId = new TablaHash<>();
 
+    /**
+     * Idempotency tracker for SCHEDULED_REMINDER notifications.
+     * Lives on the infrastructure adapter (not the domain port) to keep domain clean.
+     * Design §3.2: remindersSent on InMemoryScheduledOperationRepository.
+     */
+    private final TablaHash<String, Boolean> remindersSent = new TablaHash<>();
+
+    /** Marks an operation as already reminded (idempotent). */
+    public void markReminded(String opId) {
+        remindersSent.put(opId, Boolean.TRUE);
+    }
+
+    /** Returns true if this operation has already been reminded. */
+    public boolean isReminded(String opId) {
+        return remindersSent.get(opId).orElse(Boolean.FALSE);
+    }
+
     @Override
     public void save(OperacionProgramada op) {
         byId.put(op.getId(), op);

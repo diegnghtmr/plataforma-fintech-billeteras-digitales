@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Minus, ArrowRightLeft, Globe } from 'lucide-react';
 import { InlineLink } from '../../shared/components/InlineLink';
 import { useSelectionStore } from '../../stores/use-selection-store';
+import { useUserQuery } from '../users/hooks';
 import {
   useRechargeMutation,
   useWithdrawMutation,
@@ -35,6 +36,7 @@ const TAB_CONFIG: Record<Tab, { label: string; Icon: typeof Plus }> = {
 export function OperationsPage() {
   const selectedUserId = useSelectionStore((s) => s.selectedUserId);
   const selectedWalletId = useSelectionStore((s) => s.selectedWalletId);
+  const { data: selectedUser } = useUserQuery(selectedUserId ?? undefined);
   const [activeTab, setActiveTab] = useState<Tab>('recharge');
 
   const rechargeMutation = useRechargeMutation();
@@ -109,7 +111,11 @@ export function OperationsPage() {
           Operaciones
         </h1>
         <p className="text-body-md text-charcoal">
-          Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
+          Usuario:{' '}
+          <span className="text-ink font-semibold">
+            {selectedUser?.name ?? selectedUserId}
+          </span>{' '}
+          <span className="text-stone font-mono text-xs">({selectedUserId})</span>
         </p>
       </div>
 

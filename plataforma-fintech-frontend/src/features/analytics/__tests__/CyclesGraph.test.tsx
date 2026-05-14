@@ -76,14 +76,15 @@ describe('CyclesGraph', () => {
     expect(detailsEl!.textContent).toContain('A → B → C → A');
   });
 
-  it('uses grid layout wrapper when multiple cycles', () => {
+  it('uses stacked layout wrapper when multiple cycles', () => {
     const cycles = [
       ['USR_A', 'USR_B'],
       ['USR_C', 'USR_D'],
     ];
     const { container } = render(<CyclesGraph cycles={cycles} />);
-    const grid = container.querySelector('.grid');
-    expect(grid).toBeTruthy();
+    const wrapper = container.querySelector('.flex.flex-col');
+    expect(wrapper).toBeTruthy();
+    expect(wrapper!.children.length).toBe(2);
   });
 
   it('renders correct node count data attribute on canvas', () => {

@@ -54,12 +54,20 @@ export function InternalTransferForm({
     description: `${w.code} · ${w.type}`,
   }));
 
+  const noWallets = !walletsLoading && wallets.length === 0;
+
   const errorMessage = error
     ? (ERROR_MESSAGES[error.code] ?? error.message)
     : null;
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
+      {noWallets && (
+        <p className="text-stone text-sm" role="status">
+          Este usuario no tiene billeteras. Creá al menos dos en la sección de Billeteras
+          para poder transferir.
+        </p>
+      )}
       <Field label="Billetera origen" error={errors.sourceWalletId?.message}>
         <Controller
           control={control}

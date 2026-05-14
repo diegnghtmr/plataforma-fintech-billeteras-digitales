@@ -3,6 +3,7 @@ import { TransactionFilters } from './TransactionFilters';
 import { TransactionRow } from './TransactionRow';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { useAppStore } from '../../stores/use-app-store';
+import { useUserQuery } from '../users/hooks';
 import { EmptyState } from '../../shared/components/EmptyState';
 import { Skeleton } from '../../shared/components/Skeleton';
 import { pushToast } from '../../shared/components/Toast';
@@ -11,6 +12,7 @@ import type { TransactionType as StoreTransactionType, TransactionStatus as Stor
 
 export function TransactionsPage() {
   const selectedUserId = useSelectionStore((s) => s.selectedUserId);
+  const { data: selectedUser } = useUserQuery(selectedUserId ?? undefined);
 
   const transactionFilters = useAppStore((s) => s.transactionFilters);
   const setTransactionFilters = useAppStore((s) => s.setTransactionFilters);
@@ -76,7 +78,11 @@ export function TransactionsPage() {
           Historial y reversión
         </h1>
         <p className="text-body-md text-charcoal">
-          Usuario: <span className="text-ink font-semibold">{selectedUserId}</span>
+          Usuario:{' '}
+          <span className="text-ink font-semibold">
+            {selectedUser?.name ?? selectedUserId}
+          </span>{' '}
+          <span className="text-stone font-mono text-xs">({selectedUserId})</span>
         </p>
       </div>
 

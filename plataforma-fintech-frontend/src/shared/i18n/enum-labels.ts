@@ -23,6 +23,9 @@ export const NOTIFICATION_TYPE_LABEL = {
   FRAUD_ALERT: 'Alerta de fraude',
   POINTS_LEVEL: 'Nivel de puntos',
   SYSTEM: 'Sistema',
+  SCHEDULED_REMINDER: 'Recordatorio de operación',
+  OPERATION_REJECTED: 'Operación rechazada',
+  BENEFIT_REDEEMED: 'Beneficio canjeado',
 } as const;
 
 export const NOTIFICATION_SEVERITY_LABEL = {
@@ -36,6 +39,16 @@ export const FRAUD_SEVERITY_LABEL = {
   MEDIUM: 'Medio',
   HIGH: 'Alto',
   CRITICAL: 'Crítico',
+} as const;
+
+export const FRAUD_TYPE_LABEL = {
+  LARGE_TRANSACTION: 'Transacción grande',
+  HIGH_VELOCITY: 'Alta velocidad',
+  CYCLE_DETECTED: 'Ciclo detectado',
+  REPEATED_DESTINATION: 'Destino repetido',
+  WALLET_FRAGMENTATION: 'Fragmentación de monto',
+  FREQUENCY_BURST: 'Pico de frecuencia',
+  OFF_HOURS: 'Horario inusual',
 } as const;
 
 export const LOYALTY_LEVEL_LABEL = {
@@ -63,6 +76,10 @@ export function labelNotificationSeverity(value: string): string {
 
 export function labelFraudSeverity(value: string): string {
   return (FRAUD_SEVERITY_LABEL as Record<string, string>)[value] ?? value;
+}
+
+export function labelFraudType(value: string): string {
+  return (FRAUD_TYPE_LABEL as Record<string, string>)[value] ?? value;
 }
 
 export function labelLoyaltyLevel(value: string): string {

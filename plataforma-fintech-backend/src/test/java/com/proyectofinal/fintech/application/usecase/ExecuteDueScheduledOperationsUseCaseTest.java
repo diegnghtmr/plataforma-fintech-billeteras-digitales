@@ -141,4 +141,58 @@ class ExecuteDueScheduledOperationsUseCaseTest {
 
         verify(notificationEmitter).emitScheduledExecuted(eq("USR001"), eq("OP1"));
     }
+
+    // T3.2.3 — PENDING op scheduledAt now+45min → emitScheduledNear called once
+    @Test
+    void execute_scheduledWithin1Hour_pendingStatus_emitsReminderOnce() {
+        Instant soon = NOW.plusSeconds(45 * 60); // 45 min from now
+        OperacionProgramada op = makeOp("OP-R1", ScheduledOperationType.RECHARGE, soon);
+        // findPendingInPriorityOrder returns this op (pending, future)
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(scheduledRepo.isReminded("OP-R1")).thenReturn(false);
+
+        useCase.execute();
+
+        verify(notificationEmitter, times(1)).emitScheduledNear(eq("USR001"), eq("OP-R1"), eq(soon));
+        verify(scheduledRepo).markReminded("OP-R1");
+    }
+
+    // T3.2.4 — already reminded → emitScheduledNear NOT called again
+    @Test
+    void execute_alreadyReminded_doesNotEmitTwice() {
+        Instant soon = NOW.plusSeconds(30 * 60); // 30 min from now
+        OperacionProgramada op = makeOp("OP-R2", ScheduledOperationType.RECHARGE, soon);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(scheduledRepo.isReminded("OP-R2")).thenReturn(true); // already reminded
+
+        useCase.execute();
+
+        verify(notificationEmitter, never()).emitScheduledNear(any(), any(), any());
+    }
+
+    // T3.2.5 — scheduledAt now+90min → emitScheduledNear NOT called
+    @Test
+    void execute_scheduledBeyond1Hour_doesNotEmitReminder() {
+        Instant farFuture = NOW.plusSeconds(90 * 60); // 90 min from now
+        OperacionProgramada op = makeOp("OP-R3", ScheduledOperationType.RECHARGE, farFuture);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+
+        useCase.execute();
+
+        verify(notificationEmitter, never()).emitScheduledNear(any(), any(), any());
+    }
+
+    // T3.2.6 — status EXECUTED, scheduledAt now+30min → emitScheduledNear NOT called
+    @Test
+    void execute_alreadyExecuted_doesNotEmitReminder() {
+        Instant soon = NOW.plusSeconds(30 * 60);
+        OperacionProgramada op = new OperacionProgramada("OP-R4", ScheduledOperationType.RECHARGE,
+                ScheduledOperationStatus.EXECUTED,
+                "USR001", "W001", null, null, 100.0, soon, null);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+
+        useCase.execute();
+
+        verify(notificationEmitter, never()).emitScheduledNear(any(), any(), any());
+    }
 }

@@ -12,20 +12,31 @@ import {
   MarkerType,
 } from '@xyflow/react';
 import { Network } from 'lucide-react';
+import { GRAPH_TOKENS } from './cyclesGraphUtils';
 
 // ---------------------------------------------------------------------------
-// Constants
+// TransferNetworkGraph — distill.pub-inspired monochrome network
+//
+// Resting nodes are pale grey discs with a thin dark stroke. The user id
+// label sits below as plain text on the canvas — no pill, no colour-coded
+// identity per user. The only accent is brand cobalt on the single most
+// frequent route. Top 25% routes step up to a darker greyscale; everything
+// else stays at a quiet 1px charcoal line.
 // ---------------------------------------------------------------------------
 
-const COBALT = '#494fdf';
-const WARNING = '#ec7e00';
-const DANGER = '#e23b4a';
+const COBALT_TOP = GRAPH_TOKENS.edge.strokeTop; // top route — the one accent
+const TOP25_STROKE = GRAPH_TOKENS.edge.strokeTop25; // darker greyscale
+const DEFAULT_STROKE = GRAPH_TOKENS.edge.strokeDefault; // 1px charcoal
 
-const NODE_W = 96;
-const NODE_H = 80;
+// Container hugs the 38px disc so xyflow Handles attach at the disc edge —
+// otherwise edges enter/leave with long invisible stubs that read as "the
+// line passes through the node". Label overflows visually without growing
+// the layout bbox.
+const NODE_W = 40;
+const NODE_H = 40;
 
 // ---------------------------------------------------------------------------
-// Initials helper (shared pattern with CyclesGraph)
+// Initials helper
 // ---------------------------------------------------------------------------
 
 function extractInitials(userId: string): string {
@@ -37,17 +48,28 @@ function extractInitials(userId: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Edge color — top 25% = warning, top 1 route = danger
+// Edge style resolver — monochrome scale + ONE cobalt accent
 // ---------------------------------------------------------------------------
 
-function resolveEdgeColor(
+interface EdgeStyleSpec {
+  stroke: string;
+  width: number;
+  isTop: boolean;
+  isHighVolume: boolean;
+}
+
+function resolveEdgeStyle(
   transferCount: number,
   p75: number,
   maxCount: number,
-): string {
-  if (transferCount === maxCount) return DANGER;
-  if (transferCount >= p75) return WARNING;
-  return COBALT;
+): EdgeStyleSpec {
+  if (transferCount === maxCount) {
+    return { stroke: COBALT_TOP, width: GRAPH_TOKENS.edge.widthTop, isTop: true, isHighVolume: false };
+  }
+  if (transferCount >= p75) {
+    return { stroke: TOP25_STROKE, width: GRAPH_TOKENS.edge.widthTop25, isTop: false, isHighVolume: true };
+  }
+  return { stroke: DEFAULT_STROKE, width: GRAPH_TOKENS.edge.widthDefault, isTop: false, isHighVolume: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -71,7 +93,7 @@ function buildGraph(routes: RouteItem[]): { nodes: Node[]; edges: Edge[] } {
     userSet.add(r.targetUserId);
   }
 
-  // Determine edge color thresholds
+  // Determine edge style thresholds
   const counts = routes.map((r) => r.transferCount);
   const sorted = [...counts].sort((a, b) => a - b);
   const p75Index = Math.floor(sorted.length * 0.75);
@@ -80,7 +102,7 @@ function buildGraph(routes: RouteItem[]): { nodes: Node[]; edges: Edge[] } {
 
   // Build dagre graph
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: 'LR', nodesep: 60, ranksep: 100, marginx: 40, marginy: 40 });
+  g.setGraph({ rankdir: 'LR', nodesep: 90, ranksep: 160, marginx: 48, marginy: 48 });
   g.setDefaultEdgeLabel(() => ({}));
 
   for (const userId of userSet) {
@@ -105,32 +127,43 @@ function buildGraph(routes: RouteItem[]): { nodes: Node[]; edges: Edge[] } {
   }
 
   const edges: Edge[] = routes.map((r) => {
-    const count = r.transferCount;
-    const strokeWidth = 1.5 + Math.log(count + 1) * 1.2;
-    const color = resolveEdgeColor(count, p75, maxCount);
-    const isTop = count === maxCount;
-    const isHighVolume = !isTop && count >= p75;
-
+    const spec = resolveEdgeStyle(r.transferCount, p75, maxCount);
+    // Pick handles so a back-edge (target to the LEFT of source in the LR
+    // layout) exits from the source's LEFT handle, not its RIGHT — otherwise
+    // xyflow renders an unwanted stub before turning back.
+    const srcPos = g.node(r.sourceUserId);
+    const tgtPos = g.node(r.targetUserId);
+    const isBackEdge = tgtPos.x < srcPos.x;
+    const sourceHandle = isBackEdge ? 'src-l' : 'src-r';
+    const targetHandle = isBackEdge ? 'tgt-r' : 'tgt-l';
     return {
       id: `${r.sourceUserId}->${r.targetUserId}`,
       source: r.sourceUserId,
       target: r.targetUserId,
-      type: 'smoothstep',
-      animated: isTop,
-      label: `${count}`,
-      labelStyle: { fontSize: 10, fill: color, fontWeight: 700, fontFamily: 'var(--font-body)' },
-      labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9, rx: 4 },
+      sourceHandle,
+      targetHandle,
+      type: 'straight',
+      // No animated shimmer — the cobalt + thicker stroke is already the
+      // single accent; pulsing dashes would break the academic restraint.
+      animated: false,
+      label: `${r.transferCount}`,
+      labelStyle: {
+        fontSize: 10,
+        fill: spec.isTop ? COBALT_TOP : '#3a3d40',
+        fontWeight: 600,
+        fontFamily: 'Inter, system-ui, sans-serif',
+      },
+      labelBgStyle: { fill: '#ffffff', fillOpacity: 0.92, rx: 3 },
       style: {
-        stroke: color,
-        strokeWidth,
-        strokeDasharray: isTop ? '6 4' : undefined,
-        strokeOpacity: isTop || isHighVolume ? 1 : 0.6,
+        stroke: spec.stroke,
+        strokeWidth: spec.width,
+        strokeOpacity: spec.isTop || spec.isHighVolume ? 1 : 0.85,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color,
-        width: 18,
-        height: 18,
+        color: spec.stroke,
+        width: 11,
+        height: 11,
       },
     };
   });
@@ -139,7 +172,7 @@ function buildGraph(routes: RouteItem[]): { nodes: Node[]; edges: Edge[] } {
 }
 
 // ---------------------------------------------------------------------------
-// Custom network node
+// Custom network node — pale grey disc, plain text id below
 // ---------------------------------------------------------------------------
 
 interface NetworkNodeData extends Record<string, unknown> {
@@ -150,45 +183,57 @@ function NetworkNodeRenderer({ data }: { data: NetworkNodeData }) {
   const initials = extractInitials(data.userId);
 
   return (
-    <div className="flex flex-col items-center gap-2" style={{ width: NODE_W }}>
-      <Handle type="target" position={Position.Left} style={{ opacity: 0 }} />
-      <Handle type="source" position={Position.Right} style={{ opacity: 0 }} />
+    <div className="relative flex items-center justify-center" style={{ width: NODE_W, height: NODE_H }}>
+      {/* Four named handles — buildGraph picks which side to attach to per
+          edge based on the dagre-computed geometry, so back-edges (target to
+          the left of source) exit from the LEFT instead of stubbing right. */}
+      <Handle id="tgt-l" type="target" position={Position.Left} style={{ opacity: 0 }} />
+      <Handle id="src-r" type="source" position={Position.Right} style={{ opacity: 0 }} />
+      <Handle id="tgt-r" type="target" position={Position.Right} style={{ opacity: 0 }} />
+      <Handle id="src-l" type="source" position={Position.Left} style={{ opacity: 0 }} />
 
+      {/* Disc — pale grey fill, 1px dark stroke, charcoal initials inside */}
       <div
-        className="relative flex items-center justify-center rounded-full font-semibold text-ink select-none"
+        className="flex items-center justify-center rounded-full font-semibold select-none"
         style={{
-          width: 56,
-          height: 56,
-          fontSize: 15,
-          background: 'linear-gradient(160deg, #ffffff 0%, #f4f4f4 100%)',
-          border: '2px solid #494fdf',
-          boxShadow:
-            'inset 0 0 0 2px rgba(73,79,223,0.08), 0 0 0 6px rgba(73,79,223,0.08), 0 8px 24px -6px rgba(73,79,223,0.4)',
-          transition: 'all 200ms cubic-bezier(0.22, 1, 0.36, 1)',
+          width: 38,
+          height: 38,
+          fontSize: 11,
+          background: GRAPH_TOKENS.node.fillDefault,
+          color: '#3a3d40',
+          border: `1px solid ${GRAPH_TOKENS.node.stroke}`,
+          fontFamily: 'Inter, system-ui, sans-serif',
+          letterSpacing: '0.02em',
+          transition: 'transform 180ms ease, background 180ms ease, border-color 180ms ease',
         }}
         onMouseEnter={(e) => {
-          (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.06)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            'inset 0 0 0 2px rgba(73,79,223,0.12), 0 0 0 8px rgba(73,79,223,0.14), 0 12px 32px -6px rgba(73,79,223,0.55)';
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.transform = 'scale(1.04)';
+          el.style.borderColor = '#2c2c2c';
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            'inset 0 0 0 2px rgba(73,79,223,0.08), 0 0 0 6px rgba(73,79,223,0.08), 0 8px 24px -6px rgba(73,79,223,0.4)';
+          const el = e.currentTarget as HTMLDivElement;
+          el.style.transform = 'scale(1)';
+          el.style.borderColor = GRAPH_TOKENS.node.stroke;
         }}
       >
         {initials}
       </div>
 
+      {/* Plain text id — overflows visually outside the layout bbox so the
+          handles stay tight to the disc. Absolutely positioned to keep the
+          flex container width = disc width = NODE_W. */}
       <span
-        className="text-stone text-center leading-tight"
+        className="select-none absolute top-full left-1/2 -translate-x-1/2 mt-1"
         style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: 11,
-          fontWeight: 400,
-          letterSpacing: '0.04em',
-          maxWidth: NODE_W,
-          wordBreak: 'break-all',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          fontSize: 10,
+          fontWeight: 500,
+          color: '#3a3d40',
+          letterSpacing: '0.02em',
+          whiteSpace: 'nowrap',
+          textAlign: 'center',
+          pointerEvents: 'none',
         }}
       >
         {data.userId}
@@ -208,10 +253,10 @@ const networkNodeTypes: NodeTypes = {
 
 function EdgeLegend() {
   return (
-    <div className="flex flex-wrap items-center gap-2 px-6 pb-5 pt-1">
-      <LegendChip color={DANGER} label="Ruta más frecuente" />
-      <LegendChip color={WARNING} label="Top 25%" />
-      <LegendChip color={COBALT} label="Ruta normal" faded />
+    <div className="flex flex-wrap items-center gap-2 px-6 pb-4 pt-1">
+      <LegendChip color={COBALT_TOP} label="Ruta más frecuente" />
+      <LegendChip color={TOP25_STROKE} label="Top 25%" />
+      <LegendChip color={DEFAULT_STROKE} label="Ruta normal" faded />
     </div>
   );
 }
@@ -227,12 +272,12 @@ function LegendChip({
 }) {
   return (
     <div
-      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
+      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full"
       style={{
         background: '#f4f4f4',
         border: '1px solid #e2e2e7',
-        fontSize: 12,
-        color: '#505a63',
+        fontSize: 11,
+        color: '#3a3d40',
         opacity: faded ? 0.85 : 1,
       }}
     >
@@ -281,48 +326,51 @@ export function TransferNetworkGraph({ routes }: TransferNetworkGraphProps) {
   const { nodes, edges } = buildGraph(routes);
 
   return (
-    <div
-      className="rounded-[20px] border border-hairline-light overflow-hidden flex flex-col"
+    <figure
+      className="rounded-[16px] border border-hairline-light overflow-hidden flex flex-col m-0"
       style={{
         minHeight: 440,
-        background: 'linear-gradient(135deg, #ffffff 0%, #f4f4f4 100%)',
+        background: '#ffffff',
         transition: 'box-shadow 200ms ease',
       }}
       onMouseEnter={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow =
-          '0 8px 24px -12px rgba(73,79,223,0.18)';
+          '0 4px 12px -8px rgba(0,0,0,0.06)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
       }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-hairline-light">
+      {/* Header — calmer cobalt pill, neutral chip */}
+      <div className="flex items-center gap-3 px-6 pt-4 pb-3 border-b border-hairline-light">
         <span
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-white font-semibold"
+          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold"
           style={{
-            fontSize: 12,
-            background: 'linear-gradient(135deg, #4f55f1 0%, #494fdf 60%, #3a40c4 100%)',
+            fontSize: 11,
+            background: '#494fdf',
+            color: '#ffffff',
+            letterSpacing: '0.02em',
           }}
         >
-          <Network size={12} strokeWidth={2.5} />
+          <Network size={11} strokeWidth={2.5} />
           Red de transferencias
         </span>
 
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-full text-ink font-medium"
+          className="inline-flex items-center px-2 py-0.5 rounded-full font-medium"
           style={{
-            fontSize: 12,
+            fontSize: 11,
             background: '#f4f4f4',
             border: '1px solid #e2e2e7',
+            color: '#3a3d40',
           }}
         >
           {nodes.length} usuarios · {edges.length} rutas
         </span>
       </div>
 
-      {/* Graph area */}
-      <div className="flex-1" style={{ minHeight: 360 }}>
+      {/* Graph area — explicit height required by ReactFlow */}
+      <div style={{ height: 400, width: '100%', background: '#ffffff' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -343,9 +391,9 @@ export function TransferNetworkGraph({ routes }: TransferNetworkGraphProps) {
         >
           <Background
             variant={BackgroundVariant.Dots}
-            gap={20}
-            size={1.2}
-            color="rgba(73,79,223,0.06)"
+            gap={24}
+            size={1}
+            color="rgba(0,0,0,0.04)"
           />
           <Controls
             position="bottom-right"
@@ -354,7 +402,7 @@ export function TransferNetworkGraph({ routes }: TransferNetworkGraphProps) {
         </ReactFlow>
       </div>
 
-      {/* Legend — horizontal pill row outside graph area */}
+      {/* Legend */}
       <EdgeLegend />
 
       {/* Accessibility fallback */}
@@ -368,6 +416,6 @@ export function TransferNetworkGraph({ routes }: TransferNetworkGraphProps) {
           ))}
         </ul>
       </details>
-    </div>
+    </figure>
   );
 }
