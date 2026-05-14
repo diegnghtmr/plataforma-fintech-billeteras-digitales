@@ -2,22 +2,32 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CyclesGraph } from '../CyclesGraph';
 
-// Mock @xyflow/react — requires canvas/ResizeObserver not available in jsdom
-vi.mock('@xyflow/react', () => ({
-  ReactFlow: ({ nodes }: { nodes: { data: { userId?: string; label?: string } }[] }) => (
-    <div data-testid="react-flow">
-      {nodes.map((n) => {
-        const text = n.data.userId ?? n.data.label ?? '';
-        return <span key={text}>{text}</span>;
-      })}
-    </div>
+// Mock react-force-graph-2d — requires canvas/WebGL not available in jsdom
+vi.mock('react-force-graph-2d', () => ({
+  default: ({
+    graphData,
+    onNodeClick,
+    onBackgroundClick,
+  }: {
+    graphData: { nodes: { id?: string | number; cycleIndex?: number }[]; links: unknown[] };
+    onNodeClick?: (node: { id?: string | number }) => void;
+    onBackgroundClick?: () => void;
+  }) => (
+    <canvas
+      data-testid="force-graph-2d"
+      data-node-count={graphData.nodes.length}
+      data-link-count={graphData.links.length}
+      data-nodes={JSON.stringify(graphData.nodes.map((n) => n.id))}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.dataset.nodeId) {
+          onNodeClick?.({ id: target.dataset.nodeId });
+        } else {
+          onBackgroundClick?.();
+        }
+      }}
+    />
   ),
-  Background: () => null,
-  BackgroundVariant: { Dots: 'dots', Lines: 'lines', Cross: 'cross' },
-  Controls: () => null,
-  Handle: () => null,
-  Position: { Top: 'top', Bottom: 'bottom', Left: 'left', Right: 'right' },
-  MarkerType: { ArrowClosed: 'arrowclosed' },
 }));
 
 describe('CyclesGraph', () => {
@@ -26,52 +36,62 @@ describe('CyclesGraph', () => {
     expect(screen.getByText(/sin ciclos detectados/i)).toBeInTheDocument();
   });
 
-  it('renders cycle panels for each cycle', () => {
+  it('renders zero canvas elements for empty cycles', () => {
+    const { container } = render(<CyclesGraph cycles={[]} />);
+    expect(container.querySelectorAll('canvas').length).toBe(0);
+  });
+
+  it('renders panel headers for each cycle', () => {
     const cycles = [
       ['USR_A', 'USR_B', 'USR_C'],
       ['USR_D', 'USR_E'],
     ];
     render(<CyclesGraph cycles={cycles} />);
-
     expect(screen.getByText(/ciclo #1/i)).toBeInTheDocument();
-    expect(screen.getByText(/3 usuarios/i)).toBeInTheDocument();
     expect(screen.getByText(/ciclo #2/i)).toBeInTheDocument();
+  });
+
+  it('renders correct user count chips', () => {
+    const cycles = [
+      ['USR_A', 'USR_B', 'USR_C'],
+      ['USR_D', 'USR_E'],
+    ];
+    render(<CyclesGraph cycles={cycles} />);
+    expect(screen.getByText(/3 usuarios/i)).toBeInTheDocument();
     expect(screen.getByText(/2 usuarios/i)).toBeInTheDocument();
-  });
-
-  it('renders nodes for each userId in a cycle', () => {
-    const cycles = [['USR_A', 'USR_B', 'USR_C']];
-    render(<CyclesGraph cycles={cycles} />);
-
-    expect(screen.getByText('USR_A')).toBeInTheDocument();
-    expect(screen.getByText('USR_B')).toBeInTheDocument();
-    expect(screen.getByText('USR_C')).toBeInTheDocument();
-  });
-
-  it('renders accessibility fallback text', () => {
-    const cycles = [['USR_A', 'USR_B']];
-    render(<CyclesGraph cycles={cycles} />);
-
-    const details = document.querySelector('details');
-    expect(details).toBeTruthy();
   });
 
   it('renders singular "usuario" for single-node cycle', () => {
     const cycles = [['USR_A']];
     render(<CyclesGraph cycles={cycles} />);
-
-    expect(screen.getByText(/ciclo #1/i)).toBeInTheDocument();
     expect(screen.getByText(/1 usuario/i)).toBeInTheDocument();
   });
 
-  it('uses grid layout when there are multiple cycles', () => {
+  it('renders sr-only details with cycle text for each cycle', () => {
+    const cycles = [['A', 'B', 'C']];
+    render(<CyclesGraph cycles={cycles} />);
+
+    const detailsEl = document.querySelector('details');
+    expect(detailsEl).toBeTruthy();
+    expect(detailsEl!.textContent).toContain('A → B → C → A');
+  });
+
+  it('uses grid layout wrapper when multiple cycles', () => {
     const cycles = [
       ['USR_A', 'USR_B'],
       ['USR_C', 'USR_D'],
     ];
     const { container } = render(<CyclesGraph cycles={cycles} />);
-    // Grid wrapper exists
     const grid = container.querySelector('.grid');
     expect(grid).toBeTruthy();
+  });
+
+  it('renders correct node count data attribute on canvas', () => {
+    const cycles = [['A', 'B', 'C']];
+    render(<CyclesGraph cycles={cycles} />);
+    const canvas = document.querySelector('[data-testid="force-graph-2d"]');
+    expect(canvas).toBeTruthy();
+    expect(canvas!.getAttribute('data-node-count')).toBe('3');
+    expect(canvas!.getAttribute('data-link-count')).toBe('3');
   });
 });
