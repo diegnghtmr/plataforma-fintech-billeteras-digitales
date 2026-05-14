@@ -79,4 +79,22 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
                 .andExpect(jsonPath("$.message").value(not(emptyString())));
     }
+
+    @Test
+    void illegalArgumentException_returns400WithValidationErrorCode() throws Exception {
+        mockMvc.perform(get("/test-errors/illegal-argument"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value(not(emptyString())));
+    }
+
+    @Test
+    void dateTimeParseException_returns400WithValidationErrorCode() throws Exception {
+        mockMvc.perform(get("/test-errors/date-parse"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value(not(emptyString())));
+    }
 }

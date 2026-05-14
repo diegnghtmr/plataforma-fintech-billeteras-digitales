@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Instant;
+
 /**
  * Test-only controller — lives in src/test/java.
  * Used exclusively by GlobalExceptionHandlerTest via @WebMvcTest.
@@ -32,6 +34,12 @@ public class TestErrorTriggerController {
             case "business" -> throw new BusinessRuleException(
                     ErrorCode.INSUFFICIENT_FUNDS, "Saldo insuficiente");
             case "internal" -> throw new RuntimeException("Error interno inesperado");
+            case "illegal-argument" -> throw new IllegalArgumentException(
+                    "No enum constant TransactionType.NOT_REAL");
+            case "date-parse" -> {
+                Instant.parse("not-a-date");
+                yield "unreachable";
+            }
             default -> "ok";
         };
     }

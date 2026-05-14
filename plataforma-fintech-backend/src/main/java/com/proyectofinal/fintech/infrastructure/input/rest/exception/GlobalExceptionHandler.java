@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 /**
@@ -78,6 +79,26 @@ public class GlobalExceptionHandler {
                 .body(new ApiErrorDto(
                         ex.code().name(),
                         ex.getMessage(),
+                        null));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorDto> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorDto(
+                        ErrorCode.VALIDATION_ERROR.name(),
+                        ex.getMessage(),
+                        null));
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    public ResponseEntity<ApiErrorDto> handleDateTimeParse(DateTimeParseException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorDto(
+                        ErrorCode.VALIDATION_ERROR.name(),
+                        "Invalid date-time format: " + ex.getParsedString(),
                         null));
     }
 

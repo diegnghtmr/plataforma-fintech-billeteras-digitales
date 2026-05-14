@@ -157,4 +157,32 @@ class UserControllerTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
     }
+
+    @Test
+    void updateUser_nameTooShort_returns400() throws Exception {
+        mockMvc.perform(put("/users/USR001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("name", "A"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details").isArray());
+    }
+
+    @Test
+    void updateUser_nameOmitted_returns200() throws Exception {
+        UserView view = new UserView("USR001", "Juan Pérez", "new@example.com",
+                FIXED_NOW, 0.0, LoyaltyLevel.BRONZE, 0, 0.0);
+        when(updateUserUseCase.execute(eq("USR001"), any(), any())).thenReturn(view);
+        when(userMapper.toDto(view)).thenReturn(
+                new com.proyectofinal.fintech.infrastructure.input.rest.dto.UserResponseDto(
+                        "USR001", "Juan Pérez", "new@example.com",
+                        FIXED_NOW.toString(), 0.0, "BRONZE", 0, 0.0));
+
+        mockMvc.perform(put("/users/USR001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "new@example.com"))))
+                .andExpect(status().isOk());
+    }
 }
