@@ -5,13 +5,6 @@ import type { CycleGraphNode, DrawNodeOpts, DrawLinkOpts, DrawBackgroundOpts } f
 // Private helpers
 // ---------------------------------------------------------------------------
 
-function resolveId(x: string | NodeObject | number | undefined): string {
-  if (typeof x === 'string') return x;
-  if (typeof x === 'number') return String(x);
-  if (x != null && typeof x === 'object' && 'id' in x) return String((x as NodeObject).id);
-  return '';
-}
-
 function resolveCoord(x: string | NodeObject | number | undefined): { x: number; y: number } {
   if (x != null && typeof x === 'object' && 'x' in x) {
     const node = x as NodeObject;

@@ -43,18 +43,15 @@ export function CyclePanel({ cycle, cycleIndex }: CyclePanelProps) {
     if (!fgRef.current) return;
     const fg = fgRef.current;
 
-    // Configure forces via the library's d3Force API
-    const chargeForce = fg.d3Force('charge');
-    if (chargeForce && 'strength' in chargeForce) {
-      (chargeForce as { strength: (v: number) => unknown }).strength(-260);
-    }
+    // Configure forces via the library's d3Force API.
+    // Cast via unknown because ForceFn is a narrow type that lacks the d3 method signatures.
+    const chargeForce = fg.d3Force('charge') as unknown as { strength: (v: number) => void } | undefined;
+    chargeForce?.strength(-260);
 
-    const linkForce = fg.d3Force('link');
-    if (linkForce && 'distance' in linkForce && 'strength' in linkForce) {
-      (linkForce as { distance: (v: number) => unknown; strength: (v: number) => unknown })
-        .distance(80)
-        .strength(0.6);
-    }
+    const linkForce = fg.d3Force('link') as unknown as
+      | { distance: (v: number) => { strength: (v: number) => void } }
+      | undefined;
+    linkForce?.distance(80).strength(0.6);
   }, []);
 
   // Reduced motion: pause animation if media query matches

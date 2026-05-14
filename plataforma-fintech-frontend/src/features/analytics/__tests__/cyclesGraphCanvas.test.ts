@@ -1,9 +1,36 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest';
 import { drawNode, drawLink, drawDotBackground } from '../cyclesGraphCanvas';
 import type { CycleGraphNode } from '../cyclesGraphUtils';
 
-function createMockCtx() {
-  const ctx = {
+type MockCtx = {
+  beginPath: MockInstance;
+  arc: MockInstance;
+  fill: MockInstance;
+  stroke: MockInstance;
+  moveTo: MockInstance;
+  lineTo: MockInstance;
+  closePath: MockInstance;
+  quadraticCurveTo: MockInstance;
+  fillRect: MockInstance;
+  setLineDash: MockInstance;
+  save: MockInstance;
+  restore: MockInstance;
+  translate: MockInstance;
+  rotate: MockInstance;
+  fillText: MockInstance;
+  measureText: MockInstance;
+  createRadialGradient: MockInstance;
+  fillStyle: string | CanvasGradient | CanvasPattern;
+  strokeStyle: string | CanvasGradient | CanvasPattern;
+  lineWidth: number;
+  font: string;
+  textAlign: CanvasTextAlign;
+  textBaseline: CanvasTextBaseline;
+  globalAlpha: number;
+};
+
+function createMockCtx(): MockCtx {
+  return {
     beginPath: vi.fn(),
     arc: vi.fn(),
     fill: vi.fn(),
@@ -21,15 +48,14 @@ function createMockCtx() {
     fillText: vi.fn(),
     measureText: vi.fn(() => ({ width: 20 })),
     createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
-    fillStyle: '' as string | CanvasGradient | CanvasPattern,
-    strokeStyle: '' as string | CanvasGradient | CanvasPattern,
+    fillStyle: '',
+    strokeStyle: '',
     lineWidth: 0,
     font: '',
     textAlign: 'center' as CanvasTextAlign,
     textBaseline: 'middle' as CanvasTextBaseline,
     globalAlpha: 1,
   };
-  return ctx as unknown as CanvasRenderingContext2D & { [k: string]: ReturnType<typeof vi.fn> };
 }
 
 const baseNode: CycleGraphNode = {
@@ -40,25 +66,30 @@ const baseNode: CycleGraphNode = {
   y: 50,
 };
 
+// Helper to get canvas from MockCtx
+function asCtx(ctx: MockCtx): CanvasRenderingContext2D {
+  return ctx as unknown as CanvasRenderingContext2D;
+}
+
 describe('drawNode', () => {
-  let ctx: ReturnType<typeof createMockCtx>;
+  let ctx: MockCtx;
 
   beforeEach(() => {
     ctx = createMockCtx();
   });
 
   it('calls arc at least 4 times (3 halos + main circle)', () => {
-    drawNode(ctx, baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
+    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
     expect(ctx.arc.mock.calls.length).toBeGreaterThanOrEqual(4);
   });
 
   it('calls createRadialGradient at least 2 times (node fill + badge)', () => {
-    drawNode(ctx, baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
+    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: true });
     expect(ctx.createRadialGradient.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   it('sets globalAlpha to the opacity value', () => {
-    drawNode(ctx, baseNode, { radius: 14, opacity: 0.5, isSelected: false, isHovered: false, showBadge: false });
+    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 0.5, isSelected: false, isHovered: false, showBadge: false });
     // globalAlpha will have been set during the draw call
     // We check it was called with 0.5 at some point (save/restore pattern)
     expect(ctx.save).toHaveBeenCalled();
@@ -66,7 +97,7 @@ describe('drawNode', () => {
   });
 
   it('uses larger halo radii when isSelected is true', () => {
-    drawNode(ctx, baseNode, { radius: 14, opacity: 1, isSelected: true, isHovered: false, showBadge: false });
+    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: true, isHovered: false, showBadge: false });
     // isSelected → halos at r+4, r+8, r+12
     // arc is called with radius as 3rd arg; find halo calls
     const arcCalls = ctx.arc.mock.calls as unknown[][];
@@ -76,7 +107,7 @@ describe('drawNode', () => {
   });
 
   it('uses smaller halo radii when not selected', () => {
-    drawNode(ctx, baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: false });
+    drawNode(asCtx(ctx), baseNode, { radius: 14, opacity: 1, isSelected: false, isHovered: false, showBadge: false });
     const arcCalls = ctx.arc.mock.calls as unknown[][];
     // r+8 = 22 should appear (default halo max)
     const hasNormalHalo = arcCalls.some((call) => call[2] === 14 + 8);
@@ -85,14 +116,14 @@ describe('drawNode', () => {
 });
 
 describe('drawLink', () => {
-  let ctx: ReturnType<typeof createMockCtx>;
+  let ctx: MockCtx;
 
   beforeEach(() => {
     ctx = createMockCtx();
   });
 
   it('calls setLineDash with [6, 4]', () => {
-    drawLink(ctx, { x: 0, y: 0 }, { x: 100, y: 0 }, {
+    drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
       opacity: 1,
       width: 2.5,
       color: '#494fdf',
@@ -102,7 +133,7 @@ describe('drawLink', () => {
   });
 
   it('calls stroke to draw the line', () => {
-    drawLink(ctx, { x: 0, y: 0 }, { x: 100, y: 0 }, {
+    drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
       opacity: 1,
       width: 2.5,
       color: '#494fdf',
@@ -112,7 +143,7 @@ describe('drawLink', () => {
   });
 
   it('draws an arrowhead with moveTo + lineTo + closePath + fill', () => {
-    drawLink(ctx, { x: 0, y: 0 }, { x: 100, y: 0 }, {
+    drawLink(asCtx(ctx), { x: 0, y: 0 }, { x: 100, y: 0 }, {
       opacity: 1,
       width: 2.5,
       color: '#494fdf',
@@ -128,7 +159,7 @@ describe('drawLink', () => {
 describe('drawDotBackground', () => {
   it('calls arc exactly (width/dotSpacing) × (height/dotSpacing) times', () => {
     const ctx = createMockCtx();
-    drawDotBackground(ctx, 480, 320, {
+    drawDotBackground(asCtx(ctx), 480, 320, {
       width: 480,
       height: 320,
       dotSpacing: 20,
