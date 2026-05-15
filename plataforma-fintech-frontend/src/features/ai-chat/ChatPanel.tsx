@@ -123,17 +123,16 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
         className="flex flex-col gap-4 min-h-[320px] rounded-2xl border border-hairline-light bg-surface-soft p-4 sm:p-5"
       >
         {messages.length === 0 && !apiError && !isPending && (
-          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-brand/10 text-brand">
               <Sparkles size={22} strokeWidth={1.5} aria-hidden />
             </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-ink">Probá una pregunta para empezar</p>
-              <p className="text-xs text-mute max-w-sm">
-                Ej.: <span className="italic">"¿Cómo estuvo mi actividad esta semana?"</span> o{' '}
-                <span className="italic">"Explicame mis alertas de fraude"</span>.
-              </p>
-            </div>
+            <p className="text-sm font-medium text-ink">Probá una pregunta para empezar</p>
+            <p className="text-xs text-mute leading-relaxed max-w-md text-balance">
+              Por ejemplo:{' '}
+              <span className="italic">«¿Cómo estuvo mi actividad esta semana?»</span> o{' '}
+              <span className="italic">«Explicame mis alertas de fraude».</span>
+            </p>
           </div>
         )}
 
