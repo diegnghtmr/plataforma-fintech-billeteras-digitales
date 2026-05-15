@@ -129,4 +129,31 @@ describe('externalTransferSchema', () => {
     const result = externalTransferSchema.safeParse(validPayload);
     expect(result.success).toBe(true);
   });
+
+  it('rejects when sourceUserId equals targetUserId', () => {
+    const result = externalTransferSchema.safeParse({
+      ...validPayload,
+      targetUserId: 'USR001',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('targetUserId'));
+      expect(issue?.message).toContain('distinto al de origen');
+    }
+  });
+});
+
+describe('internalTransferSchema same-wallet rule', () => {
+  it('rejects when sourceWalletId equals targetWalletId', () => {
+    const result = internalTransferSchema.safeParse({
+      sourceWalletId: 'W001',
+      targetWalletId: 'W001',
+      amount: 100,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues.find((i) => i.path.includes('targetWalletId'));
+      expect(issue?.message).toContain('distinta a la de origen');
+    }
+  });
 });

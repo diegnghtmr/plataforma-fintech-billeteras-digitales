@@ -1,4 +1,4 @@
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Wallet } from 'lucide-react';
 import { internalTransferSchema, type InternalTransferFormData } from './schemas';
@@ -20,10 +20,17 @@ interface InternalTransferFormProps {
 
 const ERROR_MESSAGES: Record<string, string> = {
   INSUFFICIENT_FUNDS: 'Saldo insuficiente para realizar la transferencia.',
-  VALIDATION_ERROR: 'Los datos ingresados no son válidos.',
   WALLET_NOT_FOUND: 'Una de las billeteras no fue encontrada.',
   USER_NOT_FOUND: 'El usuario no fue encontrado.',
 };
+
+function resolveErrorMessage(error: ApiError | null | undefined): string | null {
+  if (!error) return null;
+  // For VALIDATION_ERROR the API already provides the precise reason
+  // (e.g. "Source and target wallets must be different"); prefer it.
+  if (error.code === 'VALIDATION_ERROR' && error.message) return error.message;
+  return ERROR_MESSAGES[error.code] ?? error.message ?? 'Ocurrió un error.';
+}
 
 export function InternalTransferForm({
   userId,
@@ -48,17 +55,22 @@ export function InternalTransferForm({
     onSubmit({ ...data, userId });
   }
 
+  const watchedSourceWalletId = useWatch({ control, name: 'sourceWalletId' });
+
   const walletOptions = wallets.map((w) => ({
     value: w.code,
     label: w.name,
     description: `${w.code} · ${w.type}`,
   }));
 
-  const noWallets = !walletsLoading && wallets.length === 0;
+  const targetWalletOptions = walletOptions.filter(
+    (o) => o.value !== watchedSourceWalletId
+  );
 
-  const errorMessage = error
-    ? (ERROR_MESSAGES[error.code] ?? error.message)
-    : null;
+  const noWallets = !walletsLoading && wallets.length === 0;
+  const onlyOneWallet = !walletsLoading && wallets.length === 1;
+
+  const errorMessage = resolveErrorMessage(error);
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
@@ -66,6 +78,12 @@ export function InternalTransferForm({
         <p className="text-stone text-sm" role="status">
           Este usuario no tiene billeteras. Creá al menos dos en la sección de Billeteras
           para poder transferir.
+        </p>
+      )}
+      {onlyOneWallet && (
+        <p className="text-stone text-sm" role="status">
+          Este usuario tiene una sola billetera. Una transferencia interna requiere
+          dos billeteras distintas.
         </p>
       )}
       <Field label="Billetera origen" error={errors.sourceWalletId?.message}>
@@ -92,7 +110,7 @@ export function InternalTransferForm({
           render={({ field }) => (
             <SearchSelect
               aria-label="Billetera destino"
-              options={walletOptions}
+              options={targetWalletOptions}
               value={field.value}
               onChange={field.onChange}
               placeholder="Selecciona billetera destino"

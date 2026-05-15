@@ -21,10 +21,15 @@ interface ExternalTransferFormProps {
 
 const ERROR_MESSAGES: Record<string, string> = {
   INSUFFICIENT_FUNDS: 'Saldo insuficiente para realizar la transferencia.',
-  VALIDATION_ERROR: 'Los datos ingresados no son válidos.',
   WALLET_NOT_FOUND: 'Una de las billeteras no fue encontrada.',
   USER_NOT_FOUND: 'El usuario de destino no fue encontrado.',
 };
+
+function resolveErrorMessage(error: ApiError | null | undefined): string | null {
+  if (!error) return null;
+  if (error.code === 'VALIDATION_ERROR' && error.message) return error.message;
+  return ERROR_MESSAGES[error.code] ?? error.message ?? 'Ocurrió un error.';
+}
 
 export function ExternalTransferForm({
   defaultSourceUserId = '',
@@ -64,6 +69,8 @@ export function ExternalTransferForm({
     description: `${u.id} · ${u.email}`,
   }));
 
+  const targetUserOptions = userOptions.filter((o) => o.value !== watchedSourceUserId);
+
   const sourceWalletOptions = sourceWallets.map((w) => ({
     value: w.code,
     label: w.name,
@@ -76,9 +83,7 @@ export function ExternalTransferForm({
     description: `${w.code} · ${w.type}`,
   }));
 
-  const errorMessage = error
-    ? (ERROR_MESSAGES[error.code] ?? error.message)
-    : null;
+  const errorMessage = resolveErrorMessage(error);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -125,7 +130,7 @@ export function ExternalTransferForm({
           render={({ field }) => (
             <SearchSelect
               aria-label="Usuario destino"
-              options={userOptions}
+              options={targetUserOptions}
               value={field.value}
               onChange={field.onChange}
               placeholder="Selecciona un usuario"
