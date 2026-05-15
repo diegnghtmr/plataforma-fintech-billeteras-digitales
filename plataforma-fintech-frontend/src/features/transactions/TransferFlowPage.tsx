@@ -232,42 +232,39 @@ export function TransferFlowPage() {
   );
 
   if (isLoading) {
-    return <div className="p-6 text-canvas-fg">Cargando transacción…</div>;
+    return (
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+        <BackButton />
+        <p className="mt-6 text-ink">Cargando transacción…</p>
+      </div>
+    );
   }
   if (error || !tx) {
     return (
-      <div className="p-6">
-        <Link to="/transactions" className="inline-flex items-center gap-2 text-canvas-fg hover:underline">
-          <ArrowLeft size={16} /> Volver
-        </Link>
-        <div className="mt-4 text-red-600">No se pudo cargar la transacción.</div>
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px]">
+        <BackButton />
+        <p className="mt-6 text-accent-pink">No se pudo cargar la transacción.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <Link
-            to="/transactions"
-            className="inline-flex items-center gap-2 text-sm text-surface-fg hover:text-canvas-fg"
-          >
-            <ArrowLeft size={14} /> Transacciones
-          </Link>
-          <h1 className="mt-2 text-2xl font-semibold text-canvas-fg">
-            Flujo paso a paso · {labelOperationType(tx.type)}
-          </h1>
-          <p className="text-sm text-surface-fg">
-            <span className="font-mono">{tx.id}</span> · {labelOperationStatus(tx.status)} ·{' '}
-            {new Date(tx.timestamp).toLocaleString()}
-          </p>
-        </div>
+    <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-[88px] space-y-6">
+      <BackButton />
+
+      <header>
+        <h1 className="text-display-lg text-ink">
+          Flujo paso a paso · {labelOperationType(tx.type)}
+        </h1>
+        <p className="mt-2 text-body-md text-charcoal">
+          <span className="font-mono text-ink">{tx.id}</span> · {labelOperationStatus(tx.status)} ·{' '}
+          <span className="text-stone">{new Date(tx.timestamp).toLocaleString()}</span>
+        </p>
       </header>
 
       <section
-        className="rounded-lg border border-surface-fg/10 bg-canvas"
-        style={{ height: 580 }}
+        className="rounded-[20px] border border-hairline-strong bg-canvas overflow-hidden"
+        style={{ height: 520 }}
         aria-label="Diagrama de flujo de la transferencia"
       >
         <ReactFlow
@@ -281,60 +278,37 @@ export function TransferFlowPage() {
           elementsSelectable={false}
           proOptions={{ hideAttribution: true }}
         >
-          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#e0e0e0" />
+          <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2a2a2a" />
           <Controls showInteractive={false} />
         </ReactFlow>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="rounded-lg border border-surface-fg/10 bg-surface p-4">
-          <div className="flex items-center gap-2 mb-3 text-canvas-fg">
-            <button
-              type="button"
-              onClick={player.prev}
-              disabled={player.index === 0}
-              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed text-canvas-fg"
-              aria-label="Paso anterior"
-            >
+        <div className="rounded-[20px] border border-hairline-light bg-canvas-light p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <StepperButton onClick={player.prev} disabled={player.index === 0} label="Paso anterior">
               <StepBack size={16} strokeWidth={2} />
-            </button>
+            </StepperButton>
             {player.playing ? (
-              <button
-                type="button"
-                onClick={player.pause}
-                className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
-                aria-label="Pausar"
-              >
+              <StepperButton onClick={player.pause} label="Pausar">
                 <Pause size={16} strokeWidth={2} />
-              </button>
+              </StepperButton>
             ) : (
-              <button
-                type="button"
-                onClick={player.play}
-                className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
-                aria-label="Reproducir"
-              >
+              <StepperButton onClick={player.play} label="Reproducir">
                 <Play size={16} strokeWidth={2} />
-              </button>
+              </StepperButton>
             )}
-            <button
-              type="button"
+            <StepperButton
               onClick={player.next}
               disabled={player.index === steps.length - 1}
-              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed text-canvas-fg"
-              aria-label="Paso siguiente"
+              label="Paso siguiente"
             >
               <StepForward size={16} strokeWidth={2} />
-            </button>
-            <button
-              type="button"
-              onClick={player.replay}
-              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
-              aria-label="Reiniciar"
-            >
+            </StepperButton>
+            <StepperButton onClick={player.replay} label="Reiniciar">
               <RotateCcw size={16} strokeWidth={2} />
-            </button>
-            <span className="ml-3 text-xs text-surface-fg">
+            </StepperButton>
+            <span className="ml-3 text-xs text-stone">
               Paso {player.index + 1} de {steps.length}
             </span>
           </div>
@@ -352,8 +326,8 @@ export function TransferFlowPage() {
                       isActive
                         ? 'bg-[#dee0f5] border-[#3a40c4] text-[#3a40c4]'
                         : isPast
-                          ? 'bg-canvas border-surface-fg/10 text-canvas-fg/70'
-                          : 'bg-canvas border-surface-fg/10 text-canvas-fg hover:bg-surface'
+                          ? 'bg-surface-soft border-hairline-light text-stone'
+                          : 'bg-canvas-light border-hairline-light text-ink hover:bg-surface-soft'
                     }`}
                   >
                     <div className="flex items-baseline gap-2">
@@ -362,8 +336,8 @@ export function TransferFlowPage() {
                           isActive
                             ? 'bg-[#3a40c4] text-white'
                             : isPast
-                              ? 'bg-canvas-fg/30 text-white'
-                              : 'bg-surface-fg/15 text-canvas-fg'
+                              ? 'bg-stone text-white'
+                              : 'bg-surface-soft text-charcoal'
                         }`}
                       >
                         {i + 1}
@@ -380,29 +354,62 @@ export function TransferFlowPage() {
           </ol>
         </div>
 
-        <aside className="rounded-lg border border-surface-fg/10 bg-surface p-4 text-sm space-y-2">
-          <h2 className="font-semibold text-canvas-fg">Resumen</h2>
+        <aside className="rounded-[20px] border border-hairline-light bg-canvas-light p-4 text-sm space-y-2">
+          <h2 className="font-semibold text-ink">Resumen</h2>
           <dl className="grid grid-cols-2 gap-1.5 text-xs">
-            <dt className="text-surface-fg">Monto</dt>
-            <dd className="text-canvas-fg font-medium">{tx.amount.toFixed(2)}</dd>
-            <dt className="text-surface-fg">Origen</dt>
-            <dd className="font-mono text-canvas-fg">{tx.sourceUserId}</dd>
-            <dt className="text-surface-fg">Destino</dt>
-            <dd className="font-mono text-canvas-fg">{tx.targetUserId ?? '—'}</dd>
-            <dt className="text-surface-fg">Puntos</dt>
-            <dd className="text-canvas-fg">+{tx.pointsGenerated ?? 0}</dd>
-            <dt className="text-surface-fg">Riesgo</dt>
-            <dd className="text-canvas-fg">{tx.riskLevel ?? 'sin alerta'}</dd>
-            <dt className="text-surface-fg">Reversible</dt>
-            <dd className="text-canvas-fg">{tx.reversible ? 'Sí' : 'No'}</dd>
+            <dt className="text-stone">Monto</dt>
+            <dd className="text-ink font-medium">{tx.amount.toFixed(2)}</dd>
+            <dt className="text-stone">Origen</dt>
+            <dd className="font-mono text-ink">{tx.sourceUserId}</dd>
+            <dt className="text-stone">Destino</dt>
+            <dd className="font-mono text-ink">{tx.targetUserId ?? '—'}</dd>
+            <dt className="text-stone">Puntos</dt>
+            <dd className="text-ink">+{tx.pointsGenerated ?? 0}</dd>
+            <dt className="text-stone">Riesgo</dt>
+            <dd className="text-ink">{tx.riskLevel ?? 'sin alerta'}</dd>
+            <dt className="text-stone">Reversible</dt>
+            <dd className="text-ink">{tx.reversible ? 'Sí' : 'No'}</dd>
           </dl>
           {tx.description && (
-            <p className="pt-2 mt-2 border-t border-surface-fg/10 text-xs text-canvas-fg/80">
+            <p className="pt-2 mt-2 border-t border-hairline-light text-xs text-charcoal">
               {tx.description}
             </p>
           )}
         </aside>
       </section>
     </div>
+  );
+}
+
+function BackButton() {
+  return (
+    <Link
+      to="/transactions"
+      className="inline-flex items-center gap-2 rounded-full border border-hairline-strong bg-canvas-light text-ink text-button-sm px-4 py-2 hover:bg-surface-soft transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      <ArrowLeft size={16} strokeWidth={2} />
+      Volver a transacciones
+    </Link>
+  );
+}
+
+interface StepperButtonProps {
+  onClick: () => void;
+  disabled?: boolean;
+  label: string;
+  children: React.ReactNode;
+}
+
+function StepperButton({ onClick, disabled, label, children }: StepperButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className="p-2 rounded border border-hairline-light bg-canvas-light text-ink hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+    >
+      {children}
+    </button>
   );
 }
