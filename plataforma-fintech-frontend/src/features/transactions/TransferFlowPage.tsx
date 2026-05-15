@@ -66,18 +66,24 @@ function FlowNode({ data }: { data: FlowNodeData }) {
       <Handle type="target" position={Position.Left} style={{ background: SLATE, width: 6, height: 6 }} />
       <Icon
         size={20}
-        color={data.active ? COBALT_DEEP : SLATE}
+        color={data.active ? COBALT_DEEP : '#e8e8e8'}
         strokeWidth={data.active ? 2.5 : 1.75}
       />
       <div
         className={`mt-1 text-[11px] font-medium ${
-          data.active ? 'text-[#3a40c4]' : 'text-canvas-fg'
+          data.active ? 'text-[#3a40c4]' : 'text-white'
         }`}
       >
         {data.label}
       </div>
       {data.sublabel && (
-        <div className="text-[9px] font-mono text-surface-fg">{data.sublabel}</div>
+        <div
+          className={`text-[9px] font-mono ${
+            data.active ? 'text-[#3a40c4]/80' : 'text-white/70'
+          }`}
+        >
+          {data.sublabel}
+        </div>
       )}
       <Handle type="source" position={Position.Right} style={{ background: SLATE, width: 6, height: 6 }} />
     </div>
