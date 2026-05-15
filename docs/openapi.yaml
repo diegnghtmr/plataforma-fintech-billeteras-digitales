@@ -311,6 +311,22 @@ paths:
                   $ref: '#/components/schemas/TransactionResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+  /transactions/{transactionId}:
+    get:
+      tags: [Transactions]
+      operationId: getTransaction
+      summary: Obtener una transacción por ID
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transacción encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /transactions/{transactionId}/reverse:
     post:
       tags: [Transactions]

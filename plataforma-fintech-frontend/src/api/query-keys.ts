@@ -21,6 +21,8 @@ export const queryKeys = {
       ['transactions', 'user', userId, filters ?? {}] as const,
     byWallet: (userId: string, walletId: string) =>
       ['transactions', 'wallet', userId, walletId] as const,
+    detail: (transactionId: string) =>
+      ['transactions', 'detail', transactionId] as const,
   },
 
   points: {

@@ -1,5 +1,6 @@
 package com.proyectofinal.fintech.infrastructure.input.rest;
 
+import com.proyectofinal.fintech.application.usecase.GetTransactionUseCase;
 import com.proyectofinal.fintech.application.usecase.ListUserTransactionsUseCase;
 import com.proyectofinal.fintech.application.usecase.ListWalletTransactionsUseCase;
 import com.proyectofinal.fintech.application.usecase.ReverseTransactionUseCase;
@@ -44,6 +45,9 @@ class TransactionControllerTest {
 
     @MockBean
     private ListWalletTransactionsUseCase listWalletTransactionsUseCase;
+
+    @MockBean
+    private GetTransactionUseCase getTransactionUseCase;
 
     @MockBean
     private ReverseTransactionUseCase reverseTransactionUseCase;
@@ -171,5 +175,29 @@ class TransactionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("TRANSACTION_NOT_REVERSIBLE"));
+    }
+
+    @Test
+    void getTransaction_existing_returns200WithDto() throws Exception {
+        Transaccion tx = makeTx("TX-007", TransactionType.EXTERNAL_TRANSFER_SENT);
+        when(getTransactionUseCase.execute("TX-007")).thenReturn(tx);
+        when(transactionMapper.toDto(tx)).thenReturn(new TransactionResponseDto(
+                "TX-007", NOW.toString(), "EXTERNAL_TRANSFER_SENT", 100.0,
+                "W001", null, "USR001", null, "SUCCESSFUL", 1.0, null, true, null));
+
+        mockMvc.perform(get("/transactions/TX-007"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("TX-007"))
+                .andExpect(jsonPath("$.type").value("EXTERNAL_TRANSFER_SENT"));
+    }
+
+    @Test
+    void getTransaction_missing_returns404() throws Exception {
+        when(getTransactionUseCase.execute("GHOST"))
+                .thenThrow(new NotFoundException(ErrorCode.TRANSACTION_NOT_FOUND, "not found"));
+
+        mockMvc.perform(get("/transactions/GHOST"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("TRANSACTION_NOT_FOUND"));
     }
 }

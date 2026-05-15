@@ -37,6 +37,13 @@ export const router = createBrowserRouter(
             })),
         },
         {
+          path: 'transactions/:transactionId/flow',
+          lazy: () =>
+            import('../features/transactions/TransferFlowPage').then((m) => ({
+              Component: m.TransferFlowPage,
+            })),
+        },
+        {
           path: 'points',
           lazy: () =>
             import('../features/points/PointsPage').then((m) => ({ Component: m.PointsPage })),

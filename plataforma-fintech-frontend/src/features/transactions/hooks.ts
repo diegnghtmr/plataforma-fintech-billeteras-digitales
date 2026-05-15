@@ -1,11 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getTransaction,
   getUserTransactions,
   getWalletTransactions,
   reverseTransaction,
 } from '../../api/transactions';
 import type { GetUserTransactionsFilters } from '../../api/transactions';
 import { queryKeys } from '../../api/query-keys';
+
+// ── useTransactionQuery (single tx, powers the transfer-flow view) ────────────
+
+export function useTransactionQuery(transactionId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.transactions.detail(transactionId ?? ''),
+    queryFn: () => getTransaction(transactionId as string),
+    enabled: Boolean(transactionId),
+  });
+}
 
 // ── useUserTransactionsQuery ──────────────────────────────────────────────────
 

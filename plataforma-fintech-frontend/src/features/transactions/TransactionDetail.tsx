@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { GitBranch } from 'lucide-react';
 import type { TransactionResponse } from '../../api/transactions';
 import { labelOperationType, labelOperationStatus } from '../../shared/i18n/enum-labels';
 
@@ -8,7 +10,15 @@ interface TransactionDetailProps {
 export function TransactionDetail({ tx }: TransactionDetailProps) {
   return (
     <div className="p-4 bg-surface rounded-lg border border-surface-fg/10 text-sm">
-      <h3 className="font-semibold text-canvas-fg mb-3">Detalle de transacción</h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-canvas-fg">Detalle de transacción</h3>
+        <Link
+          to={`/transactions/${tx.id}/flow`}
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#3a40c4] hover:underline"
+        >
+          <GitBranch size={14} /> Ver flujo paso a paso
+        </Link>
+      </div>
       <dl className="grid grid-cols-2 gap-2">
         <dt className="text-surface-fg">ID</dt>
         <dd className="font-mono text-canvas-fg">{tx.id}</dd>

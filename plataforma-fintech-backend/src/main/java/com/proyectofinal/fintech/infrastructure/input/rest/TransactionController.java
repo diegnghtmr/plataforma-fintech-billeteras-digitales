@@ -1,5 +1,6 @@
 package com.proyectofinal.fintech.infrastructure.input.rest;
 
+import com.proyectofinal.fintech.application.usecase.GetTransactionUseCase;
 import com.proyectofinal.fintech.application.usecase.ListUserTransactionsUseCase;
 import com.proyectofinal.fintech.application.usecase.ListWalletTransactionsUseCase;
 import com.proyectofinal.fintech.application.usecase.ReverseTransactionUseCase;
@@ -24,15 +25,18 @@ public class TransactionController {
 
     private final ListUserTransactionsUseCase listUserTransactionsUseCase;
     private final ListWalletTransactionsUseCase listWalletTransactionsUseCase;
+    private final GetTransactionUseCase getTransactionUseCase;
     private final ReverseTransactionUseCase reverseTransactionUseCase;
     private final TransactionMapper transactionMapper;
 
     public TransactionController(ListUserTransactionsUseCase listUserTransactionsUseCase,
                                   ListWalletTransactionsUseCase listWalletTransactionsUseCase,
+                                  GetTransactionUseCase getTransactionUseCase,
                                   ReverseTransactionUseCase reverseTransactionUseCase,
                                   TransactionMapper transactionMapper) {
         this.listUserTransactionsUseCase = listUserTransactionsUseCase;
         this.listWalletTransactionsUseCase = listWalletTransactionsUseCase;
+        this.getTransactionUseCase = getTransactionUseCase;
         this.reverseTransactionUseCase = reverseTransactionUseCase;
         this.transactionMapper = transactionMapper;
     }
@@ -69,6 +73,17 @@ public class TransactionController {
         Iterable<Transaccion> txs = listWalletTransactionsUseCase.execute(userId, walletId);
         List<TransactionResponseDto> dtos = toList(txs);
         return ResponseEntity.ok(dtos);
+    }
+
+    /**
+     * GET /transactions/{transactionId}
+     * Returns a single transaction by ID (powers the transfer-flow view).
+     */
+    @GetMapping("/transactions/{transactionId}")
+    public ResponseEntity<TransactionResponseDto> getTransaction(
+            @PathVariable String transactionId) {
+        Transaccion tx = getTransactionUseCase.execute(transactionId);
+        return ResponseEntity.ok(transactionMapper.toDto(tx));
     }
 
     /**

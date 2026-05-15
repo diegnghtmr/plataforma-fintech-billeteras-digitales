@@ -54,6 +54,24 @@ export async function getWalletTransactions(
   return data;
 }
 
+export async function getTransaction(
+  transactionId: string
+): Promise<TransactionResponse> {
+  const { data, error, response } = await apiClient.GET(
+    '/transactions/{transactionId}',
+    {
+      params: { path: { transactionId } },
+    }
+  );
+
+  if (error !== undefined || !data) {
+    const apiError = await extractApiError(response);
+    throw apiError ?? new Error('Unknown error fetching transaction');
+  }
+
+  return data;
+}
+
 export async function reverseTransaction(
   transactionId: string
 ): Promise<TransactionResponse> {

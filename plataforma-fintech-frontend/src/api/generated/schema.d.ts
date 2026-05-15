@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verificar disponibilidad del servicio */
+        get: operations["healthCheck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users": {
         parameters: {
             query?: never;
@@ -153,6 +170,23 @@ export interface paths {
         };
         /** Obtener historial de una billetera */
         get: operations["getWalletTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtener una transacción por ID */
+        get: operations["getTransaction"];
         put?: never;
         post?: never;
         delete?: never;
@@ -468,6 +502,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/benefits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar beneficios activos */
+        get: operations["getActiveBenefits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/benefits/{benefitId}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Canjear un beneficio */
+        post: operations["redeemBenefit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/benefit-redemptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listar canjes de beneficios del usuario */
+        get: operations["getUserBenefitRedemptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -609,6 +694,12 @@ export interface components {
             /** Format: date-time */
             scheduledAt: string;
             description?: string;
+            /**
+             * @description Recurrence pattern for the scheduled operation. Defaults to NONE (one-shot).
+             * @default NONE
+             * @enum {string}
+             */
+            recurrence: "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
         };
         ScheduledOperationResponse: {
             id: string;
@@ -623,6 +714,11 @@ export interface components {
             /** Format: date-time */
             scheduledAt: string;
             description?: string;
+            /**
+             * @description Recurrence pattern of this scheduled operation.
+             * @enum {string}
+             */
+            recurrence: "NONE" | "DAILY" | "WEEKLY" | "MONTHLY";
         };
         NotificationResponse: {
             id: string;
@@ -692,6 +788,23 @@ export interface components {
         NotificationSeverity: "INFO" | "WARNING" | "CRITICAL";
         /** @enum {string} */
         FraudSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+        BenefitResponse: {
+            id: string;
+            name: string;
+            description: string;
+            /** Format: double */
+            pointsCost: number;
+            active: boolean;
+        };
+        BenefitRedemptionResponse: {
+            id: string;
+            userId: string;
+            benefitId: string;
+            /** Format: double */
+            pointsSpent: number;
+            /** Format: date-time */
+            redeemedAt: string;
+        };
     };
     responses: {
         /** @description Request inválido */
@@ -751,6 +864,29 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    healthCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Servicio operativo */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example UP */
+                        status: string;
+                    };
+                };
+            };
+        };
+    };
     listUsers: {
         parameters: {
             query?: never;
@@ -848,6 +984,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     deleteUser: {
@@ -1100,6 +1237,30 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    getTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example TX-001 */
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Transacción encontrada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponse"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     reverseTransaction: {
         parameters: {
             query?: never;
@@ -1214,6 +1375,8 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BusinessError"];
         };
     };
     cancelScheduledOperation: {
@@ -1526,6 +1689,76 @@ export interface operations {
                     "application/json": components["schemas"]["FraudEventResponse"][];
                 };
             };
+        };
+    };
+    getActiveBenefits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de beneficios activos */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenefitResponse"][];
+                };
+            };
+        };
+    };
+    redeemBenefit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example USR001 */
+                userId: components["parameters"]["UserId"];
+                benefitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Beneficio canjeado exitosamente */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenefitRedemptionResponse"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BusinessError"];
+        };
+    };
+    getUserBenefitRedemptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example USR001 */
+                userId: components["parameters"]["UserId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de canjes del usuario */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenefitRedemptionResponse"][];
+                };
+            };
+            404: components["responses"]["NotFound"];
         };
     };
 }

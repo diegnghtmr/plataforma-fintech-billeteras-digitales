@@ -112,6 +112,11 @@ public class OperationsBeansConfig {
     }
 
     @Bean
+    public GetTransactionUseCase getTransactionUseCase(TransactionRepository transactionRepository) {
+        return new GetTransactionUseCase(transactionRepository);
+    }
+
+    @Bean
     public ReverseTransactionUseCase reverseTransactionUseCase(WalletRepository walletRepository,
                                                                 UserRepository userRepository,
                                                                 TransactionRepository transactionRepository,
