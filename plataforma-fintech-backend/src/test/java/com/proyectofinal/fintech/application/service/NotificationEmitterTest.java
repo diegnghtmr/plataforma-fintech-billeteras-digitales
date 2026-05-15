@@ -132,8 +132,12 @@ class NotificationEmitterTest {
         assertThat(n.getType()).isEqualTo(NotificationType.FRAUD_ALERT);
         assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.CRITICAL);
         assertThat(n.isRead()).isFalse();
-        assertThat(n.getMessage()).contains("HIGH_VELOCITY");
+        // F-44 (UX): mensaje natural en lugar de "tipo=CODE / [SEV]" técnico
+        assertThat(n.getMessage()).contains("sospechoso");
+        assertThat(n.getMessage()).contains("Alta velocidad de transacciones");
         assertThat(n.getMessage()).contains("TX-001");
+        assertThat(n.getMessage()).doesNotContain("HIGH_VELOCITY");
+        assertThat(n.getMessage()).doesNotContain("tipo=");
     }
 
     // F-43 (RED) — REQ-F1.4, REQ-F1.5: emitBenefitRedeemed

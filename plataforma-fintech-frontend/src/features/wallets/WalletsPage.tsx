@@ -62,7 +62,17 @@ export function WalletsPage() {
         </aside>
 
         <section className="min-w-0">
-          <WalletList wallets={wallets} onSelect={(code) => setSelectedWalletId(code)} />
+          <WalletList
+            wallets={wallets}
+            onSelect={(code) => {
+              setSelectedWalletId(code);
+              const wallet = wallets.find((w) => w.code === code);
+              pushToast({
+                variant: 'success',
+                message: `${wallet?.name ?? code} quedó seleccionada como origen predeterminado en Operaciones.`,
+              });
+            }}
+          />
         </section>
       </div>
     </div>

@@ -8,10 +8,15 @@ import com.proyectofinal.fintech.application.usecase.WithdrawWalletUseCase;
 import com.proyectofinal.fintech.domain.exception.DomainException;
 import com.proyectofinal.fintech.domain.model.Beneficio;
 import com.proyectofinal.fintech.domain.model.Billetera;
+import com.proyectofinal.fintech.domain.model.FraudEvent;
+import com.proyectofinal.fintech.domain.model.FraudSeverity;
+import com.proyectofinal.fintech.domain.model.FraudType;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.BeneficioRepository;
+import com.proyectofinal.fintech.domain.port.FraudEventIdGenerator;
+import com.proyectofinal.fintech.domain.port.FraudEventRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
 import org.slf4j.Logger;
@@ -45,6 +50,8 @@ public class DataSeederConfig {
             ExternalTransferUseCase externalTransfer,
             CreateScheduledOperationUseCase createScheduled,
             BeneficioRepository beneficioRepository,
+            FraudEventRepository fraudEventRepository,
+            FraudEventIdGenerator fraudEventIdGenerator,
             Clock clock) {
 
         return args -> {
@@ -254,9 +261,45 @@ public class DataSeederConfig {
             beneficioRepository.save(new Beneficio("BEN-000003", "Suscripción premium 1 mes",
                     "Acceso premium por 30 días", 500, true));
 
+            // ------------------------------------------------------------------
+            // 7. Eventos de fraude de demostración (MEDIUM y LOW).
+            // El detector solo emite estos niveles para perfiles con historial
+            // largo (≥10 / ≥20 tx) — el seeder corre con datos limitados, así que
+            // se siembran directamente al repositorio para que la página de
+            // fraudes muestre variedad de severidades en la demo.
+            // ------------------------------------------------------------------
+            fraudEventRepository.save(new FraudEvent(
+                    fraudEventIdGenerator.next(),
+                    "USR002",
+                    null,
+                    FraudType.FREQUENCY_BURST,
+                    FraudSeverity.MEDIUM,
+                    "Pico de frecuencia: 12 tx en última hora vs promedio 2.20/h",
+                    now.minus(Duration.ofMinutes(45))
+            ));
+            fraudEventRepository.save(new FraudEvent(
+                    fraudEventIdGenerator.next(),
+                    "USR003",
+                    null,
+                    FraudType.OFF_HOURS,
+                    FraudSeverity.LOW,
+                    "Transacción en horario inusual 03:00",
+                    now.minus(Duration.ofHours(6))
+            ));
+            fraudEventRepository.save(new FraudEvent(
+                    fraudEventIdGenerator.next(),
+                    "USR007",
+                    null,
+                    FraudType.OFF_HOURS,
+                    FraudSeverity.LOW,
+                    "Transacción en horario inusual 04:30",
+                    now.minus(Duration.ofHours(9))
+            ));
+
             log.info("[seed] ============================================================");
             log.info("[seed] Seed completado: 8 usuarios, 16 billeteras, ~30 transacciones, 5 operaciones programadas, 3 beneficios.");
             log.info("[seed] Triggers activos: LARGE_TRANSACTION (18500) + HIGH_VELOCITY (4 recargas rápidas USR005).");
+            log.info("[seed] Eventos de fraude demo añadidos: 1 MEDIUM (FREQUENCY_BURST) + 2 LOW (OFF_HOURS).");
             log.info("[seed] Ciclo en grafo: USR001 → USR002 → USR003 → USR001.");
             log.info("[seed] ============================================================");
         };

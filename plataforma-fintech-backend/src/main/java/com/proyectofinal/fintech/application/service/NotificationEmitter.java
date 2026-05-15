@@ -181,8 +181,13 @@ public class NotificationEmitter {
      * @param event  the detected fraud event
      */
     public void emitFraudAlert(String userId, FraudEvent event) {
-        String message = "Alerta de fraude [" + event.getSeverity().name() + "] tipo=" + event.getType()
-                + ": " + event.getDescription() + " (tx=" + event.getTransactionId() + ")";
+        String txRef = event.getTransactionId() != null
+                ? " Transacción de referencia: " + event.getTransactionId() + "."
+                : "";
+        String message = "Detectamos un movimiento sospechoso en tu cuenta. "
+                + event.getDescription() + "."
+                + txRef
+                + " Revisalo y confirmá si fuiste vos.";
         notificationRepository.save(new Notificacion(
                 idGenerator.next(),
                 userId,

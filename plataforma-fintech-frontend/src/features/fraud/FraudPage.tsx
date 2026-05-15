@@ -75,6 +75,7 @@ export function FraudPage() {
               icon={ShieldAlert}
               title="Sin eventos de fraude"
               description="No se encontraron eventos con los filtros actuales."
+              tone="dark"
             />
           ) : (
             <div className="flex flex-col gap-4">
