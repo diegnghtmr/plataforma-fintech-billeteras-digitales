@@ -1,6 +1,7 @@
 package com.proyectofinal.fintech.application.usecase;
 
 import com.proyectofinal.fintech.application.result.UserView;
+import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
@@ -113,5 +114,34 @@ class UpdateUserUseCaseTest {
         assertThat(result.name()).isEqualTo("Ana");
         assertThat(result.email()).isEqualTo("ana@test.com");
         verify(userRepository).save(any());
+    }
+
+    // S-E06: email change collides with another existing user → DuplicatedResourceException
+    @Test
+    void execute_emailAlreadyTakenByAnotherUser_throwsDuplicated() {
+        Usuario existing = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Usuario other    = new Usuario("USR002", "Bob", "bob@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findById("USR001")).thenReturn(Optional.of(existing));
+        when(userRepository.findByEmail("bob@test.com")).thenReturn(Optional.of(other));
+
+        assertThatThrownBy(() -> useCase.execute("USR001", Optional.empty(), Optional.of("bob@test.com")))
+                .isInstanceOf(DuplicatedResourceException.class)
+                .satisfies(ex -> assertThat(((DuplicatedResourceException) ex).code())
+                        .isEqualTo(ErrorCode.DUPLICATED_RESOURCE));
+
+        verify(userRepository, never()).save(any());
+    }
+
+    // S-E07: email unchanged → no duplicate check triggered
+    @Test
+    void execute_sameEmailKeptByItself_doesNotTriggerDuplicateCheck() {
+        Usuario existing = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findById("USR001")).thenReturn(Optional.of(existing));
+        when(walletRepository.countByOwnerId("USR001")).thenReturn(0);
+        when(walletRepository.sumBalanceByOwnerId("USR001")).thenReturn(0.0);
+
+        useCase.execute("USR001", Optional.of("AnaUpdated"), Optional.of("ana@test.com"));
+
+        verify(userRepository, never()).findByEmail(any());
     }
 }

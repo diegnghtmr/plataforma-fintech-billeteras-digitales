@@ -146,4 +146,98 @@ public class HexagonalBoundaryTest {
                     .that().resideInAPackage("..domain.port..")
                     .should().dependOnClassesThat().haveFullyQualifiedName("java.util.TreeSet")
                     .because("Domain ports must use domain-owned collection types, not java.util.TreeSet");
+
+    // ── Rules 16–22: forbidden JDK collection types banned across domain.model + domain.service ──
+    // Scope excludes domain.structures (where ArrayList is used only in boundary helpers like toList())
+    // and domain.port (already covered by rules 8-15). HashMap/HashSet/TreeMap/TreeSet/LinkedList are
+    // NEVER acceptable in domain — must use TablaHash / Conjunto / ArbolBST / MiLista.
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_HashMap =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashMap")
+                    .because("domain.model and domain.service must use TablaHash, not java.util.HashMap");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_HashSet =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashSet")
+                    .because("domain.model and domain.service must use Conjunto, not java.util.HashSet");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_TreeMap =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.TreeMap")
+                    .because("domain.model and domain.service must use TablaHash/ArbolBST, not java.util.TreeMap");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_TreeSet =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.TreeSet")
+                    .because("domain.model and domain.service must use Conjunto/ArbolBST, not java.util.TreeSet");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_LinkedList =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.LinkedList")
+                    .because("domain.model and domain.service must use MiLista, not java.util.LinkedList");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_List =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.List")
+                    .because("domain.model and domain.service must use MiLista, not java.util.List");
+
+    @ArchTest
+    static final ArchRule domain_model_and_service_must_not_use_java_util_ArrayList =
+            noClasses()
+                    .that().resideInAnyPackage("..domain.model..", "..domain.service..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.ArrayList")
+                    .because("domain.model and domain.service must use MiLista, not java.util.ArrayList");
+
+    // ── Rules 23–25: forbidden JDK *internal-storage* types in application.usecase ──
+    // ADR-9.1 still allows java.util.List/ArrayList at REST boundary (Jackson serialization).
+    // But HashMap/HashSet/TreeMap/TreeSet/LinkedList are never an acceptable boundary type —
+    // application use cases must use TablaHash / Conjunto when accumulating internally.
+
+    @ArchTest
+    static final ArchRule application_usecase_must_not_use_java_util_HashMap =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashMap")
+                    .because("Application use cases must accumulate with TablaHash, not java.util.HashMap");
+
+    @ArchTest
+    static final ArchRule application_usecase_must_not_use_java_util_HashSet =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashSet")
+                    .because("Application use cases must use Conjunto, not java.util.HashSet");
+
+    @ArchTest
+    static final ArchRule application_usecase_must_not_use_java_util_TreeMap =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.TreeMap")
+                    .because("Application use cases must use TablaHash/ArbolBST, not java.util.TreeMap");
+
+    @ArchTest
+    static final ArchRule application_usecase_must_not_use_java_util_TreeSet =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.TreeSet")
+                    .because("Application use cases must use Conjunto/ArbolBST, not java.util.TreeSet");
+
+    @ArchTest
+    static final ArchRule application_usecase_must_not_use_java_util_LinkedList =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.LinkedList")
+                    .because("Application use cases must use MiLista, not java.util.LinkedList");
 }

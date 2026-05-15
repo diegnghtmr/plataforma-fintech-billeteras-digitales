@@ -7,9 +7,8 @@ import com.proyectofinal.fintech.domain.model.TransactionStatus;
 import com.proyectofinal.fintech.domain.model.TransactionType;
 import com.proyectofinal.fintech.domain.port.TransactionRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,7 +43,7 @@ public class ListUserTransactionsUseCase {
 
         Iterable<Transaccion> all = transactionRepository.findByUserId(userId);
 
-        List<Transaccion> result = new ArrayList<>();
+        MiLista<Transaccion> result = new MiLista<>();
         for (Transaccion tx : all) {
             if (typeFilter.isPresent() && tx.getType() != typeFilter.get()) {
                 continue;

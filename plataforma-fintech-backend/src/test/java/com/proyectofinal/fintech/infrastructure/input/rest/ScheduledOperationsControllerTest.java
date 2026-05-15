@@ -138,9 +138,9 @@ class ScheduledOperationsControllerTest {
                 .andExpect(jsonPath("$.code").value("USER_NOT_FOUND"));
     }
 
-    // S3: POST create missing target for EXTERNAL_TRANSFER → 400
+    // S3: POST create missing target for EXTERNAL_TRANSFER → 422 (BusinessRuleException → UNPROCESSABLE_ENTITY)
     @Test
-    void create_missingTarget_returns400() throws Exception {
+    void create_missingTarget_returns422() throws Exception {
         when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
                 anyDouble(), any(), any(), any()))
                 .thenThrow(new BusinessRuleException(ErrorCode.VALIDATION_ERROR, "Missing target"));

@@ -4,8 +4,8 @@ import com.proyectofinal.fintech.application.result.UserView;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,8 +22,11 @@ public class ListUsersUseCase {
         this.walletRepository = walletRepository;
     }
 
+    // N+1 acknowledged: countByOwnerId + sumBalanceByOwnerId are called per user.
+    // Acceptable because adapters are in-memory (TablaHash O(1) lookups); a future
+    // persistent adapter would expose an aggregate port to flatten this loop.
     public List<UserView> execute() {
-        List<UserView> result = new ArrayList<>();
+        MiLista<UserView> result = new MiLista<>();
 
         for (Usuario usuario : userRepository.findAll()) {
             int walletCount = walletRepository.countByOwnerId(usuario.getId());
@@ -41,6 +44,7 @@ public class ListUsersUseCase {
             ));
         }
 
-        return result;
+        // Jackson requires java.util.List at the REST boundary; conversion is ADR-9.1 scope.
+        return result.toList();
     }
 }

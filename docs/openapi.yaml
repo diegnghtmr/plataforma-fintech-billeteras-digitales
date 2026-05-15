@@ -19,7 +19,25 @@ tags:
   - name: Analytics
   - name: Fraud
   - name: Benefits
+  - name: Health
 paths:
+  /health:
+    get:
+      tags: [Health]
+      operationId: healthCheck
+      summary: Verificar disponibilidad del servicio
+      responses:
+        '200':
+          description: Servicio operativo
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: UP
   /users:
     get:
       tags: [Users]
@@ -94,6 +112,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
     delete:
       tags: [Users]
       operationId: deleteUser
@@ -381,6 +401,10 @@ paths:
                 $ref: '#/components/schemas/ScheduledOperationResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
   /scheduled-operations/{operationId}/cancel:
     post:
       tags: [ScheduledOperations]

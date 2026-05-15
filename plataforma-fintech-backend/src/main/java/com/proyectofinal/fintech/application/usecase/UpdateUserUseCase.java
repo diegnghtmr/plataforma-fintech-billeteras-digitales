@@ -1,6 +1,7 @@
 package com.proyectofinal.fintech.application.usecase;
 
 import com.proyectofinal.fintech.application.result.UserView;
+import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.Usuario;
@@ -41,6 +42,17 @@ public class UpdateUserUseCase {
 
         String name = newName.orElse(existing.getName());
         String email = newEmail.orElse(existing.getEmail());
+
+        // Enforce email uniqueness across users (only when email is actually changing)
+        if (!email.equals(existing.getEmail())) {
+            userRepository.findByEmail(email).ifPresent(other -> {
+                if (!other.getId().equals(existing.getId())) {
+                    throw new DuplicatedResourceException(
+                            ErrorCode.DUPLICATED_RESOURCE,
+                            "User with email=" + email + " already exists");
+                }
+            });
+        }
 
         // Create updated user preserving all immutable / computed state
         Usuario updated = new Usuario(

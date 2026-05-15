@@ -7,6 +7,7 @@ import com.proyectofinal.fintech.application.usecase.DeleteUserUseCase;
 import com.proyectofinal.fintech.application.usecase.GetUserUseCase;
 import com.proyectofinal.fintech.application.usecase.ListUsersUseCase;
 import com.proyectofinal.fintech.application.usecase.UpdateUserUseCase;
+import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
@@ -83,26 +84,18 @@ class UserControllerTest {
     }
 
     @Test
-    void createUser_S2_duplicateEmail_returns500OrSuccess() throws Exception {
-        // With auto-generated IDs, duplicate detection is no longer by ID from the client.
-        // The use case still saves; this test verifies the happy path completes with 201.
-        Usuario usuario = new Usuario("USR009", "Another", "other@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
-        UserView userView = new UserView("USR009", "Another", "other@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE, 0, 0.0);
-
-        when(createUserUseCase.execute("Another", "other@example.com")).thenReturn(usuario);
-        when(getUserUseCase.execute("USR009")).thenReturn(userView);
-        when(userMapper.toDto(userView)).thenReturn(
-                new com.proyectofinal.fintech.infrastructure.input.rest.dto.UserResponseDto(
-                        "USR009", "Another", "other@example.com",
-                        FIXED_NOW.toString(), 0.0, "BRONZE", 0, 0.0)
-        );
+    void createUser_duplicateEmail_returns409() throws Exception {
+        when(createUserUseCase.execute("Another", "other@example.com"))
+                .thenThrow(new DuplicatedResourceException(
+                        ErrorCode.DUPLICATED_RESOURCE,
+                        "User with email=other@example.com already exists"));
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 Map.of("name", "Another", "email", "other@example.com"))))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value("USR009"));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DUPLICATED_RESOURCE"));
     }
 
     @Test
@@ -184,5 +177,20 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 Map.of("email", "new@example.com"))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void updateUser_duplicateEmail_returns409() throws Exception {
+        when(updateUserUseCase.execute(eq("USR001"), any(), any()))
+                .thenThrow(new DuplicatedResourceException(
+                        ErrorCode.DUPLICATED_RESOURCE,
+                        "User with email=taken@example.com already exists"));
+
+        mockMvc.perform(put("/users/USR001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", "taken@example.com"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("DUPLICATED_RESOURCE"));
     }
 }

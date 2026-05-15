@@ -67,6 +67,7 @@ classDiagram
         +frequentRoutes(min) Iterable~Route~
         +findCycles() List~List~String~~
     }
+    note for `GrafoTransferencias~T~` "findCycles returns java.util.List inside domain.structures (boundary helper, ADR-9.1). The public port TransferGraphRepository.findCycles() returns MiLista~MiLista~String~~."
     class `Conjunto~T~` {
         <<O(1) avg add/contains>>
         +add(v) void
@@ -164,9 +165,11 @@ classDiagram
     class FraudEvent {
         -id String
         -userId String
+        -transactionId String
+        -type String
         -severity FraudSeverity
-        -rule String
-        -detectedAt Instant
+        -description String
+        -createdAt Instant
     }
     class LoyaltyLevel {
         <<enumeration>>
