@@ -20,6 +20,7 @@ tags:
   - name: Fraud
   - name: Benefits
   - name: Health
+  - name: AI
 paths:
   /health:
     get:
@@ -781,6 +782,143 @@ paths:
                   $ref: '#/components/schemas/BenefitRedemptionResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  # ── AI Insight Chat (slice 1 — NoOp adapter active until OpenRouter is configured) ────
+  /ai/chat:
+    post:
+      tags: [AI]
+      operationId: aiChat
+      summary: Ask the AI assistant a fintech question
+      description: |
+        Classifies intent, builds role-scoped context, and returns a structured AI answer.
+        When APP_AI_PROVIDER=none, returns 503 AI_UNAVAILABLE.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiChatRequest'
+      responses:
+        '200':
+          description: AI chat answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiChatResponse'
+        '400':
+          description: Validation error or message too long
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Actor role/scope not permitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '502':
+          description: AI returned invalid intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '503':
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUnavailableError'
+
+  /ai/fraud-events/{fraudEventId}/explain:
+    get:
+      tags: [AI]
+      operationId: explainFraudEvent
+      summary: Get an AI-generated explanation of a fraud event
+      parameters:
+        - name: fraudEventId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: UUID of the fraud event
+        - name: actorRole
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [USER, ADMIN]
+        - name: actorUserId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI fraud explanation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiFraudExplanationResponse'
+        '403':
+          description: Actor not authorized for this event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Fraud event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '503':
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUnavailableError'
+
+  /ai/action-draft:
+    post:
+      tags: [AI]
+      operationId: aiActionDraft
+      summary: Get a structured action draft from a natural-language message
+      description: |
+        Returns a draft of a financial action. requiresConfirmation is always true.
+        The AI never executes operations — drafts are informational only.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiActionDraftRequest'
+      responses:
+        '200':
+          description: AI action draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiActionDraftResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '502':
+          description: AI returned invalid intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '503':
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiUnavailableError'
+
 components:
   parameters:
     UserId:
@@ -1320,3 +1458,169 @@ components:
         redeemedAt:
           type: string
           format: date-time
+
+    # ── AI Schemas ──────────────────────────────────────────────────────────────
+    AiIntent:
+      type: string
+      enum:
+        - EXPLAIN_BALANCE_CHANGE
+        - SUMMARIZE_ACTIVITY
+        - EXPLAIN_FRAUD_EVENT
+        - EXPLAIN_ANALYTICS
+        - DRAFT_SCHEDULED_OPERATION
+        - DRAFT_TRANSFER
+        - SHOW_NOTIFICATIONS
+        - UNKNOWN
+
+    AiSuggestedAction:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/AiIntent'
+        label:
+          type: string
+        requiresConfirmation:
+          type: boolean
+          default: true
+        missingFields:
+          type: array
+          items:
+            type: string
+
+    AiUsedContext:
+      type: object
+      properties:
+        sources:
+          type: array
+          items:
+            type: string
+          example: [WALLET_SNAPSHOT, FRAUD_EVENTS]
+        scope:
+          type: string
+          enum: [USER, ADMIN, PLATFORM]
+        rangeDescription:
+          type: string
+          nullable: true
+
+    AiUnavailableError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum: [AI_UNAVAILABLE]
+        message:
+          type: string
+        retryAfter:
+          type: integer
+          nullable: true
+          description: Seconds to wait before retrying
+
+    AiChatRequest:
+      type: object
+      required: [message, actorRole, actorUserId, scope]
+      properties:
+        conversationId:
+          type: string
+          maxLength: 64
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        actorRole:
+          type: string
+          enum: [USER, ADMIN]
+        actorUserId:
+          type: string
+          minLength: 1
+        scope:
+          type: string
+          enum: [USER, ADMIN]
+        from:
+          type: string
+          format: date-time
+          nullable: true
+        to:
+          type: string
+          format: date-time
+          nullable: true
+
+    AiChatResponse:
+      type: object
+      properties:
+        conversationId:
+          type: string
+        intent:
+          $ref: '#/components/schemas/AiIntent'
+        answer:
+          type: string
+        suggestedAction:
+          $ref: '#/components/schemas/AiSuggestedAction'
+          nullable: true
+        usedContext:
+          $ref: '#/components/schemas/AiUsedContext'
+        modelUsed:
+          type: string
+        latencyMs:
+          type: integer
+          format: int64
+
+    AiFraudExplanationResponse:
+      type: object
+      properties:
+        fraudEventId:
+          type: string
+        summary:
+          type: string
+        severityExplanation:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: string
+        recommendation:
+          type: string
+        usedContext:
+          $ref: '#/components/schemas/AiUsedContext'
+
+    AiActionDraftRequest:
+      type: object
+      required: [message, actorRole, actorUserId, scope]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        actorRole:
+          type: string
+          enum: [USER, ADMIN]
+        actorUserId:
+          type: string
+          minLength: 1
+        scope:
+          type: string
+          enum: [USER, ADMIN]
+        conversationId:
+          type: string
+          nullable: true
+
+    AiActionDraftResponse:
+      type: object
+      properties:
+        intent:
+          $ref: '#/components/schemas/AiIntent'
+        draft:
+          type: object
+          additionalProperties:
+            type: string
+          description: Inferred parameter map (slot values)
+        missingFields:
+          type: array
+          items:
+            type: string
+        requiresConfirmation:
+          type: boolean
+          default: true
+          description: Always true — AI never executes operations
+        usedContext:
+          $ref: '#/components/schemas/AiUsedContext'

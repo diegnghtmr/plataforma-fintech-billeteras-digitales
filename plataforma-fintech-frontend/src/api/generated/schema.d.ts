@@ -570,6 +570,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask the AI assistant a fintech question
+         * @description Classifies intent, builds role-scoped context, and returns a structured AI answer.
+         *     When APP_AI_PROVIDER=none, returns 503 AI_UNAVAILABLE.
+         */
+        post: operations["aiChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/fraud-events/{fraudEventId}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an AI-generated explanation of a fraud event */
+        get: operations["explainFraudEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ai/action-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a structured action draft from a natural-language message
+         * @description Returns a draft of a financial action. requiresConfirmation is always true.
+         *     The AI never executes operations — drafts are informational only.
+         */
+        post: operations["aiActionDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -831,6 +890,88 @@ export interface components {
             pointsSpent: number;
             /** Format: date-time */
             redeemedAt: string;
+        };
+        /** @enum {string} */
+        AiIntent: "EXPLAIN_BALANCE_CHANGE" | "SUMMARIZE_ACTIVITY" | "EXPLAIN_FRAUD_EVENT" | "EXPLAIN_ANALYTICS" | "DRAFT_SCHEDULED_OPERATION" | "DRAFT_TRANSFER" | "SHOW_NOTIFICATIONS" | "UNKNOWN";
+        AiSuggestedAction: {
+            type?: components["schemas"]["AiIntent"];
+            label?: string;
+            /** @default true */
+            requiresConfirmation: boolean;
+            missingFields?: string[];
+        };
+        AiUsedContext: {
+            /**
+             * @example [
+             *       "WALLET_SNAPSHOT",
+             *       "FRAUD_EVENTS"
+             *     ]
+             */
+            sources?: string[];
+            /** @enum {string} */
+            scope?: "USER" | "ADMIN" | "PLATFORM";
+            rangeDescription?: string | null;
+        };
+        AiUnavailableError: {
+            /** @enum {string} */
+            code: "AI_UNAVAILABLE";
+            message: string;
+            /** @description Seconds to wait before retrying */
+            retryAfter?: number | null;
+        };
+        AiChatRequest: {
+            conversationId?: string;
+            message: string;
+            /** @enum {string} */
+            actorRole: "USER" | "ADMIN";
+            actorUserId: string;
+            /** @enum {string} */
+            scope: "USER" | "ADMIN";
+            /** Format: date-time */
+            from?: string | null;
+            /** Format: date-time */
+            to?: string | null;
+        };
+        AiChatResponse: {
+            conversationId?: string;
+            intent?: components["schemas"]["AiIntent"];
+            answer?: string;
+            suggestedAction?: components["schemas"]["AiSuggestedAction"];
+            usedContext?: components["schemas"]["AiUsedContext"];
+            modelUsed?: string;
+            /** Format: int64 */
+            latencyMs?: number;
+        };
+        AiFraudExplanationResponse: {
+            fraudEventId?: string;
+            summary?: string;
+            severityExplanation?: string;
+            evidence?: string[];
+            recommendation?: string;
+            usedContext?: components["schemas"]["AiUsedContext"];
+        };
+        AiActionDraftRequest: {
+            message: string;
+            /** @enum {string} */
+            actorRole: "USER" | "ADMIN";
+            actorUserId: string;
+            /** @enum {string} */
+            scope: "USER" | "ADMIN";
+            conversationId?: string | null;
+        };
+        AiActionDraftResponse: {
+            intent?: components["schemas"]["AiIntent"];
+            /** @description Inferred parameter map (slot values) */
+            draft?: {
+                [key: string]: string;
+            };
+            missingFields?: string[];
+            /**
+             * @description Always true — AI never executes operations
+             * @default true
+             */
+            requiresConfirmation: boolean;
+            usedContext?: components["schemas"]["AiUsedContext"];
         };
     };
     responses: {
@@ -1818,6 +1959,170 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+        };
+    };
+    aiChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiChatRequest"];
+            };
+        };
+        responses: {
+            /** @description AI chat answer */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiChatResponse"];
+                };
+            };
+            /** @description Validation error or message too long */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Actor role/scope not permitted */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description AI returned invalid intent */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description AI provider unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUnavailableError"];
+                };
+            };
+        };
+    };
+    explainFraudEvent: {
+        parameters: {
+            query: {
+                actorRole: "USER" | "ADMIN";
+                actorUserId: string;
+            };
+            header?: never;
+            path: {
+                /** @description UUID of the fraud event */
+                fraudEventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description AI fraud explanation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiFraudExplanationResponse"];
+                };
+            };
+            /** @description Actor not authorized for this event */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Fraud event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description AI provider unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUnavailableError"];
+                };
+            };
+        };
+    };
+    aiActionDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiActionDraftRequest"];
+            };
+        };
+        responses: {
+            /** @description AI action draft */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiActionDraftResponse"];
+                };
+            };
+            /** @description Validation error */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description AI returned invalid intent */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description AI provider unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUnavailableError"];
+                };
+            };
         };
     };
 }

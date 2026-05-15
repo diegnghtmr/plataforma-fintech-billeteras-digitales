@@ -13,6 +13,20 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+app:
+  ai:
+    provider: ${APP_AI_PROVIDER:none}
+    max-user-message-length: ${APP_AI_MAX_INPUT_CHARS:1000}
+    request-timeout-seconds: ${APP_AI_REQUEST_TIMEOUT_SECONDS:30}
+    cache-ttl-minutes: ${APP_AI_CACHE_TTL_MINUTES:10}
+
+openrouter:
+  base-url: ${OPENROUTER_BASE_URL:https://openrouter.ai/api/v1}
+  api-key: ${OPENROUTER_API_KEY:}
+  model: ${OPENROUTER_MODEL:meta-llama/llama-3.3-70b-instruct:free}
+  http-referer: ${OPENROUTER_HTTP_REFERER:}
+  app-title: ${OPENROUTER_APP_TITLE:}
+
 logging:
   level:
     root: INFO

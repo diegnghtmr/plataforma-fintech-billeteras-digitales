@@ -11,6 +11,8 @@ public interface FraudEventRepository {
 
     void save(FraudEvent event);
 
+    java.util.Optional<FraudEvent> findById(String id);
+
     Iterable<FraudEvent> findAll();
 
     Iterable<FraudEvent> findByUserId(String userId);

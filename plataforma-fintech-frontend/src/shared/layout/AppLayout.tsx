@@ -11,6 +11,7 @@ import {
   Bell,
   BarChart3,
   ShieldAlert,
+  MessageSquare,
   Menu,
   X,
 } from 'lucide-react';
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { to: '/notifications', label: 'Alertas', Icon: Bell },
   { to: '/analytics', label: 'Analítica', Icon: BarChart3 },
   { to: '/fraud', label: 'Fraude', Icon: ShieldAlert },
+  { to: '/ai', label: 'Asistente IA', Icon: MessageSquare },
 ] as const;
 
 function NavItem({ to, label, Icon }: { to: string; label: string; Icon: typeof Home }) {

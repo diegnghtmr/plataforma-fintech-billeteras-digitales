@@ -55,4 +55,12 @@ export const queryKeys = {
     events: (filters?: Record<string, unknown>) =>
       ['fraud', 'events', filters ?? {}] as const,
   },
+
+  ai: {
+    all: ['ai'] as const,
+    chat: (conversationId: string, scope: string) =>
+      ['ai', 'chat', conversationId, scope] as const,
+    fraudExplain: (id: string) => ['ai', 'fraud-explain', id] as const,
+    actionDraft: () => ['ai', 'action-draft'] as const,
+  },
 } as const;

@@ -11,3 +11,11 @@ coverage/
 *.tsbuildinfo
 
 .atl/
+
+# Local environment / secrets — never commit
+.env
+.env.local
+.env.*.local
+application-local.yml
+application-local.yaml
+application-local.properties

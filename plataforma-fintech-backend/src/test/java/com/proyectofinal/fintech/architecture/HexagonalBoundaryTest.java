@@ -5,6 +5,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
@@ -240,4 +241,68 @@ public class HexagonalBoundaryTest {
                     .that().resideInAPackage("..application.usecase..")
                     .should().dependOnClassesThat().haveFullyQualifiedName("java.util.LinkedList")
                     .because("Application use cases must use MiLista, not java.util.LinkedList");
+
+    // ── AI-specific rules (slice 1) ───────────────────────────────────────────
+
+    // Rule 26: application.result.ai must not import Spring or Jakarta
+    @ArchTest
+    static final ArchRule ai_result_types_must_not_depend_on_spring =
+            noClasses()
+                    .that().resideInAPackage("..application.result.ai..")
+                    .should().dependOnClassesThat().resideInAPackage("org.springframework..")
+                    .because("AI result types are pure value objects — no Spring imports allowed");
+
+    @ArchTest
+    static final ArchRule ai_result_types_must_not_depend_on_jakarta =
+            noClasses()
+                    .that().resideInAPackage("..application.result.ai..")
+                    .should().dependOnClassesThat().resideInAPackage("jakarta..")
+                    .because("AI result types are pure value objects — no Jakarta imports allowed");
+
+    // Rule 27: application.port.in.ai and application.port.out.ai must not depend on Spring
+    @ArchTest
+    static final ArchRule ai_ports_must_not_depend_on_spring =
+            noClasses()
+                    .that().resideInAnyPackage("..application.port.in.ai..", "..application.port.out.ai..")
+                    .should().dependOnClassesThat().resideInAPackage("org.springframework..")
+                    .because("AI application ports must be framework-agnostic");
+
+    // Rule 28: application.usecase.ai must not use forbidden JDK collections (HashMap, HashSet, etc.)
+    // (covered by existing rules 23-25 that use ..application.usecase.. pattern)
+    // Adding explicit check for ai subpackage to be explicit
+    @ArchTest
+    static final ArchRule ai_usecase_must_not_use_java_util_HashMap =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase.ai..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashMap")
+                    .because("AI use cases must use TablaHash, not java.util.HashMap");
+
+    @ArchTest
+    static final ArchRule ai_usecase_must_not_use_java_util_HashSet =
+            noClasses()
+                    .that().resideInAPackage("..application.usecase.ai..")
+                    .should().dependOnClassesThat().haveFullyQualifiedName("java.util.HashSet")
+                    .because("AI use cases must use Conjunto, not java.util.HashSet");
+
+    // Rule 29: infrastructure.output.ai classes should not be accessed directly from outside infra
+    // (ArchUnit access rule — verifies encapsulation of the AI output adapters)
+    @ArchTest
+    static final ArchRule ai_output_adapters_not_accessed_outside_infra =
+            noClasses()
+                    .that().resideOutsideOfPackages(
+                            "..infrastructure.output.ai..",
+                            "..infrastructure.config..")
+                    .should().dependOnClassesThat().resideInAPackage("..infrastructure.output.ai..")
+                    .because("AI output adapters should only be referenced from infrastructure.config");
+
+    // Rule 30: RestClient must not be used outside infrastructure.output.ai (guards slice 2)
+    @ArchTest
+    static final ArchRule rest_client_only_in_ai_output_or_infra =
+            noClasses()
+                    .that().resideOutsideOfPackages(
+                            "..infrastructure.output.ai..",
+                            "..infrastructure.config..")
+                    .should().dependOnClassesThat()
+                    .haveFullyQualifiedName("org.springframework.web.client.RestClient")
+                    .because("RestClient must only be used in infrastructure.output.ai or infrastructure.config");
 }

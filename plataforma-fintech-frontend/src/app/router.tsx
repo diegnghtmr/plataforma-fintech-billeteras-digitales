@@ -74,6 +74,13 @@ export const router = createBrowserRouter(
           lazy: () =>
             import('../features/fraud/FraudPage').then((m) => ({ Component: m.FraudPage })),
         },
+        {
+          path: 'ai',
+          lazy: () =>
+            import('../features/ai-chat/AiChatPage').then((m) => ({
+              Component: m.AiChatPage,
+            })),
+        },
       ],
     },
   ],

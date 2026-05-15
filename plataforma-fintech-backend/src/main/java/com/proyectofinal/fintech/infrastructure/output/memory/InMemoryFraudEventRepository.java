@@ -8,6 +8,7 @@ import com.proyectofinal.fintech.domain.structures.TablaHash;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * In-memory implementation of FraudEventRepository.
@@ -19,6 +20,16 @@ public class InMemoryFraudEventRepository implements FraudEventRepository {
 
     private final MiLista<FraudEvent> global = new MiLista<>();
     private final TablaHash<String, MiLista<FraudEvent>> byUser = new TablaHash<>();
+
+    @Override
+    public Optional<FraudEvent> findById(String id) {
+        for (FraudEvent e : global) {
+            if (id.equals(e.getId())) {
+                return Optional.of(e);
+            }
+        }
+        return Optional.empty();
+    }
 
     @Override
     public void save(FraudEvent event) {
