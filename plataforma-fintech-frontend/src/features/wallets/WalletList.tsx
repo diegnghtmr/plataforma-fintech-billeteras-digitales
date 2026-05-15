@@ -66,10 +66,17 @@ export function WalletList({ wallets, onSelect, onRename, onToggleActive, isUpda
               isSelected ? 'ring-2 ring-[#3a40c4] ring-offset-2 ring-offset-canvas-light' : ''
             }`}
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                {isEditing ? (
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              {isEditing ? (
+                <div className="flex flex-col gap-1 flex-1 min-w-[18rem]">
+                  <label
+                    htmlFor={`wallet-name-${wallet.code}`}
+                    className="text-xs font-medium text-stone"
+                  >
+                    Renombrar billetera {wallet.code}
+                  </label>
                   <Input
+                    id={`wallet-name-${wallet.code}`}
                     value={draftName}
                     onChange={(e) => setDraftName(e.target.value)}
                     onKeyDown={(e) => {
@@ -78,26 +85,28 @@ export function WalletList({ wallets, onSelect, onRename, onToggleActive, isUpda
                     }}
                     autoFocus
                     maxLength={80}
+                    placeholder="Nuevo nombre"
                     aria-label="Nuevo nombre de billetera"
-                    className="max-w-xs"
                   />
-                ) : (
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <span className="text-ink font-semibold truncate">{wallet.name}</span>
-                )}
-                <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-surface-soft text-charcoal shrink-0">
-                  {wallet.type}
-                </span>
-                {!wallet.active && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-surface-soft text-stone shrink-0">
-                    Cerrada
+                  <span className="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold bg-surface-soft text-charcoal shrink-0">
+                    {wallet.type}
                   </span>
-                )}
-                {isSelected && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#3a40c4] text-white shrink-0">
-                    <Check size={10} strokeWidth={3} /> Seleccionada
-                  </span>
-                )}
-              </div>
+                  {!wallet.active && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-surface-soft text-stone shrink-0">
+                      Cerrada
+                    </span>
+                  )}
+                  {isSelected && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#3a40c4] text-white shrink-0">
+                      <Check size={10} strokeWidth={3} /> Seleccionada
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex items-center gap-2 shrink-0">
                 {isEditing ? (
                   <>
