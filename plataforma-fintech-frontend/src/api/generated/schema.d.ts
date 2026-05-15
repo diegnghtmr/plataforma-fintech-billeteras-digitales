@@ -76,6 +76,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{userId}/wallets/{walletId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Renombrar o cerrar/reabrir una billetera */
+        patch: operations["updateWallet"];
+        trace?: never;
+    };
     "/users/{userId}/wallets/{walletId}/recharge": {
         parameters: {
             query?: never;
@@ -586,6 +603,16 @@ export interface components {
             /** @example DAILY_EXPENSES */
             type: string;
         };
+        /** @description Partial update; envía sólo los campos que querés cambiar. */
+        UpdateWalletRequest: {
+            /** @example Gastos del mes */
+            name?: string;
+            /**
+             * @description false = cerrar billetera (requiere balance == 0); true = reabrir.
+             * @example false
+             */
+            active?: boolean;
+        };
         WalletResponse: {
             code: string;
             name: string;
@@ -1061,6 +1088,38 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    updateWallet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example USR001 */
+                userId: components["parameters"]["UserId"];
+                /** @example WALLET-001 */
+                walletId: components["parameters"]["WalletId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWalletRequest"];
+            };
+        };
+        responses: {
+            /** @description Billetera actualizada */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["BusinessError"];
         };
     };
     rechargeWallet: {

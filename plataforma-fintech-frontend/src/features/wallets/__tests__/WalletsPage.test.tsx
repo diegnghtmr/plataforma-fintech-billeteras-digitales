@@ -8,13 +8,14 @@ import { WalletsPage } from '../WalletsPage';
 vi.mock('../hooks', () => ({
   useUserWalletsQuery: vi.fn(),
   useCreateWalletMutation: vi.fn(),
+  useUpdateWalletMutation: vi.fn(),
 }));
 
 vi.mock('../../../stores/use-selection-store', () => ({
   useSelectionStore: vi.fn(),
 }));
 
-import { useUserWalletsQuery, useCreateWalletMutation } from '../hooks';
+import { useUserWalletsQuery, useCreateWalletMutation, useUpdateWalletMutation } from '../hooks';
 import { useSelectionStore } from '../../../stores/use-selection-store';
 
 function makeWrapper() {
@@ -32,6 +33,12 @@ describe('WalletsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useCreateWalletMutation).mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+      isError: false,
+      error: null,
+    } as any);
+    vi.mocked(useUpdateWalletMutation).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
       isError: false,

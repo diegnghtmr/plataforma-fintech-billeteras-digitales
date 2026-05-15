@@ -1,4 +1,6 @@
-import { useUserWalletsQuery, useCreateWalletMutation } from './hooks';
+import { useUserWalletsQuery, useCreateWalletMutation, useUpdateWalletMutation } from './hooks';
+import type { ApiError } from '../../api/error';
+import type { WalletResponse } from '../../api/wallets';
 import { InlineLink } from '../../shared/components/InlineLink';
 import { useSelectionStore } from '../../stores/use-selection-store';
 import { WalletForm } from './WalletForm';
@@ -13,6 +15,42 @@ export function WalletsPage() {
 
   const { data: wallets = [] } = useUserWalletsQuery(selectedUserId ?? undefined);
   const mutation = useCreateWalletMutation();
+  const updateMutation = useUpdateWalletMutation();
+
+  function describeError(err: unknown): string {
+    const apiError = err as ApiError | undefined;
+    if (apiError?.message) return apiError.message;
+    return 'No se pudo actualizar la billetera.';
+  }
+
+  function handleRename(code: string, name: string) {
+    if (!selectedUserId) return;
+    updateMutation.mutate(
+      { userId: selectedUserId, walletId: code, name },
+      {
+        onSuccess: () => pushToast({ variant: 'success', message: `Billetera ${code} renombrada a "${name}".` }),
+        onError: (err) => pushToast({ variant: 'error', message: describeError(err) }),
+      }
+    );
+  }
+
+  function handleToggleActive(wallet: WalletResponse) {
+    if (!selectedUserId) return;
+    const next = !wallet.active;
+    updateMutation.mutate(
+      { userId: selectedUserId, walletId: wallet.code, active: next },
+      {
+        onSuccess: () =>
+          pushToast({
+            variant: 'success',
+            message: next
+              ? `Billetera ${wallet.code} reabierta.`
+              : `Billetera ${wallet.code} cerrada.`,
+          }),
+        onError: (err) => pushToast({ variant: 'error', message: describeError(err) }),
+      }
+    );
+  }
 
   if (!selectedUserId) {
     return (
@@ -72,6 +110,9 @@ export function WalletsPage() {
                 message: `${wallet?.name ?? code} quedó seleccionada como origen predeterminado en Operaciones.`,
               });
             }}
+            onRename={handleRename}
+            onToggleActive={handleToggleActive}
+            isUpdating={updateMutation.isPending}
           />
         </section>
       </div>

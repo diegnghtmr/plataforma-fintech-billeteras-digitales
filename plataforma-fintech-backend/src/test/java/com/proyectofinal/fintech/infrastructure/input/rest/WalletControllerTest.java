@@ -3,6 +3,8 @@ package com.proyectofinal.fintech.infrastructure.input.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.proyectofinal.fintech.application.usecase.CreateWalletUseCase;
 import com.proyectofinal.fintech.application.usecase.ListWalletsUseCase;
+import com.proyectofinal.fintech.application.usecase.UpdateWalletUseCase;
+import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.Billetera;
@@ -41,6 +43,9 @@ class WalletControllerTest {
 
     @MockBean
     private ListWalletsUseCase listWalletsUseCase;
+
+    @MockBean
+    private UpdateWalletUseCase updateWalletUseCase;
 
     @MockBean
     private WalletMapper walletMapper;
@@ -99,5 +104,45 @@ class WalletControllerTest {
                         .content(objectMapper.writeValueAsString(
                                 Map.of("type", "SAVINGS"))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateWallet_renameSucceeds_returns200() throws Exception {
+        Billetera updated = new Billetera("W001", "NewName", "SAVINGS",
+                "USR001", 500.0, true, FIXED_NOW, 3);
+        when(updateWalletUseCase.execute(eq("USR001"), eq("W001"), any(), any())).thenReturn(updated);
+        when(walletMapper.toDto(updated)).thenReturn(new WalletResponseDto(
+                "W001", "NewName", "SAVINGS", "USR001", 500.0, true, FIXED_NOW.toString(), 3));
+
+        mockMvc.perform(patch("/users/USR001/wallets/W001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "NewName"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("NewName"));
+    }
+
+    @Test
+    void updateWallet_closeWithBalance_returns422() throws Exception {
+        when(updateWalletUseCase.execute(eq("USR001"), eq("W001"), any(), any()))
+                .thenThrow(new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
+                        "No se puede cerrar una billetera con saldo > 0"));
+
+        mockMvc.perform(patch("/users/USR001/wallets/W001")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("active", false))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void updateWallet_unknownWallet_returns404() throws Exception {
+        when(updateWalletUseCase.execute(eq("USR001"), eq("GHOST"), any(), any()))
+                .thenThrow(new NotFoundException(ErrorCode.WALLET_NOT_FOUND, "not found"));
+
+        mockMvc.perform(patch("/users/USR001/wallets/GHOST")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("name", "X"))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("WALLET_NOT_FOUND"));
     }
 }

@@ -168,6 +168,33 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /users/{userId}/wallets/{walletId}:
+    patch:
+      tags: [Wallets]
+      operationId: updateWallet
+      summary: Renombrar o cerrar/reabrir una billetera
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/WalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWalletRequest'
+      responses:
+        '200':
+          description: Billetera actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
   /users/{userId}/wallets/{walletId}/recharge:
     post:
       tags: [Operations]
@@ -875,6 +902,19 @@ components:
         type:
           type: string
           example: DAILY_EXPENSES
+    UpdateWalletRequest:
+      type: object
+      description: Partial update; envía sólo los campos que querés cambiar.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+          example: Gastos del mes
+        active:
+          type: boolean
+          description: false = cerrar billetera (requiere balance == 0); true = reabrir.
+          example: false
     WalletResponse:
       type: object
       required: [code, name, type, ownerId, balance, active, createdAt, transactionCount]

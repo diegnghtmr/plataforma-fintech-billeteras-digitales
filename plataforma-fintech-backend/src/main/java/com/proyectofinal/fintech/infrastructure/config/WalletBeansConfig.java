@@ -2,6 +2,7 @@ package com.proyectofinal.fintech.infrastructure.config;
 
 import com.proyectofinal.fintech.application.usecase.CreateWalletUseCase;
 import com.proyectofinal.fintech.application.usecase.ListWalletsUseCase;
+import com.proyectofinal.fintech.application.usecase.UpdateWalletUseCase;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
 import com.proyectofinal.fintech.infrastructure.mapper.WalletMapper;
@@ -34,6 +35,12 @@ public class WalletBeansConfig {
     public ListWalletsUseCase listWalletsUseCase(UserRepository userRepository,
                                                   WalletRepository walletRepository) {
         return new ListWalletsUseCase(userRepository, walletRepository);
+    }
+
+    @Bean
+    public UpdateWalletUseCase updateWalletUseCase(UserRepository userRepository,
+                                                    WalletRepository walletRepository) {
+        return new UpdateWalletUseCase(userRepository, walletRepository);
     }
 
     @Bean
