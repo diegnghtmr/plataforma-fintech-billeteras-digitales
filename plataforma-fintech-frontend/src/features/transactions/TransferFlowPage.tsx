@@ -288,51 +288,51 @@ export function TransferFlowPage() {
 
       <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="rounded-lg border border-surface-fg/10 bg-surface p-4">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 text-canvas-fg">
             <button
               type="button"
               onClick={player.prev}
               disabled={player.index === 0}
-              className="p-2 rounded hover:bg-canvas disabled:opacity-40"
+              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed text-canvas-fg"
               aria-label="Paso anterior"
             >
-              <StepBack size={16} />
+              <StepBack size={16} strokeWidth={2} />
             </button>
             {player.playing ? (
               <button
                 type="button"
                 onClick={player.pause}
-                className="p-2 rounded hover:bg-canvas"
+                className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
                 aria-label="Pausar"
               >
-                <Pause size={16} />
+                <Pause size={16} strokeWidth={2} />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={player.play}
-                className="p-2 rounded hover:bg-canvas"
+                className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
                 aria-label="Reproducir"
               >
-                <Play size={16} />
+                <Play size={16} strokeWidth={2} />
               </button>
             )}
             <button
               type="button"
               onClick={player.next}
               disabled={player.index === steps.length - 1}
-              className="p-2 rounded hover:bg-canvas disabled:opacity-40"
+              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft disabled:opacity-40 disabled:cursor-not-allowed text-canvas-fg"
               aria-label="Paso siguiente"
             >
-              <StepForward size={16} />
+              <StepForward size={16} strokeWidth={2} />
             </button>
             <button
               type="button"
               onClick={player.replay}
-              className="p-2 rounded hover:bg-canvas"
+              className="p-2 rounded border border-surface-fg/15 bg-canvas hover:bg-surface-soft text-canvas-fg"
               aria-label="Reiniciar"
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={16} strokeWidth={2} />
             </button>
             <span className="ml-3 text-xs text-surface-fg">
               Paso {player.index + 1} de {steps.length}
@@ -371,7 +371,7 @@ export function TransferFlowPage() {
                       <span className="text-sm font-medium">{s.title}</span>
                     </div>
                     {isActive && (
-                      <p className="mt-1 ml-7 text-xs text-canvas-fg/80">{s.detail}</p>
+                      <p className="mt-1 ml-7 text-xs text-[#3a40c4]/85 font-mono">{s.detail}</p>
                     )}
                   </button>
                 </li>
