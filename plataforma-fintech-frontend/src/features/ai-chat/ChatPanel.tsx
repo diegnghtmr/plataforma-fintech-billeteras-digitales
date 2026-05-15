@@ -127,8 +127,10 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-brand/10 text-brand">
               <Sparkles size={22} strokeWidth={1.5} aria-hidden />
             </div>
-            <p className="text-sm font-medium text-ink">Probá una pregunta para empezar</p>
-            <p className="text-xs text-mute leading-relaxed max-w-md text-balance">
+            <p className="w-full text-sm font-medium text-ink">
+              Probá una pregunta para empezar
+            </p>
+            <p className="w-full max-w-md mx-auto text-xs text-mute leading-relaxed text-balance">
               Por ejemplo:{' '}
               <span className="italic">«¿Cómo estuvo mi actividad esta semana?»</span> o{' '}
               <span className="italic">«Explicame mis alertas de fraude».</span>
