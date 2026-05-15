@@ -4,7 +4,15 @@
 
 El proyecto consiste en una plataforma de billeteras digitales con usuarios, transferencias internas/externas, puntos de fidelidad, operaciones programadas, notificaciones automáticas y detección de fraude. El backend implementa **Arquitectura Hexagonal / Clean Architecture** en Java 21 + Spring Boot 3.3. El frontend usa React 19 + TypeScript + TanStack Query.
 
-La restricción académica central es que **ningún componente de dominio o aplicación puede usar estructuras de datos de la JDK** (HashMap, ArrayList, LinkedList, etc.) — todo debe implementarse con estructuras propias definidas en `domain/structures/`.
+La restricción académica central es que **ningún componente de dominio o aplicación puede usar estructuras de datos de la JDK** (HashMap, ArrayList, LinkedList, etc.) para almacenamiento interno o agregación — todo debe implementarse con estructuras propias definidas en `domain/structures/`.
+
+**Excepciones documentadas** (ver `docs/JDK_AUDIT_2026-05-15.md`):
+
+- **ADR-9.1** — Los casos de uso pueden devolver `java.util.List<ViewRecord>` **únicamente como tipo de retorno** al controlador REST, porque Jackson serializa `java.util.List` a JSON array de forma nativa. El almacenamiento interno del use case sigue siendo `MiLista` (convertido vía `toList()` solo al borde del return).
+- **ADR-9.2** — `java.util.Optional<T>` se considera un primitivo estructural (envoltorio mono-elemento de presencia/ausencia, análogo a `java.time.Instant`), no una colección; no entra bajo la prohibición.
+- **ADR-9.3** — Los métodos boundary-helper de `domain/structures/*` (p. ej. `MiLista.toList()`, `ArbolBST.toList()`, `GrafoTransferencias.findCycles()`) pueden devolver `java.util.List` para snapshots y traducción a adaptadores. El almacenamiento interno de cada estructura sigue siendo propio.
+
+Las reglas ArchUnit en `HexagonalBoundaryTest.java` (24 reglas) refuerzan estas restricciones de forma automatizada en `domain.port`, `domain.model`, `domain.service` y `application.usecase`.
 
 ---
 
