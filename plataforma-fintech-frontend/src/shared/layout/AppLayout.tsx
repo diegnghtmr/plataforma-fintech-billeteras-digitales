@@ -59,7 +59,7 @@ export function AppLayout() {
         </span>
 
         {/* Desktop nav links */}
-        <nav className="hidden lg:flex items-center gap-6 flex-1 overflow-x-auto">
+        <nav className="hidden lg:flex items-center gap-6 flex-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {NAV_ITEMS.map((item) => (
             <NavItem key={item.to} to={item.to} label={item.label} Icon={item.Icon} />
           ))}
