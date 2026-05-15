@@ -39,4 +39,15 @@ public class InMemoryUserRepository implements UserRepository {
     public void deleteById(String id) {
         store.remove(id);
     }
+
+    @Override
+    public Optional<Usuario> findByEmail(String email) {
+        for (String key : store.keys()) {
+            Optional<Usuario> candidate = store.get(key);
+            if (candidate.isPresent() && email.equals(candidate.get().getEmail())) {
+                return candidate;
+            }
+        }
+        return Optional.empty();
+    }
 }

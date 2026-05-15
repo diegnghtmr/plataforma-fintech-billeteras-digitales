@@ -29,24 +29,27 @@ public class InMemoryTransactionRepository implements TransactionRepository {
 
     @Override
     public Transaccion save(Transaccion transaccion) {
-        all.add(transaccion);
+        // C1: idempotent upsert — replace existing entry with same id, or append if new
+        if (!replaceIfPresent(all, transaccion)) {
+            all.add(transaccion);
+        }
 
         // Index by sourceUserId
-        appendToIndex(byUser, transaccion.getSourceUserId(), transaccion);
+        upsertInIndex(byUser, transaccion.getSourceUserId(), transaccion);
 
         // Index by targetUserId only if distinct from source (avoids duplicate for internal tx)
         String targetUserId = transaccion.getTargetUserId();
         if (targetUserId != null && !targetUserId.equals(transaccion.getSourceUserId())) {
-            appendToIndex(byUser, targetUserId, transaccion);
+            upsertInIndex(byUser, targetUserId, transaccion);
         }
 
         // Index by sourceWalletId
-        appendToIndex(byWallet, transaccion.getSourceWalletId(), transaccion);
+        upsertInIndex(byWallet, transaccion.getSourceWalletId(), transaccion);
 
         // Index by targetWalletId only if distinct from source
         String targetWalletId = transaccion.getTargetWalletId();
         if (targetWalletId != null && !targetWalletId.equals(transaccion.getSourceWalletId())) {
-            appendToIndex(byWallet, targetWalletId, transaccion);
+            upsertInIndex(byWallet, targetWalletId, transaccion);
         }
 
         return transaccion;
@@ -89,15 +92,15 @@ public class InMemoryTransactionRepository implements TransactionRepository {
                     || userId.equals(tx.getTargetUserId());
             if (!ownedByUser) {
                 newAll.add(tx);
-                appendToIndex(newByUser, tx.getSourceUserId(), tx);
+                upsertInIndex(newByUser, tx.getSourceUserId(), tx);
                 String tgt = tx.getTargetUserId();
                 if (tgt != null && !tgt.equals(tx.getSourceUserId())) {
-                    appendToIndex(newByUser, tgt, tx);
+                    upsertInIndex(newByUser, tgt, tx);
                 }
-                appendToIndex(newByWallet, tx.getSourceWalletId(), tx);
+                upsertInIndex(newByWallet, tx.getSourceWalletId(), tx);
                 String tgtW = tx.getTargetWalletId();
                 if (tgtW != null && !tgtW.equals(tx.getSourceWalletId())) {
-                    appendToIndex(newByWallet, tgtW, tx);
+                    upsertInIndex(newByWallet, tgtW, tx);
                 }
             }
         }
@@ -119,15 +122,40 @@ public class InMemoryTransactionRepository implements TransactionRepository {
         }
     }
 
-    // ── Internal helper ───────────────────────────────────────────────────────
+    // ── Internal helpers ──────────────────────────────────────────────────────
 
-    private void appendToIndex(TablaHash<String, MiLista<Transaccion>> index,
+    /**
+     * Linear scan of {@code list} by transaction id.
+     * If a match is found, replaces the entry in-place via {@link MiLista#set} and returns true.
+     * Returns false if no match (caller must append).
+     * C1 / ADR-13.2.
+     */
+    private boolean replaceIfPresent(MiLista<Transaccion> list, Transaccion tx) {
+        int i = 0;
+        for (Transaccion existing : list) {
+            if (existing.getId().equals(tx.getId())) {
+                list.set(i, tx);
+                return true;
+            }
+            i++;
+        }
+        return false;
+    }
+
+    /**
+     * Upserts {@code tx} into the index list for {@code key}.
+     * Creates the list if absent. Replaces existing entry with same id, or appends.
+     * Renamed from {@code appendToIndex} to make upsert semantics explicit.
+     */
+    private void upsertInIndex(TablaHash<String, MiLista<Transaccion>> index,
                                 String key, Transaccion tx) {
         MiLista<Transaccion> list = index.get(key).orElseGet(() -> {
             MiLista<Transaccion> newList = new MiLista<>();
             index.put(key, newList);
             return newList;
         });
-        list.add(tx);
+        if (!replaceIfPresent(list, tx)) {
+            list.add(tx);
+        }
     }
 }

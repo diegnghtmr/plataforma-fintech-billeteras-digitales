@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * T05-B03 / T11-B01 (RED) — Transaccion domain model tests.
@@ -102,5 +103,32 @@ class TransaccionTest {
         tx.markRiskLevel(FraudSeverity.HIGH);
         tx.markRiskLevel(FraudSeverity.LOW);
         assertThat(tx.getRiskLevel()).isEqualTo(FraudSeverity.LOW);
+    }
+
+    // C2-RED: addBonusPoints increments pointsGenerated
+
+    @Test
+    void addBonusPoints_incrementsPointsGenerated() {
+        Transaccion tx = new Transaccion(
+                "TX-000007", NOW, TransactionType.RECHARGE, 100.0,
+                "W001", null, "USR001", null,
+                TransactionStatus.SUCCESSFUL, 1.0, null, true
+        );
+
+        tx.addBonusPoints(5.0);
+
+        assertThat(tx.getPointsGenerated()).isEqualTo(6.0);
+    }
+
+    @Test
+    void addBonusPoints_negative_throwsIllegalArgument() {
+        Transaccion tx = new Transaccion(
+                "TX-000008", NOW, TransactionType.RECHARGE, 100.0,
+                "W001", null, "USR001", null,
+                TransactionStatus.SUCCESSFUL, 1.0, null, true
+        );
+
+        assertThatThrownBy(() -> tx.addBonusPoints(-1.0))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

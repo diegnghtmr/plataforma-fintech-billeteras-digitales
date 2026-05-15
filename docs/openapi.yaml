@@ -18,6 +18,7 @@ tags:
   - name: Notifications
   - name: Analytics
   - name: Fraud
+  - name: Benefits
 paths:
   /users:
     get:
@@ -658,6 +659,61 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FraudEventResponse'
+  /benefits:
+    get:
+      tags: [Benefits]
+      operationId: getActiveBenefits
+      summary: Listar beneficios activos
+      responses:
+        '200':
+          description: Lista de beneficios activos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitResponse'
+  /users/{userId}/benefits/{benefitId}/redeem:
+    post:
+      tags: [Benefits]
+      operationId: redeemBenefit
+      summary: Canjear un beneficio
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - name: benefitId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Beneficio canjeado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BenefitRedemptionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessError'
+  /users/{userId}/benefit-redemptions:
+    get:
+      tags: [Benefits]
+      operationId: getUserBenefitRedemptions
+      summary: Listar canjes de beneficios del usuario
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Lista de canjes del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitRedemptionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     UserId:
@@ -989,9 +1045,14 @@ components:
           format: date-time
         description:
           type: string
+        recurrence:
+          type: string
+          enum: [NONE, DAILY, WEEKLY, MONTHLY]
+          default: NONE
+          description: Recurrence pattern for the scheduled operation. Defaults to NONE (one-shot).
     ScheduledOperationResponse:
       type: object
-      required: [id, type, status, sourceUserId, sourceWalletId, amount, scheduledAt]
+      required: [id, type, status, sourceUserId, sourceWalletId, amount, scheduledAt, recurrence]
       properties:
         id:
           type: string
@@ -1015,6 +1076,10 @@ components:
           format: date-time
         description:
           type: string
+        recurrence:
+          type: string
+          enum: [NONE, DAILY, WEEKLY, MONTHLY]
+          description: Recurrence pattern of this scheduled operation.
     NotificationResponse:
       type: object
       required: [id, userId, type, severity, title, message, read, createdAt]
@@ -1144,3 +1209,34 @@ components:
     FraudSeverity:
       type: string
       enum: [LOW, MEDIUM, HIGH, CRITICAL]
+    BenefitResponse:
+      type: object
+      required: [id, name, description, pointsCost, active]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        pointsCost:
+          type: number
+          format: double
+        active:
+          type: boolean
+    BenefitRedemptionResponse:
+      type: object
+      required: [id, userId, benefitId, pointsSpent, redeemedAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        benefitId:
+          type: string
+        pointsSpent:
+          type: number
+          format: double
+        redeemedAt:
+          type: string
+          format: date-time

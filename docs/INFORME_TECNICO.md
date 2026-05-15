@@ -220,7 +220,7 @@ La restricción académica central es que **ningún componente de dominio o apli
 | Detección de ciclos en grafo | ✅ CUMPLE | `GrafoTransferencias.findCycles()` |
 | Puntos: floor(amount/100)*rate | ✅ CUMPLE | `PuntosCalculator.compute()` |
 | Niveles: ≤500 BRONZE, 501-1000 SILVER, 1001-5000 GOLD, >5000 PLATINUM | ✅ CUMPLE | `LoyaltyLevelCalculator.from()` |
-| FraudDetector velocidad ≥3 tx en 60s | ✅ CUMPLE | `FraudDetector.detect()` Rule B |
+| FraudDetector velocidad ≥2 tx previas en 60s (3ra transacción dispara) | ✅ CUMPLE | `FraudDetector.detect()` Rule B — `VELOCITY_THRESHOLD=2` |
 | FraudDetector monto >10000 | ✅ CUMPLE | `FraudDetector.detect()` Rule A |
 | **Regla C — REPEATED_DESTINATION (destino repetido)** | ✅ CUMPLE | `FraudDetector.checkRepeatedDestination()` — severity HIGH, ventana 5 min, umbral ≥3 |
 | **Regla D — WALLET_FRAGMENTATION (fragmentación de monto)** | ✅ CUMPLE | `FraudDetector.checkAmountFragmentation()` — severity HIGH, ventana 2 min, ≥3 billeteras y >5000 |
@@ -230,7 +230,7 @@ La restricción académica central es que **ningún componente de dominio o apli
 | Notificaciones LOW_BALANCE, POINTS_LEVEL, TRANSACTION | ✅ CUMPLE | `NotificationEmitter` |
 | **Notificación SCHEDULED_REMINDER** | ✅ CUMPLE | `NotificationEmitter.emitScheduledNear(userId, opId, scheduledAt)` — emitida por `ExecuteDueScheduledOperationsUseCase` (idempotente via `remindersSent`; incluye fecha programada en el cuerpo del mensaje) |
 | **Notificación OPERATION_REJECTED** | ✅ CUMPLE | `NotificationEmitter.emitOperationRejected()` + `emitScheduledRejected()` — emitida en rutas de fallo de los 4 use cases de transferencia |
-| **Notificación BENEFIT_REDEEMED** | ✅ CUMPLE (enum-only) | `NotificationType.BENEFIT_REDEEMED` — slot de compatibilidad futura; no tiene emitter ni use case (ADR-7.2, REQ-3.6) |
+| **Notificación BENEFIT_REDEEMED** | ✅ CUMPLE | `NotificationEmitter.emitBenefitRedeemed()` — emitida por `RedeemBenefitUseCase` al canjear un beneficio; tipo INFO |
 | ColaPrioridad para operaciones programadas | ✅ CUMPLE | `InMemoryScheduledOperationRepository.findPendingInPriorityOrder()` |
 | Arquitectura Hexagonal | ✅ CUMPLE | Capas domain / application / infrastructure separadas |
 | ZERO Spring/Jakarta en domain y application | ✅ CUMPLE | Verificado con `rg` en CI |
@@ -265,7 +265,7 @@ Los benchmarks de estructuras propias se ejecutan on-demand con `./mvnw test -Ds
 | `execute_tieBreakByIdAsc` | `GetTopTransactionsUseCaseTest` | Tie-break léxico asc por id |
 | `findCycles_singleCycle_returnsNormalizedCycle` | `GrafoTransferenciasTest` | Ciclo normalizado al id más pequeño |
 | `findCycles_triangleCycle_returnsNormalized` | `GrafoTransferenciasTest` | Ciclo triangular A→B→C→A detectado y rotado |
-| `detect_highVelocity_returnsHighFraudEvent` | `FraudDetectorTest` | ≥3 tx en 60s para mismo user = HIGH |
+| `detect_velocityRule_twoPriorPlusCurrent_returnsHighVelocity` | `FraudDetectorTest` | ≥2 tx previas en 60s + current = HIGH |
 | `compute_externalTransferSent_floor_correct` | `PuntosCalculatorTest` | floor(amount/100)*3 para EXTERNAL_TRANSFER_SENT |
 | `from_boundary501_returnsSilver` | `LoyaltyLevelCalculatorTest` | Borde 501 → SILVER (no BRONZE) |
 | `execute_recharge_bonusPlusPointsGranted` | `ExecuteDueScheduledOperationsUseCaseTest` | +5 bonus al ejecutar operación programada |

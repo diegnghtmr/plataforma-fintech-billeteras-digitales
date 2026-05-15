@@ -1,5 +1,6 @@
 package com.proyectofinal.fintech.application.usecase;
 
+import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.UserRepository;
@@ -13,7 +14,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -76,9 +79,23 @@ class CreateUserUseCaseTest {
     void execute_nonUSRIdsAreIgnored_fallsBackToUSR001() {
         Usuario existing = new Usuario("WAL001", "Other", "o@o.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
         when(userRepository.findAll()).thenReturn(List.of(existing));
+        when(userRepository.findByEmail("juan@example.com")).thenReturn(Optional.empty());
 
         Usuario result = useCase.execute("Juan", "juan@example.com");
 
         assertEquals("USR001", result.getId());
+    }
+
+    // C3-RED: duplicate email throws DuplicatedResourceException
+    @Test
+    void execute_duplicateEmail_throwsDuplicatedResourceException() {
+        Usuario existing = new Usuario("USR001", "Juan", "taken@example.com", FIXED_NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findByEmail("taken@example.com")).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> useCase.execute("Another", "taken@example.com"))
+                .isInstanceOf(DuplicatedResourceException.class)
+                .hasMessageContaining("taken@example.com");
+
+        verify(userRepository, never()).save(any());
     }
 }

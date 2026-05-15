@@ -1,19 +1,19 @@
 package com.proyectofinal.fintech.application.usecase;
 
 import com.proyectofinal.fintech.domain.port.TransferGraphRepository;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 /**
  * T11-H03 (RED→GREEN) — GetCyclesUseCase tests.
+ * Updated for MiLista return type (REQ-F3.2).
  */
 @ExtendWith(MockitoExtension.class)
 class GetCyclesUseCaseTest {
@@ -28,34 +28,52 @@ class GetCyclesUseCaseTest {
         useCase = new GetCyclesUseCase(transferGraphRepository);
     }
 
+    private static MiLista<String> cycle(String... nodes) {
+        MiLista<String> list = new MiLista<>();
+        for (String n : nodes) list.add(n);
+        return list;
+    }
+
     @Test
     void execute_noCycles_returnsEmpty() {
-        when(transferGraphRepository.findCycles()).thenReturn(List.of());
+        when(transferGraphRepository.findCycles()).thenReturn(new MiLista<>());
 
-        List<List<String>> result = useCase.execute();
+        MiLista<MiLista<String>> result = useCase.execute();
 
-        assertThat(result).isEmpty();
+        int count = 0;
+        for (var ignored : result) count++;
+        assertThat(count).isEqualTo(0);
     }
 
     @Test
     void execute_oneCycle_returnsCycle() {
-        when(transferGraphRepository.findCycles()).thenReturn(List.of(List.of("A", "B")));
+        MiLista<MiLista<String>> cycles = new MiLista<>();
+        cycles.add(cycle("A", "B"));
+        when(transferGraphRepository.findCycles()).thenReturn(cycles);
 
-        List<List<String>> result = useCase.execute();
+        MiLista<MiLista<String>> result = useCase.execute();
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0)).containsExactly("A", "B");
+        int count = 0;
+        for (MiLista<String> c : result) {
+            count++;
+            java.util.List<String> items = new java.util.ArrayList<>();
+            for (String n : c) items.add(n);
+            assertThat(items).containsExactly("A", "B");
+        }
+        assertThat(count).isEqualTo(1);
     }
 
     @Test
     void execute_multipleCycles_returnsAll() {
-        when(transferGraphRepository.findCycles()).thenReturn(List.of(
-                List.of("A", "B"),
-                List.of("C", "D", "E")
-        ));
+        MiLista<MiLista<String>> cycles = new MiLista<>();
+        cycles.add(cycle("A", "B"));
+        cycles.add(cycle("C", "D", "E"));
+        when(transferGraphRepository.findCycles()).thenReturn(cycles);
 
-        List<List<String>> result = useCase.execute();
+        MiLista<MiLista<String>> result = useCase.execute();
 
-        assertThat(result).hasSize(2);
+        int count = 0;
+        for (var ignored : result) count++;
+        assertThat(count).isEqualTo(2);
     }
 }

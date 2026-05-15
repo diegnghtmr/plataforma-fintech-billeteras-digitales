@@ -1,9 +1,9 @@
 package com.proyectofinal.fintech.application.usecase;
 
+import com.proyectofinal.fintech.application.result.RangeTotalView;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
 import com.proyectofinal.fintech.domain.model.*;
 import com.proyectofinal.fintech.domain.port.TransactionRepository;
-import com.proyectofinal.fintech.infrastructure.input.rest.dto.RangeTotalResponseDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +52,7 @@ class GetTotalMovedInRangeUseCaseTest {
                 makeTx("TX-3", 200.0, OUTSIDE, TransactionType.RECHARGE, TransactionStatus.SUCCESSFUL)
         ));
 
-        RangeTotalResponseDto result = useCase.execute(FROM, TO);
+        RangeTotalView result = useCase.execute(FROM, TO);
 
         assertThat(result.count()).isEqualTo(2);
         assertThat(result.totalAmount()).isEqualTo(1500.0);
@@ -67,7 +67,7 @@ class GetTotalMovedInRangeUseCaseTest {
                 makeTx("TX-2", 999.0, MID, TransactionType.EXTERNAL_TRANSFER_RECEIVED, TransactionStatus.SUCCESSFUL)
         ));
 
-        RangeTotalResponseDto result = useCase.execute(FROM, TO);
+        RangeTotalView result = useCase.execute(FROM, TO);
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.totalAmount()).isEqualTo(500.0);
@@ -83,7 +83,7 @@ class GetTotalMovedInRangeUseCaseTest {
     void execute_empty_returnsZero() {
         when(transactionRepository.findAll()).thenReturn(List.of());
 
-        RangeTotalResponseDto result = useCase.execute(FROM, TO);
+        RangeTotalView result = useCase.execute(FROM, TO);
 
         assertThat(result.count()).isEqualTo(0);
         assertThat(result.totalAmount()).isEqualTo(0.0);

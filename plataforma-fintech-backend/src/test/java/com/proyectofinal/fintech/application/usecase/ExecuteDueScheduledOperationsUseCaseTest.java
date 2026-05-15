@@ -5,17 +5,21 @@ import com.proyectofinal.fintech.application.service.NotificationEmitter;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.model.*;
+import com.proyectofinal.fintech.domain.port.ScheduledOperationIdGenerator;
 import com.proyectofinal.fintech.domain.port.ScheduledOperationRepository;
+import com.proyectofinal.fintech.domain.port.TransactionRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
@@ -35,7 +39,9 @@ class ExecuteDueScheduledOperationsUseCaseTest {
 
     @Mock private ScheduledOperationRepository scheduledRepo;
     @Mock private UserRepository userRepository;
+    @Mock private TransactionRepository transactionRepository;
     @Mock private NotificationEmitter notificationEmitter;
+    @Mock private ScheduledOperationIdGenerator idGenerator;
     @Mock private RechargeWalletUseCase rechargeUseCase;
     @Mock private WithdrawWalletUseCase withdrawUseCase;
     @Mock private InternalTransferUseCase internalTransferUseCase;
@@ -50,7 +56,7 @@ class ExecuteDueScheduledOperationsUseCaseTest {
     void setUp() {
         clock = Clock.fixed(NOW, ZoneId.of("UTC"));
         useCase = new ExecuteDueScheduledOperationsUseCase(
-                scheduledRepo, userRepository, notificationEmitter, clock,
+                scheduledRepo, userRepository, transactionRepository, notificationEmitter, clock, idGenerator,
                 rechargeUseCase, withdrawUseCase, internalTransferUseCase, externalTransferUseCase
         );
     }
@@ -58,6 +64,12 @@ class ExecuteDueScheduledOperationsUseCaseTest {
     private OperacionProgramada makeOp(String id, ScheduledOperationType type, Instant scheduledAt) {
         return new OperacionProgramada(id, type, ScheduledOperationStatus.PENDING,
                 "USR001", "W001", null, null, 100.0, scheduledAt, null);
+    }
+
+    private OperacionProgramada makeOpWithRecurrence(String id, ScheduledOperationType type,
+                                                       Instant scheduledAt, RecurrenceType recurrence) {
+        return new OperacionProgramada(id, type, ScheduledOperationStatus.PENDING,
+                "USR001", "W001", null, null, 100.0, scheduledAt, null, recurrence);
     }
 
     private Transaccion makeTx(String id) {
@@ -194,5 +206,122 @@ class ExecuteDueScheduledOperationsUseCaseTest {
         useCase.execute();
 
         verify(notificationEmitter, never()).emitScheduledNear(any(), any(), any());
+    }
+
+    // E-23 (RED) — REQ-F4.4: DAILY recurrence spawns next occurrence +24h
+
+    @Test
+    void execute_dailyRecurrence_spawnsNextOccurrencePlus24h() {
+        Instant scheduledAt = NOW.minusSeconds(10);
+        OperacionProgramada op = makeOpWithRecurrence("OP-D1", ScheduledOperationType.RECHARGE,
+                scheduledAt, RecurrenceType.DAILY);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(rechargeUseCase.execute(any(), any(), anyDouble(), any())).thenReturn(makeTx("TX-D1"));
+        when(userRepository.findById("USR001"))
+                .thenReturn(Optional.of(new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE)));
+        when(idGenerator.next()).thenReturn("OP-D1-NEXT");
+
+        useCase.execute();
+
+        ArgumentCaptor<OperacionProgramada> captor = ArgumentCaptor.forClass(OperacionProgramada.class);
+        // save is called at least twice: once for markExecuted, once for spawned op
+        verify(scheduledRepo, atLeast(2)).save(captor.capture());
+        OperacionProgramada spawned = captor.getAllValues().stream()
+                .filter(o -> "OP-D1-NEXT".equals(o.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Spawned op not saved"));
+        assertThat(spawned.getScheduledAt()).isEqualTo(scheduledAt.plus(Duration.ofDays(1)));
+        assertThat(spawned.getRecurrence()).isEqualTo(RecurrenceType.DAILY);
+        assertThat(spawned.getStatus()).isEqualTo(ScheduledOperationStatus.PENDING);
+    }
+
+    @Test
+    void execute_weeklyRecurrence_spawnsNextOccurrencePlus7d() {
+        Instant scheduledAt = NOW.minusSeconds(10);
+        OperacionProgramada op = makeOpWithRecurrence("OP-W1", ScheduledOperationType.RECHARGE,
+                scheduledAt, RecurrenceType.WEEKLY);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(rechargeUseCase.execute(any(), any(), anyDouble(), any())).thenReturn(makeTx("TX-W1"));
+        when(userRepository.findById("USR001"))
+                .thenReturn(Optional.of(new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE)));
+        when(idGenerator.next()).thenReturn("OP-W1-NEXT");
+
+        useCase.execute();
+
+        ArgumentCaptor<OperacionProgramada> captor = ArgumentCaptor.forClass(OperacionProgramada.class);
+        verify(scheduledRepo, atLeast(2)).save(captor.capture());
+        OperacionProgramada spawned = captor.getAllValues().stream()
+                .filter(o -> "OP-W1-NEXT".equals(o.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Spawned op not saved"));
+        assertThat(spawned.getScheduledAt()).isEqualTo(scheduledAt.plus(Duration.ofDays(7)));
+        assertThat(spawned.getRecurrence()).isEqualTo(RecurrenceType.WEEKLY);
+    }
+
+    @Test
+    void execute_monthlyRecurrence_spawnsNextOccurrencePlus30d() {
+        Instant scheduledAt = NOW.minusSeconds(10);
+        OperacionProgramada op = makeOpWithRecurrence("OP-M1", ScheduledOperationType.RECHARGE,
+                scheduledAt, RecurrenceType.MONTHLY);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(rechargeUseCase.execute(any(), any(), anyDouble(), any())).thenReturn(makeTx("TX-M1"));
+        when(userRepository.findById("USR001"))
+                .thenReturn(Optional.of(new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE)));
+        when(idGenerator.next()).thenReturn("OP-M1-NEXT");
+
+        useCase.execute();
+
+        ArgumentCaptor<OperacionProgramada> captor = ArgumentCaptor.forClass(OperacionProgramada.class);
+        verify(scheduledRepo, atLeast(2)).save(captor.capture());
+        OperacionProgramada spawned = captor.getAllValues().stream()
+                .filter(o -> "OP-M1-NEXT".equals(o.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Spawned op not saved"));
+        assertThat(spawned.getScheduledAt()).isEqualTo(scheduledAt.plus(Duration.ofDays(30)));
+        assertThat(spawned.getRecurrence()).isEqualTo(RecurrenceType.MONTHLY);
+    }
+
+    @Test
+    void execute_noneRecurrence_noNewOpSpawned() {
+        Instant scheduledAt = NOW.minusSeconds(10);
+        OperacionProgramada op = makeOpWithRecurrence("OP-N1", ScheduledOperationType.RECHARGE,
+                scheduledAt, RecurrenceType.NONE);
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+        when(rechargeUseCase.execute(any(), any(), anyDouble(), any())).thenReturn(makeTx("TX-N1"));
+        when(userRepository.findById("USR001"))
+                .thenReturn(Optional.of(new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE)));
+
+        useCase.execute();
+
+        // Only one save: the markExecuted save. No spawned op.
+        ArgumentCaptor<OperacionProgramada> captor = ArgumentCaptor.forClass(OperacionProgramada.class);
+        verify(scheduledRepo, atMost(2)).save(captor.capture()); // user save doesn't go here
+        captor.getAllValues().forEach(saved ->
+                assertThat(saved.getId()).isEqualTo("OP-N1")); // only the original op saved
+    }
+
+    // C2-RED: scheduled recharge tx pointsGenerated = base + SCHEDULED_EXECUTION_BONUS
+    @Test
+    void execute_scheduledRecharge_txPointsGeneratedEqualsBasePlusBonus() {
+        OperacionProgramada op = makeOp("OP-C2", ScheduledOperationType.RECHARGE, NOW.minusSeconds(60));
+        when(scheduledRepo.findPendingInPriorityOrder()).thenReturn(List.of(op));
+
+        // base points = 1.0 (recharge of 100)
+        Transaccion tx = makeTx("TX-C2");  // pointsGenerated = 1.0
+        when(rechargeUseCase.execute(eq("USR001"), eq("W001"), eq(100.0), any()))
+                .thenReturn(tx);
+
+        Usuario user = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        when(userRepository.findById("USR001")).thenReturn(Optional.of(user));
+
+        useCase.execute();
+
+        // tx.pointsGenerated must equal base (1.0) + SCHEDULED_EXECUTION_BONUS (5.0) = 6.0
+        assertThat(tx.getPointsGenerated()).isEqualTo(6.0);
+
+        // transactionRepository.save(tx) must be called with the augmented tx
+        ArgumentCaptor<Transaccion> txCaptor = ArgumentCaptor.forClass(Transaccion.class);
+        verify(transactionRepository).save(txCaptor.capture());
+        assertThat(txCaptor.getValue().getPointsGenerated()).isEqualTo(6.0);
     }
 }

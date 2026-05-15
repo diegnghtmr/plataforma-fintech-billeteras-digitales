@@ -35,6 +35,7 @@ class ScheduledOperationMapperTest {
         assertEquals(100.0, dto.amount());
         assertEquals(SCHEDULED.toString(), dto.scheduledAt());
         assertEquals("desc", dto.description());
+        assertEquals("NONE", dto.recurrence());
     }
 
     @Test

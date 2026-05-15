@@ -24,7 +24,7 @@ import java.util.Optional;
  *
  * Rules (evaluated in order — first match wins, ADR-7.1):
  *   Rule A: amount > 10000 → HIGH LARGE_TRANSACTION
- *   Rule B (velocity): ≥3 SUCCESSFUL tx for same sourceUserId within 60s → HIGH HIGH_VELOCITY
+ *   Rule B (velocity): Triggers when there are ≥2 prior SUCCESSFUL transactions within 60s before the current one (3rd consecutive transaction in the window fires).
  *   Rule C: ≥3 transfers to same target (user+wallet) within 5min → HIGH REPEATED_DESTINATION
  *   Rule D: ≥3 distinct source wallets within 2min AND totalAmount > 5000 → HIGH WALLET_FRAGMENTATION
  *   Rule E: history ≥10 AND last-1h count ≥ 5× avg hourly rate → MEDIUM FREQUENCY_BURST
@@ -34,7 +34,7 @@ public class FraudDetector {
 
     private static final double LARGE_TRANSACTION_THRESHOLD = 10_000.0;
     private static final long VELOCITY_WINDOW_SECONDS = 60L;
-    private static final int VELOCITY_THRESHOLD = 3;
+    private static final int VELOCITY_THRESHOLD = 2;
     private static final long REPEATED_DEST_WINDOW_SECONDS = 300L;   // 5 min
     private static final int REPEATED_DEST_THRESHOLD = 3;
     private static final long FRAGMENTATION_WINDOW_SECONDS = 120L;   // 2 min

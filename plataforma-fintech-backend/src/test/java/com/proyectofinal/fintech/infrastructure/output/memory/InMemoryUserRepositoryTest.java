@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryUserRepositoryTest {
@@ -70,5 +71,35 @@ class InMemoryUserRepositoryTest {
         assertTrue(found.isPresent());
         assertEquals("Juan Updated", found.get().getName());
         assertEquals(50.0, found.get().getPoints());
+    }
+
+    // C3-RED: findByEmail tests (will fail until findByEmail is implemented)
+
+    @Test
+    void findByEmail_returnsUser_whenEmailMatches() {
+        repository.save(new Usuario("USR001", "Juan", "juan@example.com", NOW, 0.0, LoyaltyLevel.BRONZE));
+
+        Optional<Usuario> found = repository.findByEmail("juan@example.com");
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getId()).isEqualTo("USR001");
+    }
+
+    @Test
+    void findByEmail_returnsEmpty_whenNotFound() {
+        repository.save(new Usuario("USR001", "Juan", "juan@example.com", NOW, 0.0, LoyaltyLevel.BRONZE));
+
+        Optional<Usuario> found = repository.findByEmail("other@example.com");
+
+        assertThat(found).isEmpty();
+    }
+
+    @Test
+    void findByEmail_caseSensitive_treatsAsDistinct() {
+        repository.save(new Usuario("USR001", "Juan", "User@x.com", NOW, 0.0, LoyaltyLevel.BRONZE));
+
+        Optional<Usuario> found = repository.findByEmail("user@x.com");
+
+        assertThat(found).isEmpty();
     }
 }

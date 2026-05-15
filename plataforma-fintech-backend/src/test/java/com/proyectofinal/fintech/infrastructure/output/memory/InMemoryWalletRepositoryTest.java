@@ -108,4 +108,26 @@ class InMemoryWalletRepositoryTest {
     void sumBalanceByOwnerId_unknownOwner_returnsZero() {
         assertEquals(0.0, repository.sumBalanceByOwnerId("UNKNOWN"), 0.001);
     }
+
+    // C-9: findAll returns MiLista<Billetera>
+    @Test
+    void findAll_returnsMiLista() {
+        repository.save(wallet("W001", "USR001", 100.0));
+        repository.save(wallet("W002", "USR002", 200.0));
+        repository.save(wallet("W003", "USR001", 300.0));
+
+        com.proyectofinal.fintech.domain.structures.MiLista<Billetera> result = repository.findAll();
+
+        assertNotNull(result);
+        int count = 0;
+        for (Billetera b : result) { count++; }
+        assertEquals(3, count);
+    }
+
+    @Test
+    void findAll_empty_returnsMiLista() {
+        com.proyectofinal.fintech.domain.structures.MiLista<Billetera> result = repository.findAll();
+        assertNotNull(result);
+        assertFalse(result.iterator().hasNext());
+    }
 }

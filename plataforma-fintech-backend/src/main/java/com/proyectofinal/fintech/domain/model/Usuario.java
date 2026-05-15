@@ -52,4 +52,22 @@ public class Usuario {
         this.loyaltyLevel = LoyaltyLevelCalculator.from(this.points);
         return this.loyaltyLevel.ordinal() > previousLevel.ordinal();
     }
+
+    /**
+     * Deducts points for a benefit redemption.
+     * REQ-F1.3: validates amount > 0 and sufficient balance.
+     *
+     * @param amount points to deduct (must be > 0)
+     * @throws IllegalArgumentException if amount <= 0 ("invalid_points_amount")
+     * @throws IllegalArgumentException if insufficient points ("insufficient_points")
+     */
+    public void spendPoints(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("invalid_points_amount");
+        }
+        if (this.points < amount) {
+            throw new IllegalArgumentException("insufficient_points");
+        }
+        addPoints(-amount);
+    }
 }

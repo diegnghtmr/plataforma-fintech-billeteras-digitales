@@ -22,4 +22,13 @@ public interface UserRepository {
      * Removes the user with the given id. No-op if not found.
      */
     void deleteById(String id);
+
+    /**
+     * Finds a user by exact (case-sensitive) email match.
+     * C3: required by CreateUserUseCase to enforce email uniqueness.
+     *
+     * @param email the email to search for
+     * @return an Optional containing the matching user, or empty if not found
+     */
+    Optional<Usuario> findByEmail(String email);
 }

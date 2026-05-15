@@ -16,5 +16,6 @@ public record CreateScheduledOperationRequestDto(
         String targetWalletId,
         @NotNull @DecimalMin("0.01") Double amount,
         @NotBlank String scheduledAt,
-        String description
+        String description,
+        String recurrence
 ) {}

@@ -3,15 +3,21 @@ package com.proyectofinal.fintech.application.usecase;
 import com.proyectofinal.fintech.application.result.ExecutionReport;
 import com.proyectofinal.fintech.application.service.NotificationEmitter;
 import com.proyectofinal.fintech.domain.model.OperacionProgramada;
+import com.proyectofinal.fintech.domain.model.RecurrenceType;
+import com.proyectofinal.fintech.domain.model.ScheduledOperationStatus;
 import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
+import com.proyectofinal.fintech.domain.model.Transaccion;
+import com.proyectofinal.fintech.domain.port.ScheduledOperationIdGenerator;
 import com.proyectofinal.fintech.domain.port.ScheduledOperationRepository;
+import com.proyectofinal.fintech.domain.port.TransactionRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.service.PuntosCalculator;
 
+import com.proyectofinal.fintech.domain.structures.MiLista;
+
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Use case: execute all scheduled operations that are due (scheduledAt <= now).
@@ -22,8 +28,10 @@ public class ExecuteDueScheduledOperationsUseCase {
 
     private final ScheduledOperationRepository scheduledRepo;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
     private final NotificationEmitter notificationEmitter;
     private final Clock clock;
+    private final ScheduledOperationIdGenerator idGenerator;
     private final RechargeWalletUseCase rechargeUseCase;
     private final WithdrawWalletUseCase withdrawUseCase;
     private final InternalTransferUseCase internalTransferUseCase;
@@ -32,16 +40,20 @@ public class ExecuteDueScheduledOperationsUseCase {
     public ExecuteDueScheduledOperationsUseCase(
             ScheduledOperationRepository scheduledRepo,
             UserRepository userRepository,
+            TransactionRepository transactionRepository,
             NotificationEmitter notificationEmitter,
             Clock clock,
+            ScheduledOperationIdGenerator idGenerator,
             RechargeWalletUseCase rechargeUseCase,
             WithdrawWalletUseCase withdrawUseCase,
             InternalTransferUseCase internalTransferUseCase,
             ExternalTransferUseCase externalTransferUseCase) {
         this.scheduledRepo = scheduledRepo;
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
         this.notificationEmitter = notificationEmitter;
         this.clock = clock;
+        this.idGenerator = idGenerator;
         this.rechargeUseCase = rechargeUseCase;
         this.withdrawUseCase = withdrawUseCase;
         this.internalTransferUseCase = internalTransferUseCase;
@@ -58,8 +70,8 @@ public class ExecuteDueScheduledOperationsUseCase {
     public ExecutionReport execute() {
         Instant now = Instant.now(clock);
         Instant horizon = now.plusSeconds(3600L); // 1 hour ahead
-        List<String> executedIds = new ArrayList<>();
-        List<String> failedIds = new ArrayList<>();
+        MiLista<String> executedIds = new MiLista<>();
+        MiLista<String> failedIds = new MiLista<>();
 
         // SCHEDULED_REMINDER loop: emit for upcoming PENDING ops within 1h window
         for (OperacionProgramada op : scheduledRepo.findPendingInPriorityOrder()) {
@@ -80,9 +92,15 @@ public class ExecuteDueScheduledOperationsUseCase {
             }
 
             try {
-                dispatch(op);
+                // C2/ADR-13.3: dispatch returns the produced Transaccion for bonus folding
+                Transaccion tx = dispatch(op);
                 op.markExecuted();
                 scheduledRepo.save(op);
+
+                // C2: fold SCHEDULED_EXECUTION_BONUS into tx.pointsGenerated, then re-persist
+                // (idempotent thanks to C1 — does not duplicate)
+                tx.addBonusPoints(PuntosCalculator.SCHEDULED_EXECUTION_BONUS);
+                transactionRepository.save(tx);
 
                 // Bonus +5 points for the source user
                 userRepository.findById(op.getSourceUserId()).ifPresent(user -> {
@@ -96,6 +114,9 @@ public class ExecuteDueScheduledOperationsUseCase {
                 notificationEmitter.emitScheduledExecuted(op.getSourceUserId(), op.getId());
                 executedIds.add(op.getId());
 
+                // Spawn next occurrence if recurrence is not NONE
+                spawnNextIfRecurring(op);
+
             } catch (Exception e) {
                 op.markFailed();
                 scheduledRepo.save(op);
@@ -108,8 +129,40 @@ public class ExecuteDueScheduledOperationsUseCase {
         return new ExecutionReport(executedIds.size(), failedIds.size(), executedIds, failedIds);
     }
 
-    private void dispatch(OperacionProgramada op) {
-        switch (op.getType()) {
+    private void spawnNextIfRecurring(OperacionProgramada op) {
+        RecurrenceType recurrence = op.getRecurrence();
+        if (recurrence == RecurrenceType.NONE) return;
+
+        Duration period = switch (recurrence) {
+            case DAILY -> Duration.ofDays(1);
+            case WEEKLY -> Duration.ofDays(7);
+            case MONTHLY -> Duration.ofDays(30);
+            default -> throw new IllegalStateException("Unexpected recurrence: " + recurrence);
+        };
+
+        Instant nextScheduledAt = op.getScheduledAt().plus(period);
+        OperacionProgramada next = new OperacionProgramada(
+                idGenerator.next(),
+                op.getType(),
+                ScheduledOperationStatus.PENDING,
+                op.getSourceUserId(),
+                op.getSourceWalletId(),
+                op.getTargetUserId(),
+                op.getTargetWalletId(),
+                op.getAmount(),
+                nextScheduledAt,
+                op.getDescription(),
+                recurrence);
+        scheduledRepo.save(next);
+    }
+
+    /**
+     * Dispatches the scheduled operation to the appropriate sub-use-case and returns
+     * the produced Transaccion. For EXTERNAL_TRANSFER, returns the outgoing (source-side) leg.
+     * ADR-13.3: private, single caller — zero external blast radius.
+     */
+    private Transaccion dispatch(OperacionProgramada op) {
+        return switch (op.getType()) {
             case RECHARGE -> rechargeUseCase.execute(
                     op.getSourceUserId(), op.getSourceWalletId(), op.getAmount(), op.getDescription());
             case WITHDRAWAL -> withdrawUseCase.execute(
@@ -120,8 +173,8 @@ public class ExecuteDueScheduledOperationsUseCase {
             case EXTERNAL_TRANSFER -> externalTransferUseCase.execute(
                     op.getSourceUserId(), op.getSourceWalletId(),
                     op.getTargetUserId(), op.getTargetWalletId(),
-                    op.getAmount(), op.getDescription());
+                    op.getAmount(), op.getDescription()).outgoing();
             default -> throw new IllegalArgumentException("Unknown operation type: " + op.getType());
-        }
+        };
     }
 }

@@ -1,14 +1,15 @@
 package com.proyectofinal.fintech.application.result;
 
-import java.util.List;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 
 /**
  * Immutable result record produced by ExecuteDueScheduledOperationsUseCase.
  * ZERO Spring/Jakarta imports.
+ * W3: fields use MiLista&lt;String&gt; — no java.util.List in domain/application layer.
  */
 public record ExecutionReport(
         int executed,
         int failed,
-        List<String> executedIds,
-        List<String> failedIds
+        MiLista<String> executedIds,
+        MiLista<String> failedIds
 ) {}

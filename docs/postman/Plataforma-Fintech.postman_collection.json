@@ -1052,6 +1052,62 @@
       ]
     },
     {
+      "name": "10 — Beneficios",
+      "item": [
+        {
+          "name": "GET /benefits",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/benefits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "benefits"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /users/{userId}/benefits/{benefitId}/redeem",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userIdA}}/benefits/BEN001/redeem",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userIdA}}",
+                "benefits",
+                "BEN001",
+                "redeem"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /users/{userId}/benefit-redemptions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userIdA}}/benefit-redemptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{userIdA}}",
+                "benefit-redemptions"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "99 — Cleanup (opcional, ejecutar al final)",
       "item": [
         {

@@ -4,6 +4,8 @@ import com.proyectofinal.fintech.domain.model.*;
 import com.proyectofinal.fintech.domain.port.NotificationIdGenerator;
 import com.proyectofinal.fintech.domain.port.NotificationRepository;
 
+// FraudEvent is used for emitFraudAlert
+
 import java.time.Clock;
 import java.time.Instant;
 
@@ -143,6 +145,51 @@ public class NotificationEmitter {
                 NotificationSeverity.WARNING,
                 "Operación rechazada",
                 "La operación fue rechazada: " + reason,
+                false,
+                Instant.now(clock)
+        ));
+    }
+
+    /**
+     * Emits BENEFIT_REDEEMED INFO notification after a successful benefit redemption.
+     * REQ-F1.4, REQ-F1.5: type=BENEFIT_REDEEMED, severity=INFO.
+     *
+     * @param userId       the user to notify
+     * @param benefitId    the benefit id redeemed
+     * @param benefitName  the benefit display name
+     * @param pointsSpent  points deducted
+     */
+    public void emitBenefitRedeemed(String userId, String benefitId, String benefitName, int pointsSpent) {
+        String message = "Canje exitoso: " + benefitName + " (-" + pointsSpent + " puntos)";
+        notificationRepository.save(new Notificacion(
+                idGenerator.next(),
+                userId,
+                NotificationType.BENEFIT_REDEEMED,
+                NotificationSeverity.INFO,
+                "Beneficio canjeado exitosamente",
+                message,
+                false,
+                Instant.now(clock)
+        ));
+    }
+
+    /**
+     * Emits FRAUD_ALERT CRITICAL notification when a fraud event is detected in a transaction.
+     * REQ-F2.1: type=FRAUD_ALERT, severity=CRITICAL, message includes fraudType and txId.
+     *
+     * @param userId the source user to notify
+     * @param event  the detected fraud event
+     */
+    public void emitFraudAlert(String userId, FraudEvent event) {
+        String message = "Alerta de fraude [" + event.getSeverity().name() + "] tipo=" + event.getType()
+                + ": " + event.getDescription() + " (tx=" + event.getTransactionId() + ")";
+        notificationRepository.save(new Notificacion(
+                idGenerator.next(),
+                userId,
+                NotificationType.FRAUD_ALERT,
+                NotificationSeverity.CRITICAL,
+                "Alerta de fraude detectada",
+                message,
                 false,
                 Instant.now(clock)
         ));

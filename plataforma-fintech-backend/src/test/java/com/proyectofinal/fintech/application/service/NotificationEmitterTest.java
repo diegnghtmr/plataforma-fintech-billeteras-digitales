@@ -112,4 +112,44 @@ class NotificationEmitterTest {
         assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.WARNING);
         assertThat(n.getTitle()).contains("rechazada");
     }
+
+    @Test
+    void emitFraudAlert_savesFraudAlertNotificationWithCriticalSeverity() {
+        com.proyectofinal.fintech.domain.model.FraudEvent fraudEvent =
+                new com.proyectofinal.fintech.domain.model.FraudEvent(
+                        "FRD-001", "USR001", "TX-001",
+                        "HIGH_VELOCITY", com.proyectofinal.fintech.domain.model.FraudSeverity.HIGH,
+                        "Alta velocidad de transacciones",
+                        NOW);
+
+        emitter.emitFraudAlert("USR001", fraudEvent);
+
+        ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notificacion n = captor.getValue();
+        assertThat(n.getUserId()).isEqualTo("USR001");
+        assertThat(n.getType()).isEqualTo(NotificationType.FRAUD_ALERT);
+        assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.CRITICAL);
+        assertThat(n.isRead()).isFalse();
+        assertThat(n.getMessage()).contains("HIGH_VELOCITY");
+        assertThat(n.getMessage()).contains("TX-001");
+    }
+
+    // F-43 (RED) — REQ-F1.4, REQ-F1.5: emitBenefitRedeemed
+    @Test
+    void emitBenefitRedeemed_savesBenefitRedeemedNotificationWithInfoSeverity() {
+        emitter.emitBenefitRedeemed("USR001", "BEN-001", "Cashback 1%", 200);
+
+        ArgumentCaptor<Notificacion> captor = ArgumentCaptor.forClass(Notificacion.class);
+        verify(notificationRepository).save(captor.capture());
+
+        Notificacion n = captor.getValue();
+        assertThat(n.getUserId()).isEqualTo("USR001");
+        assertThat(n.getType()).isEqualTo(NotificationType.BENEFIT_REDEEMED);
+        assertThat(n.getSeverity()).isEqualTo(NotificationSeverity.INFO);
+        assertThat(n.getMessage()).contains("Cashback 1%");
+        assertThat(n.getMessage()).contains("200");
+        assertThat(n.isRead()).isFalse();
+    }
 }

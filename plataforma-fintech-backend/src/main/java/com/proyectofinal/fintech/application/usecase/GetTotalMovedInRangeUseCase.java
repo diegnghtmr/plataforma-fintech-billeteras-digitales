@@ -1,19 +1,19 @@
 package com.proyectofinal.fintech.application.usecase;
 
+import com.proyectofinal.fintech.application.result.RangeTotalView;
 import com.proyectofinal.fintech.domain.exception.BusinessRuleException;
 import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.model.Transaccion;
 import com.proyectofinal.fintech.domain.model.TransactionStatus;
 import com.proyectofinal.fintech.domain.model.TransactionType;
 import com.proyectofinal.fintech.domain.port.TransactionRepository;
-import com.proyectofinal.fintech.infrastructure.input.rest.dto.RangeTotalResponseDto;
 
 import java.time.Instant;
 
 /**
  * Use case: returns the total amount and count of SUCCESSFUL transactions within a date range.
  * Excludes REVERSED status and EXTERNAL_TRANSFER_RECEIVED type.
- * Plain class — ZERO Spring/Jakarta imports.
+ * Plain class — ZERO Spring/Jakarta/infrastructure imports.
  */
 public class GetTotalMovedInRangeUseCase {
 
@@ -28,10 +28,10 @@ public class GetTotalMovedInRangeUseCase {
      *
      * @param from start of range (inclusive)
      * @param to   end of range (inclusive)
-     * @return RangeTotalResponseDto with totalAmount, count, from, to
+     * @return RangeTotalView with totalAmount, count, from, to
      * @throws BusinessRuleException if from is after to
      */
-    public RangeTotalResponseDto execute(Instant from, Instant to) {
+    public RangeTotalView execute(Instant from, Instant to) {
         if (from.isAfter(to)) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
                     "'from' must not be after 'to'");
@@ -49,6 +49,6 @@ public class GetTotalMovedInRangeUseCase {
             count++;
         }
 
-        return new RangeTotalResponseDto(totalAmount, count, from.toString(), to.toString());
+        return new RangeTotalView(totalAmount, count, from.toString(), to.toString());
     }
 }

@@ -61,4 +61,39 @@ class InMemoryTransferGraphRepositoryTest {
         it.forEach(list::add);
         return list;
     }
+
+    // C-9: findCycles returns MiLista<MiLista<String>>
+    @Test
+    void findCycles_returnsMiLista() {
+        // Build cycle A→B→C→A
+        repo.addNode("A");
+        repo.addNode("B");
+        repo.addNode("C");
+        repo.addEdge("A", "B", 100.0);
+        repo.addEdge("B", "C", 100.0);
+        repo.addEdge("C", "A", 100.0);
+
+        com.proyectofinal.fintech.domain.structures.MiLista<com.proyectofinal.fintech.domain.structures.MiLista<String>> cycles =
+                repo.findCycles();
+
+        assertThat(cycles).isNotNull();
+        int count = 0;
+        for (var cycle : cycles) { count++; }
+        assertThat(count).isGreaterThan(0);
+    }
+
+    @Test
+    void findCycles_noCycles_returnsEmptyMiLista() {
+        repo.addNode("A");
+        repo.addNode("B");
+        repo.addEdge("A", "B", 100.0);
+
+        com.proyectofinal.fintech.domain.structures.MiLista<com.proyectofinal.fintech.domain.structures.MiLista<String>> cycles =
+                repo.findCycles();
+
+        assertThat(cycles).isNotNull();
+        int count = 0;
+        for (var ignored : cycles) { count++; }
+        assertThat(count).isEqualTo(0);
+    }
 }

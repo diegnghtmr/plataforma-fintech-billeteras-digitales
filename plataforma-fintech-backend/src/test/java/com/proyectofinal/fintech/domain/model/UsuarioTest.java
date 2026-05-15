@@ -111,4 +111,44 @@ class UsuarioTest {
         boolean levelChanged = usuario.addPoints(-600.0);
         assertThat(levelChanged).isFalse();
     }
+
+    // F-33 (RED) — REQ-F1.3, REQ-F1.4: spendPoints
+
+    @Test
+    void spendPoints_sufficientPoints_deductsAndRecomputesLevel() {
+        Instant now = Instant.now();
+        // 500 points BRONZE; spend 200 → 300 points still BRONZE
+        Usuario user = new Usuario("USR001", "Test", "test@example.com", now, 500.0, LoyaltyLevel.BRONZE);
+        user.spendPoints(200);
+        assertThat(user.getPoints()).isEqualTo(300.0);
+        assertThat(user.getLoyaltyLevel()).isEqualTo(LoyaltyLevel.BRONZE);
+    }
+
+    @Test
+    void spendPoints_insufficientPoints_throws() {
+        Instant now = Instant.now();
+        Usuario user = new Usuario("USR001", "Test", "test@example.com", now, 100.0, LoyaltyLevel.BRONZE);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> user.spendPoints(200));
+        assertEquals("insufficient_points", ex.getMessage());
+        assertThat(user.getPoints()).isEqualTo(100.0); // unchanged
+    }
+
+    @Test
+    void spendPoints_zeroAmount_throws() {
+        Instant now = Instant.now();
+        Usuario user = new Usuario("USR001", "Test", "test@example.com", now, 500.0, LoyaltyLevel.BRONZE);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> user.spendPoints(0));
+        assertEquals("invalid_points_amount", ex.getMessage());
+    }
+
+    @Test
+    void spendPoints_negativeAmount_throws() {
+        Instant now = Instant.now();
+        Usuario user = new Usuario("USR001", "Test", "test@example.com", now, 500.0, LoyaltyLevel.BRONZE);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> user.spendPoints(-50));
+        assertEquals("invalid_points_amount", ex.getMessage());
+    }
 }

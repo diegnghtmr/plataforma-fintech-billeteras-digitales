@@ -2,8 +2,7 @@ package com.proyectofinal.fintech.infrastructure.output.memory;
 
 import com.proyectofinal.fintech.domain.port.TransferGraphRepository;
 import com.proyectofinal.fintech.domain.structures.GrafoTransferencias;
-
-import java.util.List;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 
 /**
  * In-memory implementation of TransferGraphRepository.
@@ -30,7 +29,15 @@ public class InMemoryTransferGraphRepository implements TransferGraphRepository 
     }
 
     @Override
-    public List<List<String>> findCycles() {
-        return graph.findCycles();
+    public MiLista<MiLista<String>> findCycles() {
+        MiLista<MiLista<String>> result = new MiLista<>();
+        for (java.util.List<String> cycle : graph.findCycles()) {
+            MiLista<String> inner = new MiLista<>();
+            for (String node : cycle) {
+                inner.add(node);
+            }
+            result.add(inner);
+        }
+        return result;
     }
 }

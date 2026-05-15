@@ -65,7 +65,7 @@ class ScheduledOperationsControllerTest {
         return new ScheduledOperationResponseDto(op.getId(), op.getType().name(),
                 op.getStatus().name(), op.getSourceUserId(), op.getSourceWalletId(),
                 op.getTargetUserId(), op.getTargetWalletId(), op.getAmount(),
-                op.getScheduledAt().toString(), op.getDescription());
+                op.getScheduledAt().toString(), op.getDescription(), op.getRecurrence().name());
     }
 
     // S1: POST create → 201
@@ -75,7 +75,7 @@ class ScheduledOperationsControllerTest {
         ScheduledOperationResponseDto dto = makeDto(op);
 
         when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
-                anyDouble(), any(), any())).thenReturn(op);
+                anyDouble(), any(), any(), any())).thenReturn(op);
         when(mapper.toDto(op)).thenReturn(dto);
 
         mockMvc.perform(post("/scheduled-operations")
@@ -123,7 +123,7 @@ class ScheduledOperationsControllerTest {
     @Test
     void create_userNotFound_returns404() throws Exception {
         when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
-                anyDouble(), any(), any()))
+                anyDouble(), any(), any(), any()))
                 .thenThrow(new NotFoundException(ErrorCode.USER_NOT_FOUND, "User not found"));
 
         mockMvc.perform(post("/scheduled-operations")
@@ -142,7 +142,7 @@ class ScheduledOperationsControllerTest {
     @Test
     void create_missingTarget_returns400() throws Exception {
         when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
-                anyDouble(), any(), any()))
+                anyDouble(), any(), any(), any()))
                 .thenThrow(new BusinessRuleException(ErrorCode.VALIDATION_ERROR, "Missing target"));
 
         mockMvc.perform(post("/scheduled-operations")
@@ -177,5 +177,53 @@ class ScheduledOperationsControllerTest {
         mockMvc.perform(post("/scheduled-operations/SOP-000001/cancel"))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    // E-26 (RED) — REQ-F4.3: recurrence in POST and response
+
+    @Test
+    void create_withDailyRecurrence_returns201WithRecurrence() throws Exception {
+        OperacionProgramada op = new OperacionProgramada("SOP-000002", ScheduledOperationType.RECHARGE,
+                ScheduledOperationStatus.PENDING, "USR001", "W001", null, null, 100.0, SCHED, null,
+                com.proyectofinal.fintech.domain.model.RecurrenceType.DAILY);
+        ScheduledOperationResponseDto dto = new ScheduledOperationResponseDto(
+                op.getId(), op.getType().name(), op.getStatus().name(),
+                op.getSourceUserId(), op.getSourceWalletId(),
+                op.getTargetUserId(), op.getTargetWalletId(), op.getAmount(),
+                op.getScheduledAt().toString(), op.getDescription(), "DAILY");
+
+        when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
+                anyDouble(), any(), any(), any())).thenReturn(op);
+        when(mapper.toDto(op)).thenReturn(dto);
+
+        mockMvc.perform(post("/scheduled-operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "type", "RECHARGE",
+                                "sourceUserId", "USR001",
+                                "sourceWalletId", "W001",
+                                "amount", 100.0,
+                                "scheduledAt", "2027-01-01T00:00:00Z",
+                                "recurrence", "DAILY"))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.recurrence").value("DAILY"));
+    }
+
+    @Test
+    void create_withInvalidRecurrence_returns400() throws Exception {
+        when(createUseCase.execute(any(), anyString(), anyString(), any(), any(),
+                anyDouble(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("invalid_recurrence"));
+
+        mockMvc.perform(post("/scheduled-operations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "type", "RECHARGE",
+                                "sourceUserId", "USR001",
+                                "sourceWalletId", "W001",
+                                "amount", 100.0,
+                                "scheduledAt", "2027-01-01T00:00:00Z",
+                                "recurrence", "HOURLY"))))
+                .andExpect(status().isBadRequest());
     }
 }

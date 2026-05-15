@@ -206,6 +206,42 @@ class RechargeWalletUseCaseTest {
         verify(notificationEmitter, times(1)).emitOperationRejected(eq("USR001"), any());
     }
 
+    // B-6: fraud detected → emitFraudAlert called once
+    @Test
+    void execute_fraudDetected_emitsFraudAlert() {
+        Usuario user = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Billetera wallet = new Billetera("W001", "Ahorros", "SAVINGS", "USR001", 0.0, true, NOW, 0);
+
+        when(userRepository.findById("USR001")).thenReturn(Optional.of(user));
+        when(walletRepository.findByOwnerIdAndCode("USR001", "W001")).thenReturn(Optional.of(wallet));
+        when(idGenerator.next()).thenReturn("TX-000001");
+        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FraudEvent fakeEvent = new FraudEvent("FRD-001", "USR001", "TX-000001",
+                "LARGE_TRANSACTION", FraudSeverity.HIGH, "Test", NOW);
+        when(fraudDetector.detect(any())).thenReturn(Optional.of(fakeEvent));
+
+        useCase.execute("USR001", "W001", 15000.0, null);
+
+        verify(notificationEmitter, times(1)).emitFraudAlert("USR001", fakeEvent);
+    }
+
+    // B-6: no fraud → emitFraudAlert NOT called
+    @Test
+    void execute_noFraud_doesNotEmitFraudAlert() {
+        Usuario user = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Billetera wallet = new Billetera("W001", "Ahorros", "SAVINGS", "USR001", 0.0, true, NOW, 0);
+
+        when(userRepository.findById("USR001")).thenReturn(Optional.of(user));
+        when(walletRepository.findByOwnerIdAndCode("USR001", "W001")).thenReturn(Optional.of(wallet));
+        when(idGenerator.next()).thenReturn("TX-000001");
+        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        useCase.execute("USR001", "W001", 100.0, null);
+
+        verify(notificationEmitter, never()).emitFraudAlert(any(), any());
+    }
+
     @Test
     void execute_withDescription_propagatesDescription() {
         Usuario user = new Usuario("USR001", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);

@@ -131,6 +131,51 @@ class InMemoryTransactionRepositoryTest {
         assertThat(toList(repo.findAll())).hasSize(2);
     }
 
+    // C1-RED: idempotent save tests
+
+    // C1.1 — double save produces single entry in findAll, findByUserId, findByWalletId
+    @Test
+    void save_sameTxTwice_findAllContainsOnce() {
+        Transaccion tx = makeRecharge("TX-000001", "W001", "USR001");
+        repo.save(tx);
+        repo.save(tx);
+
+        assertThat(toList(repo.findAll())).hasSize(1);
+        assertThat(toList(repo.findByUserId("USR001"))).hasSize(1);
+        assertThat(toList(repo.findByWalletId("W001"))).hasSize(1);
+    }
+
+    // C1.2 — re-save with mutated state reflects latest write
+    @Test
+    void save_mutateThenReSave_findByIdReturnsUpdated() {
+        Transaccion tx = makeRecharge("TX-000001", "W001", "USR001");
+        repo.save(tx);
+
+        // Mutate riskLevel and re-save
+        tx.markRiskLevel(com.proyectofinal.fintech.domain.model.FraudSeverity.HIGH);
+        repo.save(tx);
+
+        assertThat(toList(repo.findAll())).hasSize(1);
+        assertThat(repo.findById("TX-000001"))
+                .isPresent()
+                .hasValueSatisfying(found ->
+                        assertThat(found.getRiskLevel())
+                                .isEqualTo(com.proyectofinal.fintech.domain.model.FraudSeverity.HIGH));
+    }
+
+    // C1.3 — fraud re-save produces single entry
+    @Test
+    void save_fraudReSave_findAllSizeIsOne() {
+        Transaccion tx = makeRecharge("TX-000001", "W001", "USR001");
+        repo.save(tx);
+
+        // Simulate fraud detection path: mutate then re-save
+        tx.markRiskLevel(com.proyectofinal.fintech.domain.model.FraudSeverity.CRITICAL);
+        repo.save(tx);
+
+        assertThat(toList(repo.findAll())).hasSize(1);
+    }
+
     // ── helper ───────────────────────────────────────────────────────────────
 
     private <T> List<T> toList(Iterable<T> iterable) {

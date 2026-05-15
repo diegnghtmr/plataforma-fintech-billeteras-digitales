@@ -1,6 +1,7 @@
 package com.proyectofinal.fintech.infrastructure.input.rest;
 
 import com.proyectofinal.fintech.application.result.MetricItem;
+import com.proyectofinal.fintech.application.result.RangeTotalView;
 import com.proyectofinal.fintech.application.usecase.*;
 import com.proyectofinal.fintech.domain.model.Transaccion;
 import com.proyectofinal.fintech.infrastructure.input.rest.dto.*;
@@ -109,7 +110,16 @@ public class AnalyticsController {
     /** GET /analytics/cycles */
     @GetMapping("/analytics/cycles")
     public ResponseEntity<List<List<String>>> getCycles() {
-        return ResponseEntity.ok(getCyclesUseCase.execute());
+        // C-13: boundary conversion MiLista<MiLista<String>> → List<List<String>> for Jackson
+        List<List<String>> result = new ArrayList<>();
+        for (com.proyectofinal.fintech.domain.structures.MiLista<String> cycle : getCyclesUseCase.execute()) {
+            List<String> innerList = new ArrayList<>();
+            for (String node : cycle) {
+                innerList.add(node);
+            }
+            result.add(innerList);
+        }
+        return ResponseEntity.ok(result);
     }
 
     /** GET /analytics/top-wallet-categories?limit=10 (1..100) */
@@ -135,8 +145,8 @@ public class AnalyticsController {
     public ResponseEntity<RangeTotalResponseDto> getTotalMoved(
             @RequestParam String from,
             @RequestParam String to) {
-        RangeTotalResponseDto result = getTotalMovedInRangeUseCase.execute(
+        RangeTotalView view = getTotalMovedInRangeUseCase.execute(
                 Instant.parse(from), Instant.parse(to));
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(new RangeTotalResponseDto(view.totalAmount(), view.count(), view.from(), view.to()));
     }
 }

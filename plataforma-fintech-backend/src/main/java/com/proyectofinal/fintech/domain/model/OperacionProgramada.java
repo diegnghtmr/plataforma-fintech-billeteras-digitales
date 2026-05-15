@@ -19,11 +19,20 @@ public class OperacionProgramada implements Comparable<OperacionProgramada> {
     private final double amount;
     private final Instant scheduledAt;
     private final String description;        // nullable
+    private final RecurrenceType recurrence;
 
+    /**
+     * Full constructor with recurrence.
+     * @throws IllegalArgumentException if recurrence is null
+     */
     public OperacionProgramada(String id, ScheduledOperationType type, ScheduledOperationStatus status,
                                 String sourceUserId, String sourceWalletId,
                                 String targetUserId, String targetWalletId,
-                                double amount, Instant scheduledAt, String description) {
+                                double amount, Instant scheduledAt, String description,
+                                RecurrenceType recurrence) {
+        if (recurrence == null) {
+            throw new IllegalArgumentException("invalid_recurrence");
+        }
         this.id = id;
         this.type = type;
         this.status = status;
@@ -34,6 +43,18 @@ public class OperacionProgramada implements Comparable<OperacionProgramada> {
         this.amount = amount;
         this.scheduledAt = scheduledAt;
         this.description = description;
+        this.recurrence = recurrence;
+    }
+
+    /**
+     * Backward-compatible constructor — defaults recurrence to NONE.
+     */
+    public OperacionProgramada(String id, ScheduledOperationType type, ScheduledOperationStatus status,
+                                String sourceUserId, String sourceWalletId,
+                                String targetUserId, String targetWalletId,
+                                double amount, Instant scheduledAt, String description) {
+        this(id, type, status, sourceUserId, sourceWalletId, targetUserId, targetWalletId,
+                amount, scheduledAt, description, RecurrenceType.NONE);
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
@@ -48,6 +69,7 @@ public class OperacionProgramada implements Comparable<OperacionProgramada> {
     public double getAmount() { return amount; }
     public Instant getScheduledAt() { return scheduledAt; }
     public String getDescription() { return description; }
+    public RecurrenceType getRecurrence() { return recurrence; }
 
     // ── Status mutations ─────────────────────────────────────────────────────
 

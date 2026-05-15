@@ -80,9 +80,11 @@ classDiagram
         -id String
         -name String
         -email String
+        -registeredAt Instant
         -points double
         -loyaltyLevel LoyaltyLevel
         +addPoints(delta) boolean
+        +spendPoints(amount) void
         +getId() String
         +getPoints() double
         +getLoyaltyLevel() LoyaltyLevel
@@ -101,18 +103,56 @@ classDiagram
     }
     class Transaccion {
         -id String
+        -timestamp Instant
         -type TransactionType
         -status TransactionStatus
         -amount double
-        -sourceWalletCode String
-        -targetWalletCode String
+        -sourceWalletId String
+        -targetWalletId String
+        -sourceUserId String
+        -targetUserId String
+        -pointsGenerated double
+        -description String
+        -reversible boolean
+        -riskLevel FraudSeverity
+        +setStatus(s) void
+        +markRiskLevel(s) void
+        +addBonusPoints(bonus) void
     }
     class OperacionProgramada {
         -id String
-        -userId String
         -type ScheduledOperationType
         -status ScheduledOperationStatus
+        -sourceUserId String
+        -sourceWalletId String
+        -targetUserId String
+        -targetWalletId String
+        -amount double
         -scheduledAt Instant
+        -description String
+        -recurrence RecurrenceType
+        +markExecuted() void
+        +markCancelled() void
+        +markFailed() void
+    }
+    class Beneficio {
+        -id String
+        -name String
+        -description String
+        -pointsCost int
+        -active boolean
+        +getId() String
+        +getName() String
+        +getPointsCost() int
+        +isActive() boolean
+    }
+    class BenefitRedemption {
+        <<record>>
+        +id String
+        +userId String
+        +benefitId String
+        +pointsSpent int
+        +redeemedAt Instant
     }
     class Notificacion {
         -id String
@@ -159,14 +199,25 @@ classDiagram
         PENDING
         EXECUTED
         CANCELLED
+        FAILED
+    }
+    class RecurrenceType {
+        <<enumeration>>
+        NONE
+        DAILY
+        WEEKLY
+        MONTHLY
     }
     class NotificationType {
         <<enumeration>>
         LOW_BALANCE
-        POINTS_LEVEL_UP
-        SCHEDULED_NEAR
-        SCHEDULED_EXECUTED
-        SCHEDULED_REJECTED
+        TRANSACTION
+        FRAUD_ALERT
+        POINTS_LEVEL
+        SYSTEM
+        SCHEDULED_REMINDER
+        OPERATION_REJECTED
+        BENEFIT_REDEEMED
     }
     class NotificationSeverity {
         <<enumeration>>
@@ -223,6 +274,7 @@ classDiagram
     Transaccion --> TransactionStatus
     OperacionProgramada --> ScheduledOperationType
     OperacionProgramada --> ScheduledOperationStatus
+    OperacionProgramada --> RecurrenceType
     Notificacion --> NotificationType
     Notificacion --> NotificationSeverity
     FraudEvent --> FraudSeverity
@@ -241,9 +293,10 @@ classDiagram
         <<interface>>
         +save(u) void
         +findById(id) Optional~Usuario~
-        +findByEmail(e) Optional~Usuario~
+        +existsById(id) boolean
         +findAll() Iterable~Usuario~
-        +delete(id) void
+        +deleteById(id) void
+        +findByEmail(email) Optional~Usuario~
     }
     class WalletRepository {
         <<interface>>
@@ -292,6 +345,25 @@ classDiagram
         +deleteByUserId(id) void
     }
     class FraudEventIdGenerator {
+        <<interface>>
+        +next() String
+    }
+    class BeneficioRepository {
+        <<interface>>
+        +save(b) void
+        +findById(id) Optional~Beneficio~
+        +findAllActive() MiLista~Beneficio~
+    }
+    class BeneficioIdGenerator {
+        <<interface>>
+        +next() String
+    }
+    class BenefitRedemptionRepository {
+        <<interface>>
+        +save(r) void
+        +findByUserId(id) MiLista~BenefitRedemption~
+    }
+    class BenefitRedemptionIdGenerator {
         <<interface>>
         +next() String
     }
@@ -391,6 +463,15 @@ classDiagram
     class ListFraudEventsUseCase {
         +execute() Iterable~FraudEvent~
     }
+    class ListBenefitsUseCase {
+        +execute() List~BenefitView~
+    }
+    class RedeemBenefitUseCase {
+        +execute(cmd) BenefitRedemption
+    }
+    class ListUserRedemptionsUseCase {
+        +execute(userId) List~BenefitRedemptionView~
+    }
     class NotificationEmitter {
         +emitLowBalance(userId, code) void
         +emitLevelUp(userId, level) void
@@ -428,7 +509,25 @@ classDiagram
     class ExecutionReport {
         <<record>>
         +executed int
-        +rejected int
+        +failed int
+        +executedIds MiLista~String~
+        +failedIds MiLista~String~
+    }
+    class BenefitView {
+        <<record>>
+        +id String
+        +name String
+        +description String
+        +pointsCost int
+        +active boolean
+    }
+    class BenefitRedemptionView {
+        <<record>>
+        +id String
+        +userId String
+        +benefitId String
+        +pointsSpent int
+        +redeemedAt String
     }
     class MetricItem {
         <<record>>
@@ -481,6 +580,13 @@ classDiagram
     ListUserNotificationsUseCase --> NotificationRepository
     MarkNotificationAsReadUseCase --> NotificationRepository
     ListFraudEventsUseCase --> FraudEventRepository
+    ListBenefitsUseCase --> BeneficioRepository
+    RedeemBenefitUseCase --> BeneficioRepository
+    RedeemBenefitUseCase --> BenefitRedemptionRepository
+    RedeemBenefitUseCase --> UserRepository
+    RedeemBenefitUseCase --> BenefitRedemptionIdGenerator
+    ListUserRedemptionsUseCase --> BenefitRedemptionRepository
+    ListUserRedemptionsUseCase --> UserRepository
     NotificationEmitter --> NotificationRepository
     NotificationEmitter --> NotificationIdGenerator
 ```
@@ -551,6 +657,23 @@ classDiagram
     class SequentialFraudEventIdGenerator {
         +next() String
     }
+    class InMemoryBeneficioRepository {
+        -store TablaHash
+        +save(b) void
+        +findById(id) Optional
+        +findAllActive() MiLista
+    }
+    class InMemoryBenefitRedemptionRepository {
+        -store TablaHash
+        +save(r) void
+        +findByUserId(id) MiLista
+    }
+    class SequentialBeneficioIdGenerator {
+        +next() String
+    }
+    class SequentialBenefitRedemptionIdGenerator {
+        +next() String
+    }
     class UserController {
         +createUser() ResponseEntity
         +getUser(id) ResponseEntity
@@ -603,6 +726,11 @@ classDiagram
     class FraudController {
         +listEvents() ResponseEntity
     }
+    class BenefitController {
+        +listBenefits() ResponseEntity
+        +redeemBenefit(userId, benefitId) ResponseEntity
+        +listRedemptions(userId) ResponseEntity
+    }
     class HealthController {
         +health() ResponseEntity
     }
@@ -642,6 +770,12 @@ classDiagram
         +fraudEventRepository() FraudEventRepository
         +fraudDetector() FraudDetector
     }
+    class BenefitBeansConfig {
+        +beneficioRepository() BeneficioRepository
+        +listBenefitsUseCase() ListBenefitsUseCase
+        +redeemBenefitUseCase() RedeemBenefitUseCase
+        +listUserRedemptionsUseCase() ListUserRedemptionsUseCase
+    }
     class ClockConfig {
         +clock() Clock
     }
@@ -658,6 +792,10 @@ classDiagram
     SequentialScheduledOperationIdGenerator ..|> ScheduledOperationIdGenerator
     SequentialNotificationIdGenerator ..|> NotificationIdGenerator
     SequentialFraudEventIdGenerator ..|> FraudEventIdGenerator
+    InMemoryBeneficioRepository ..|> BeneficioRepository
+    InMemoryBenefitRedemptionRepository ..|> BenefitRedemptionRepository
+    SequentialBeneficioIdGenerator ..|> BeneficioIdGenerator
+    SequentialBenefitRedemptionIdGenerator ..|> BenefitRedemptionIdGenerator
 ```
 
 ## D. Frontend (páginas + stores + API)

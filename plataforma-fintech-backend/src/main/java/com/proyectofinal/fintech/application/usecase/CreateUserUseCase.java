@@ -1,5 +1,7 @@
 package com.proyectofinal.fintech.application.usecase;
 
+import com.proyectofinal.fintech.domain.exception.DuplicatedResourceException;
+import com.proyectofinal.fintech.domain.exception.ErrorCode;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.Usuario;
 import com.proyectofinal.fintech.domain.port.UserRepository;
@@ -24,6 +26,13 @@ public class CreateUserUseCase {
     }
 
     public Usuario execute(String name, String email) {
+        // C3: enforce email uniqueness before id generation
+        userRepository.findByEmail(email).ifPresent(u -> {
+            throw new DuplicatedResourceException(
+                    ErrorCode.DUPLICATED_RESOURCE,
+                    "User with email=" + email + " already exists");
+        });
+
         String nextId = generateNextId();
 
         Usuario usuario = new Usuario(

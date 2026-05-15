@@ -55,8 +55,9 @@ public class AnalyticsBeansConfig {
     }
 
     @Bean
-    public GetTopWalletCategoriesUseCase getTopWalletCategoriesUseCase(WalletRepository walletRepository) {
-        return new GetTopWalletCategoriesUseCase(walletRepository);
+    public GetTopWalletCategoriesUseCase getTopWalletCategoriesUseCase(WalletRepository walletRepository,
+                                                                         TransactionRepository transactionRepository) {
+        return new GetTopWalletCategoriesUseCase(walletRepository, transactionRepository);
     }
 
     @Bean

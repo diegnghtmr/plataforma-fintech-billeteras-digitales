@@ -81,4 +81,23 @@ class OperacionProgramadaTest {
         op.markCancelled();
         assertEquals(ScheduledOperationStatus.CANCELLED, op.getStatus());
     }
+
+    // E-21 (RED) — REQ-F4.2: recurrence field
+
+    @Test
+    void constructor_withRecurrence_storesRecurrence() {
+        OperacionProgramada op = new OperacionProgramada("SOP-000001", ScheduledOperationType.RECHARGE,
+                ScheduledOperationStatus.PENDING, "USR001", "W001", null, null,
+                100.0, Instant.parse("2026-06-01T00:00:00Z"), null, RecurrenceType.DAILY);
+        assertEquals(RecurrenceType.DAILY, op.getRecurrence());
+    }
+
+    @Test
+    void constructor_withNullRecurrence_throwsIllegalArgument() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                new OperacionProgramada("SOP-000001", ScheduledOperationType.RECHARGE,
+                        ScheduledOperationStatus.PENDING, "USR001", "W001", null, null,
+                        100.0, Instant.parse("2026-06-01T00:00:00Z"), null, null));
+        assertEquals("invalid_recurrence", ex.getMessage());
+    }
 }

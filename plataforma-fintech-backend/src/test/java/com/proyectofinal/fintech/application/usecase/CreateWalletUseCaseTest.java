@@ -5,6 +5,7 @@ import com.proyectofinal.fintech.domain.exception.NotFoundException;
 import com.proyectofinal.fintech.domain.model.Billetera;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,8 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,7 +43,7 @@ class CreateWalletUseCaseTest {
     @Test
     void execute_emptyRepo_generatesWAL001() {
         when(userRepository.existsById("USR001")).thenReturn(true);
-        when(walletRepository.findAll()).thenReturn(Collections.emptyList());
+        when(walletRepository.findAll()).thenReturn(new MiLista<>());
 
         Billetera result = useCase.execute("USR001", "Ahorros", "SAVINGS");
 
@@ -64,10 +63,9 @@ class CreateWalletUseCaseTest {
     void execute_withFiveExistingWallets_generatesWAL006() {
         when(userRepository.existsById("USR001")).thenReturn(true);
 
-        List<Billetera> existing = List.of(
-                wallet("WAL001"), wallet("WAL002"), wallet("WAL003"),
-                wallet("WAL004"), wallet("WAL005")
-        );
+        MiLista<Billetera> existing = new MiLista<>();
+        existing.add(wallet("WAL001")); existing.add(wallet("WAL002")); existing.add(wallet("WAL003"));
+        existing.add(wallet("WAL004")); existing.add(wallet("WAL005"));
         when(walletRepository.findAll()).thenReturn(existing);
 
         Billetera result = useCase.execute("USR001", "Inversión", "INVESTMENT");
@@ -80,7 +78,8 @@ class CreateWalletUseCaseTest {
     void execute_ignoresNonWALCodes_generatesWAL001() {
         when(userRepository.existsById("USR001")).thenReturn(true);
 
-        List<Billetera> existing = List.of(wallet("W001"), wallet("OTHER-123"));
+        MiLista<Billetera> existing = new MiLista<>();
+        existing.add(wallet("W001")); existing.add(wallet("OTHER-123"));
         when(walletRepository.findAll()).thenReturn(existing);
 
         Billetera result = useCase.execute("USR001", "Ahorros", "SAVINGS");

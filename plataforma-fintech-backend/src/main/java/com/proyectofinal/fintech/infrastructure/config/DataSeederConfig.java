@@ -6,10 +6,12 @@ import com.proyectofinal.fintech.application.usecase.InternalTransferUseCase;
 import com.proyectofinal.fintech.application.usecase.RechargeWalletUseCase;
 import com.proyectofinal.fintech.application.usecase.WithdrawWalletUseCase;
 import com.proyectofinal.fintech.domain.exception.DomainException;
+import com.proyectofinal.fintech.domain.model.Beneficio;
 import com.proyectofinal.fintech.domain.model.Billetera;
 import com.proyectofinal.fintech.domain.model.LoyaltyLevel;
 import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
 import com.proyectofinal.fintech.domain.model.Usuario;
+import com.proyectofinal.fintech.domain.port.BeneficioRepository;
 import com.proyectofinal.fintech.domain.port.UserRepository;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
 import org.slf4j.Logger;
@@ -42,6 +44,7 @@ public class DataSeederConfig {
             InternalTransferUseCase internalTransfer,
             ExternalTransferUseCase externalTransfer,
             CreateScheduledOperationUseCase createScheduled,
+            BeneficioRepository beneficioRepository,
             Clock clock) {
 
         return args -> {
@@ -241,8 +244,18 @@ public class DataSeederConfig {
                     799.0, future3,
                     "Suscripción Spotify Premium — bimensual"));
 
+            // ------------------------------------------------------------------
+            // Benefits seed (REQ-F1.6)
+            // ------------------------------------------------------------------
+            beneficioRepository.save(new Beneficio("BEN-000001", "Cashback 1%",
+                    "Recibí el 1% de tus transacciones como crédito", 100, true));
+            beneficioRepository.save(new Beneficio("BEN-000002", "Boleto cine",
+                    "Entradas para cualquier función en cines asociados", 200, true));
+            beneficioRepository.save(new Beneficio("BEN-000003", "Suscripción premium 1 mes",
+                    "Acceso premium por 30 días", 500, true));
+
             log.info("[seed] ============================================================");
-            log.info("[seed] Seed completado: 8 usuarios, 16 billeteras, ~30 transacciones, 5 operaciones programadas.");
+            log.info("[seed] Seed completado: 8 usuarios, 16 billeteras, ~30 transacciones, 5 operaciones programadas, 3 beneficios.");
             log.info("[seed] Triggers activos: LARGE_TRANSACTION (18500) + HIGH_VELOCITY (4 recargas rápidas USR005).");
             log.info("[seed] Ciclo en grafo: USR001 → USR002 → USR003 → USR001.");
             log.info("[seed] ============================================================");

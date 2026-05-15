@@ -6,6 +6,7 @@ import com.proyectofinal.fintech.application.usecase.CreateScheduledOperationUse
 import com.proyectofinal.fintech.application.usecase.ExecuteDueScheduledOperationsUseCase;
 import com.proyectofinal.fintech.application.usecase.ListScheduledOperationsUseCase;
 import com.proyectofinal.fintech.domain.model.OperacionProgramada;
+import com.proyectofinal.fintech.domain.model.RecurrenceType;
 import com.proyectofinal.fintech.domain.model.ScheduledOperationType;
 import com.proyectofinal.fintech.infrastructure.input.rest.dto.CreateScheduledOperationRequestDto;
 import com.proyectofinal.fintech.infrastructure.input.rest.dto.ExecutionReportResponseDto;
@@ -58,6 +59,7 @@ public class ScheduledOperationsController {
     @PostMapping
     public ResponseEntity<ScheduledOperationResponseDto> create(
             @Valid @RequestBody CreateScheduledOperationRequestDto request) {
+        RecurrenceType recurrence = parseRecurrence(request.recurrence());
         OperacionProgramada op = createUseCase.execute(
                 ScheduledOperationType.valueOf(request.type()),
                 request.sourceUserId(),
@@ -66,8 +68,21 @@ public class ScheduledOperationsController {
                 request.targetWalletId(),
                 request.amount(),
                 Instant.parse(request.scheduledAt()),
-                request.description());
+                request.description(),
+                recurrence);
         return ResponseEntity.status(HttpStatus.CREATED).body(mapper.toDto(op));
+    }
+
+    /**
+     * Parses recurrence string: null/absent → NONE; invalid → IllegalArgumentException("invalid_recurrence").
+     */
+    private RecurrenceType parseRecurrence(String recurrenceStr) {
+        if (recurrenceStr == null || recurrenceStr.isBlank()) return RecurrenceType.NONE;
+        try {
+            return RecurrenceType.valueOf(recurrenceStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("invalid_recurrence");
+        }
     }
 
     @PostMapping("/{operationId}/cancel")
@@ -80,7 +95,9 @@ public class ScheduledOperationsController {
     @PostMapping("/run")
     public ResponseEntity<ExecutionReportResponseDto> run() {
         ExecutionReport report = executeUseCase.execute();
+        // W3: MiLista→List boundary conversion for Jackson serialization
         return ResponseEntity.ok(new ExecutionReportResponseDto(
-                report.executed(), report.failed(), report.executedIds(), report.failedIds()));
+                report.executed(), report.failed(),
+                report.executedIds().toList(), report.failedIds().toList()));
     }
 }

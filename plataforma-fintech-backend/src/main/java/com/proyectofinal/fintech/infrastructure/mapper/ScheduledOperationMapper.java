@@ -24,7 +24,8 @@ public class ScheduledOperationMapper {
                 op.getTargetWalletId(),
                 op.getAmount(),
                 op.getScheduledAt().toString(),
-                op.getDescription()
+                op.getDescription(),
+                op.getRecurrence().name()
         );
     }
 }

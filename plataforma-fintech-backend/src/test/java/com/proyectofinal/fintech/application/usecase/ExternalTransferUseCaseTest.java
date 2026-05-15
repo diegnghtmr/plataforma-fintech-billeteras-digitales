@@ -240,4 +240,48 @@ class ExternalTransferUseCaseTest {
                 .isInstanceOf(BusinessRuleException.class);
         verify(notificationEmitter, times(1)).emitOperationRejected(eq("USR_A"), any());
     }
+
+    // B-6: fraud detected → emitFraudAlert called once
+    @Test
+    void execute_fraudDetected_emitsFraudAlert() {
+        Usuario srcUser = new Usuario("USR_A", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Usuario dstUser = new Usuario("USR_B", "Bob", "bob@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Billetera srcWallet = new Billetera("W_A", "Src", "SAVINGS", "USR_A", 50000.0, true, NOW, 0);
+        Billetera dstWallet = new Billetera("W_B", "Dst", "SAVINGS", "USR_B", 0.0, true, NOW, 0);
+
+        when(userRepository.findById("USR_A")).thenReturn(Optional.of(srcUser));
+        when(userRepository.findById("USR_B")).thenReturn(Optional.of(dstUser));
+        when(walletRepository.findByOwnerIdAndCode("USR_A", "W_A")).thenReturn(Optional.of(srcWallet));
+        when(walletRepository.findByOwnerIdAndCode("USR_B", "W_B")).thenReturn(Optional.of(dstWallet));
+        when(idGenerator.next()).thenReturn("TX-001").thenReturn("TX-002");
+        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        FraudEvent fakeEvent = new FraudEvent("FRD-001", "USR_A", "TX-001",
+                "LARGE_TRANSACTION", FraudSeverity.HIGH, "Test", NOW);
+        when(fraudDetector.detect(any())).thenReturn(Optional.of(fakeEvent)).thenReturn(Optional.empty());
+
+        useCase.execute("USR_A", "W_A", "USR_B", "W_B", 15000.0, null);
+
+        verify(notificationEmitter, times(1)).emitFraudAlert("USR_A", fakeEvent);
+    }
+
+    // B-6: no fraud → emitFraudAlert NOT called
+    @Test
+    void execute_noFraud_doesNotEmitFraudAlert() {
+        Usuario srcUser = new Usuario("USR_A", "Ana", "ana@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Usuario dstUser = new Usuario("USR_B", "Bob", "bob@test.com", NOW, 0.0, LoyaltyLevel.BRONZE);
+        Billetera srcWallet = new Billetera("W_A", "Src", "SAVINGS", "USR_A", 500.0, true, NOW, 0);
+        Billetera dstWallet = new Billetera("W_B", "Dst", "SAVINGS", "USR_B", 0.0, true, NOW, 0);
+
+        when(userRepository.findById("USR_A")).thenReturn(Optional.of(srcUser));
+        when(userRepository.findById("USR_B")).thenReturn(Optional.of(dstUser));
+        when(walletRepository.findByOwnerIdAndCode("USR_A", "W_A")).thenReturn(Optional.of(srcWallet));
+        when(walletRepository.findByOwnerIdAndCode("USR_B", "W_B")).thenReturn(Optional.of(dstWallet));
+        when(idGenerator.next()).thenReturn("TX-001").thenReturn("TX-002");
+        when(transactionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        useCase.execute("USR_A", "W_A", "USR_B", "W_B", 100.0, null);
+
+        verify(notificationEmitter, never()).emitFraudAlert(any(), any());
+    }
 }

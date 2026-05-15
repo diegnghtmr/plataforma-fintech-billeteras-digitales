@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 
+// C2: ExecuteDueScheduledOperationsUseCase now requires TransactionRepository to fold bonus into tx
+
 /**
  * Wires all beans for SDD 08 scheduled operations slice.
  * SDD-11: adds ExecuteDueScheduledOperationsUseCase.
@@ -54,14 +56,17 @@ public class ScheduledOperationsBeansConfig {
     public ExecuteDueScheduledOperationsUseCase executeDueScheduledOperationsUseCase(
             ScheduledOperationRepository scheduledOperationRepository,
             UserRepository userRepository,
+            TransactionRepository transactionRepository,
             NotificationEmitter notificationEmitter,
             Clock clock,
+            ScheduledOperationIdGenerator scheduledOperationIdGenerator,
             RechargeWalletUseCase rechargeWalletUseCase,
             WithdrawWalletUseCase withdrawWalletUseCase,
             InternalTransferUseCase internalTransferUseCase,
             ExternalTransferUseCase externalTransferUseCase) {
         return new ExecuteDueScheduledOperationsUseCase(
-                scheduledOperationRepository, userRepository, notificationEmitter, clock,
+                scheduledOperationRepository, userRepository, transactionRepository,
+                notificationEmitter, clock, scheduledOperationIdGenerator,
                 rechargeWalletUseCase, withdrawWalletUseCase, internalTransferUseCase, externalTransferUseCase);
     }
 

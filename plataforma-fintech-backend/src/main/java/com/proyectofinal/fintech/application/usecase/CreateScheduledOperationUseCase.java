@@ -31,11 +31,15 @@ public class CreateScheduledOperationUseCase {
 
     /**
      * Creates and persists a scheduled operation with status PENDING.
+     * @param recurrence recurrence type; null defaults to NONE; invalid string throws IllegalArgumentException
      */
     public OperacionProgramada execute(ScheduledOperationType type,
                                         String sourceUserId, String sourceWalletId,
                                         String targetUserId, String targetWalletId,
-                                        double amount, Instant scheduledAt, String description) {
+                                        double amount, Instant scheduledAt, String description,
+                                        RecurrenceType recurrence) {
+        // Backward-compat overload for callers not passing recurrence handled by the 8-arg method
+        if (recurrence == null) recurrence = RecurrenceType.NONE;
         // Validate amount
         if (amount < 0.01) {
             throw new BusinessRuleException(ErrorCode.VALIDATION_ERROR,
@@ -72,9 +76,20 @@ public class CreateScheduledOperationUseCase {
         OperacionProgramada op = new OperacionProgramada(
                 idGenerator.next(), type, ScheduledOperationStatus.PENDING,
                 sourceUserId, sourceWalletId, targetUserId, targetWalletId,
-                amount, scheduledAt, description);
+                amount, scheduledAt, description, recurrence);
 
         operationRepository.save(op);
         return op;
+    }
+
+    /**
+     * Backward-compatible overload — defaults recurrence to NONE.
+     */
+    public OperacionProgramada execute(ScheduledOperationType type,
+                                        String sourceUserId, String sourceWalletId,
+                                        String targetUserId, String targetWalletId,
+                                        double amount, Instant scheduledAt, String description) {
+        return execute(type, sourceUserId, sourceWalletId, targetUserId, targetWalletId,
+                amount, scheduledAt, description, RecurrenceType.NONE);
     }
 }

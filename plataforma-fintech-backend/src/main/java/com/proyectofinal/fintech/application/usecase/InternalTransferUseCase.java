@@ -125,6 +125,7 @@ public class InternalTransferUseCase {
             tx.markRiskLevel(ev.getSeverity());
             transactionRepository.save(tx);
             fraudRepo.save(ev);
+            notificationEmitter.emitFraudAlert(tx.getSourceUserId(), ev);
         });
 
         stack.push(tx);

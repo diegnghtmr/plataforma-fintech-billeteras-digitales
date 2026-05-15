@@ -16,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.proyectofinal.fintech.domain.structures.MiLista;
 import java.time.Instant;
 import java.util.List;
 
@@ -150,7 +151,9 @@ class AnalyticsControllerTest {
     // T11-H04: GET /analytics/cycles
     @Test
     void getCycles_returns200() throws Exception {
-        when(getCyclesUseCase.execute()).thenReturn(List.of(List.of("A", "B")));
+        MiLista<String> inner = new MiLista<>(); inner.add("A"); inner.add("B");
+        MiLista<MiLista<String>> cycles = new MiLista<>(); cycles.add(inner);
+        when(getCyclesUseCase.execute()).thenReturn(cycles);
 
         mockMvc.perform(get("/analytics/cycles"))
                 .andExpect(status().isOk())
@@ -184,13 +187,13 @@ class AnalyticsControllerTest {
     // T11-I06: GET /analytics/total-moved
     @Test
     void getTotalMoved_validRange_returns200() throws Exception {
-        com.proyectofinal.fintech.infrastructure.input.rest.dto.RangeTotalResponseDto dto =
-                new com.proyectofinal.fintech.infrastructure.input.rest.dto.RangeTotalResponseDto(
+        com.proyectofinal.fintech.application.result.RangeTotalView view =
+                new com.proyectofinal.fintech.application.result.RangeTotalView(
                         1500.0, 3, "2026-01-01T00:00:00Z", "2026-12-31T00:00:00Z");
 
         when(getTotalMovedInRangeUseCase.execute(
                 Instant.parse("2026-01-01T00:00:00Z"),
-                Instant.parse("2026-12-31T00:00:00Z"))).thenReturn(dto);
+                Instant.parse("2026-12-31T00:00:00Z"))).thenReturn(view);
 
         mockMvc.perform(get("/analytics/total-moved?from=2026-01-01T00:00:00Z&to=2026-12-31T00:00:00Z"))
                 .andExpect(status().isOk())

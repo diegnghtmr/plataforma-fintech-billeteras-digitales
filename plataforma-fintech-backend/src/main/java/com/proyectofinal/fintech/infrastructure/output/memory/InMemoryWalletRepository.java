@@ -2,10 +2,10 @@ package com.proyectofinal.fintech.infrastructure.output.memory;
 
 import com.proyectofinal.fintech.domain.model.Billetera;
 import com.proyectofinal.fintech.domain.port.WalletRepository;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 import com.proyectofinal.fintech.domain.structures.TablaHash;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -77,8 +77,8 @@ public class InMemoryWalletRepository implements WalletRepository {
     }
 
     @Override
-    public List<Billetera> findAll() {
-        ArrayList<Billetera> list = new ArrayList<>();
+    public MiLista<Billetera> findAll() {
+        MiLista<Billetera> list = new MiLista<>();
         for (String ownerId : store.keys()) {
             store.get(ownerId).ifPresent(inner -> {
                 for (Billetera b : inner.values()) {

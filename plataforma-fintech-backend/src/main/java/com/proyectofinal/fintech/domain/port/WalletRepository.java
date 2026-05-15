@@ -1,13 +1,14 @@
 package com.proyectofinal.fintech.domain.port;
 
 import com.proyectofinal.fintech.domain.model.Billetera;
+import com.proyectofinal.fintech.domain.structures.MiLista;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
  * Output port for wallet persistence.
  * ZERO Spring/Jakarta imports — pure domain interface.
+ * REQ-F3.1: findAll() returns MiLista<Billetera>; no java.util.List in this interface.
  */
 public interface WalletRepository {
 
@@ -25,8 +26,9 @@ public interface WalletRepository {
 
     /**
      * Returns all wallets across all owners.
+     * REQ-F3.1: returns MiLista<Billetera> — no JDK List.
      */
-    List<Billetera> findAll();
+    MiLista<Billetera> findAll();
 
     /**
      * Removes all wallets owned by the given user. No-op if none found.

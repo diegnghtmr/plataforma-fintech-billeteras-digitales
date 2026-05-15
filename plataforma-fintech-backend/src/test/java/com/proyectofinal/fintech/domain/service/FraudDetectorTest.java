@@ -112,14 +112,30 @@ class FraudDetectorTest {
         assertThat(result.get().getSeverity()).isEqualTo(FraudSeverity.HIGH);
     }
 
-    // Rule B: only 2 recent → no velocity fraud
+    // Rule B: 2 prior + current = 3rd transaction → HIGH_VELOCITY (threshold=2 prior)
     @Test
-    void detect_velocityRule_twoRecentSuccessful_returnsEmpty() {
+    void detect_velocityRule_twoPriorPlusCurrent_returnsHighVelocity() {
         Transaccion tx = makeTx("TX-NEW", 100.0, "USR001");
 
         List<Transaccion> existing = List.of(
                 makeSuccessfulTx("TX-A", "USR001", NOW.minusSeconds(10)),
                 makeSuccessfulTx("TX-B", "USR001", NOW.minusSeconds(20))
+        );
+        when(txRepo.findByUserId("USR001")).thenReturn(existing);
+
+        Optional<FraudEvent> result = detector.detect(tx);
+        assertThat(result).isPresent();
+        assertThat(result.get().getType()).isEqualTo(FraudType.HIGH_VELOCITY);
+        assertThat(result.get().getSeverity()).isEqualTo(FraudSeverity.HIGH);
+    }
+
+    // Rule B: 1 prior + current = 2nd transaction → no velocity fraud
+    @Test
+    void detect_velocityRule_onePriorPlusCurrent_returnsEmpty() {
+        Transaccion tx = makeTx("TX-NEW", 100.0, "USR001");
+
+        List<Transaccion> existing = List.of(
+                makeSuccessfulTx("TX-A", "USR001", NOW.minusSeconds(10))
         );
         when(txRepo.findByUserId("USR001")).thenReturn(existing);
 
@@ -132,15 +148,14 @@ class FraudDetectorTest {
     void detect_velocityRule_excludesOwnTxId() {
         Transaccion tx = makeTx("TX-SELF", 100.0, "USR001");
 
-        // If own id is included, would be 3 but it must be excluded
+        // If own id is included, would be 2 but it must be excluded → only 1 valid prior → no fraud
         List<Transaccion> existing = List.of(
                 makeSuccessfulTx("TX-SELF", "USR001", NOW.minusSeconds(5)),  // same id — must be excluded
-                makeSuccessfulTx("TX-A", "USR001", NOW.minusSeconds(10)),
-                makeSuccessfulTx("TX-B", "USR001", NOW.minusSeconds(20))
+                makeSuccessfulTx("TX-A", "USR001", NOW.minusSeconds(10))
         );
         when(txRepo.findByUserId("USR001")).thenReturn(existing);
 
-        // Only 2 valid (excluding self) → no fraud
+        // Only 1 valid (excluding self) → no fraud (threshold requires ≥2 prior)
         Optional<FraudEvent> result = detector.detect(tx);
         assertThat(result).isEmpty();
     }
@@ -261,10 +276,11 @@ class FraudDetectorTest {
     }
 
     // T1.3.1 — 3 distinct source wallets, combined > 5000 → WALLET_FRAGMENTATION HIGH
+    // History txs placed at 65s and 75s ago (outside 60s velocity window, inside 120s fragmentation window)
     @Test
     void detect_amountFragmentation_threeWalletsOverThreshold_emitsHigh() {
-        Instant t1 = NOW.minusSeconds(60);
-        Instant t2 = NOW.minusSeconds(30);
+        Instant t1 = NOW.minusSeconds(75);
+        Instant t2 = NOW.minusSeconds(65);
         // current tx is NOW from W-C
         Transaccion tx = makeWalletTx("TX-NEW", "USR001", "W-C", 2000.0, NOW);
 
@@ -276,19 +292,21 @@ class FraudDetectorTest {
 
         Optional<FraudEvent> result = detector.detect(tx);
         // 3 distinct wallets, combined = 2001 + 2000 + 2000 = 6001 > 5000
+        // History txs are outside velocity window (>60s), so Rule B does not fire; Rule D does
         assertThat(result).isPresent();
         assertThat(result.get().getType()).isEqualTo(FraudType.WALLET_FRAGMENTATION);
         assertThat(result.get().getSeverity()).isEqualTo(FraudSeverity.HIGH);
     }
 
     // T1.3.2 — 3 distinct wallets but combined amount <= 5000 → no event
+    // History txs placed outside velocity window (>60s ago) to avoid Rule B interference
     @Test
     void detect_amountFragmentation_belowAmount_doesNotFire() {
         Transaccion tx = makeWalletTx("TX-NEW", "USR001", "W-C", 1000.0, NOW);
 
         List<Transaccion> hist = List.of(
-                makeWalletTx("TX-A", "USR001", "W-A", 1666.0, NOW.minusSeconds(60)),
-                makeWalletTx("TX-B", "USR001", "W-B", 1666.0, NOW.minusSeconds(30))
+                makeWalletTx("TX-A", "USR001", "W-A", 1666.0, NOW.minusSeconds(75)),
+                makeWalletTx("TX-B", "USR001", "W-B", 1666.0, NOW.minusSeconds(65))
         );
         when(txRepo.findByUserId("USR001")).thenReturn(hist);
 
@@ -298,18 +316,20 @@ class FraudDetectorTest {
     }
 
     // T1.3.3 — only 2 distinct wallets within window → no event
+    // One history tx outside velocity window, one within; only 1 within velocity → no Rule B
     @Test
     void detect_amountFragmentation_twoWalletsOnly_doesNotFire() {
         Transaccion tx = makeWalletTx("TX-NEW", "USR001", "W-A", 5000.0, NOW);
 
         List<Transaccion> hist = List.of(
-                makeWalletTx("TX-A", "USR001", "W-A", 3000.0, NOW.minusSeconds(60)),
-                makeWalletTx("TX-B", "USR001", "W-B", 3000.0, NOW.minusSeconds(30))
+                makeWalletTx("TX-A", "USR001", "W-A", 3000.0, NOW.minusSeconds(75)),
+                makeWalletTx("TX-B", "USR001", "W-B", 3000.0, NOW.minusSeconds(65))
         );
         when(txRepo.findByUserId("USR001")).thenReturn(hist);
 
         Optional<FraudEvent> result = detector.detect(tx);
-        // 2 distinct wallets (W-A appears twice, W-B once) → only 2 distinct → no event
+        // 2 distinct wallets (W-A appears twice, W-B once) → only 2 distinct → no fragmentation event
+        // Both hist txs outside velocity window → no velocity event either
         assertThat(result).isEmpty();
     }
 

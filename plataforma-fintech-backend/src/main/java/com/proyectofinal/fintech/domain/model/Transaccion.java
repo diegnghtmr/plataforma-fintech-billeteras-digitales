@@ -20,7 +20,7 @@ public class Transaccion {
     private final String sourceUserId;
     private final String targetUserId;       // nullable
     private TransactionStatus status;        // mutable — SDD 6 may flip to REVERSED
-    private final double pointsGenerated;
+    private double pointsGenerated;          // mutable — C2/ADR-13.1: scheduled bonus added post-dispatch
     private final String description;        // nullable
     private final boolean reversible;
     private FraudSeverity riskLevel = FraudSeverity.LOW;  // mutable — SDD 11 fraud detection
@@ -81,5 +81,21 @@ public class Transaccion {
      */
     public void markRiskLevel(FraudSeverity severity) {
         this.riskLevel = severity;
+    }
+
+    /**
+     * Adds {@code bonus} points to {@code pointsGenerated}.
+     * C2 / ADR-13.1: called by ExecuteDueScheduledOperationsUseCase after dispatch
+     * to fold the scheduled-execution bonus into the tx record. Reversals then
+     * automatically refund base + bonus via {@code addPoints(-getPointsGenerated())}.
+     *
+     * @param bonus non-negative bonus to add
+     * @throws IllegalArgumentException if {@code bonus} is negative
+     */
+    public void addBonusPoints(double bonus) {
+        if (bonus < 0) {
+            throw new IllegalArgumentException("bonus must be >= 0, got: " + bonus);
+        }
+        this.pointsGenerated += bonus;
     }
 }

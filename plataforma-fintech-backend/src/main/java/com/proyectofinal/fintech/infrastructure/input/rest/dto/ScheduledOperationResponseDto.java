@@ -14,5 +14,6 @@ public record ScheduledOperationResponseDto(
         String targetWalletId,
         double amount,
         String scheduledAt,
-        String description
+        String description,
+        String recurrence
 ) {}

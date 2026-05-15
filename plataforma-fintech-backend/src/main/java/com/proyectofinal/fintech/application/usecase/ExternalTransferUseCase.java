@@ -158,6 +158,7 @@ public class ExternalTransferUseCase {
             outgoing.markRiskLevel(ev.getSeverity());
             transactionRepository.save(outgoing);
             fraudRepo.save(ev);
+            notificationEmitter.emitFraudAlert(outgoing.getSourceUserId(), ev);
         });
 
         // SDD-09: record the inter-user transfer in the graph
