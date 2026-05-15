@@ -25,21 +25,26 @@ export function AiChatPage() {
     <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         <h1 className="font-display font-semibold text-2xl text-ink">Asistente IA</h1>
-        <p className="text-sm text-ink-mute">
-          Preguntá sobre tu actividad financiera, saldo, puntos, alertas de fraude o programá operaciones con asistencia inteligente.
+        <p className="text-sm text-mute">
+          Preguntá sobre tu actividad financiera, saldo, puntos, alertas de fraude o programá
+          operaciones con asistencia inteligente.
         </p>
       </header>
 
       {/* Scope selector */}
-      <div className="flex flex-col gap-1">
-        <label htmlFor="ai-scope-select" className="text-xs font-medium text-ink-mute uppercase tracking-wide">
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor="ai-scope-select"
+          className="text-xs font-medium text-mute uppercase tracking-wide"
+        >
           Contexto
         </label>
         <select
           id="ai-scope-select"
           value={scope}
           onChange={(e) => setScope(e.target.value as AiScopeValue)}
-          className="rounded-lg border border-hairline bg-surface px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-brand"
+          style={{ colorScheme: 'light' }}
+          className="rounded-lg border border-hairline-light bg-surface-card px-3 h-11 text-sm text-ink shadow-sm transition-colors hover:border-stone focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
         >
           {SCOPE_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
