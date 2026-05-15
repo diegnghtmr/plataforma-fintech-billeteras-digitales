@@ -64,7 +64,7 @@ export function TransactionsPage() {
         <EmptyState
           icon={ArrowLeftRight}
           title="Selecciona un usuario"
-          description="Seleccioná un usuario desde la sección de Usuarios para ver su historial."
+          description="Selecciona un usuario desde la sección de Usuarios para ver su historial."
         />
       </div>
     );

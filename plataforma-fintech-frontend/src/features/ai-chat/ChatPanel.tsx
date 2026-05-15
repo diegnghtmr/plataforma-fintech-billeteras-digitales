@@ -127,7 +127,9 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
             <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-brand/10 text-brand">
               <Sparkles size={22} strokeWidth={1.5} aria-hidden />
             </div>
-            <p className="mt-3 text-sm font-medium text-ink">Probá una pregunta para empezar</p>
+            <p className="mt-3 text-sm font-medium text-ink">
+              Prueba con una pregunta para empezar
+            </p>
             <p className="mt-1 mx-auto max-w-[28rem] text-xs text-mute leading-relaxed">
               Por ejemplo:{' '}
               <span className="italic">«¿Cómo estuvo mi actividad esta semana?»</span> o{' '}
@@ -162,7 +164,7 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
               {/* Message body */}
               <div className={`flex flex-col gap-1.5 max-w-[80%] ${isUser ? 'items-end' : 'items-start'}`}>
                 <span className="text-[11px] text-mute font-medium uppercase tracking-wide">
-                  {isUser ? 'Vos' : 'Asistente IA'}
+                  {isUser ? 'Tú' : 'Asistente IA'}
                 </span>
                 <div
                   className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
@@ -230,10 +232,10 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
             className="rounded-xl bg-accent-danger/10 border border-accent-danger/40 px-4 py-3 text-sm text-accent-danger"
           >
             {apiError.code === 'AI_UNAVAILABLE' && (
-              <p>IA no disponible en este momento. Probá de nuevo en unos segundos.</p>
+              <p>IA no disponible en este momento. Inténtalo de nuevo en unos segundos.</p>
             )}
             {apiError.code === 'AI_MESSAGE_TOO_LONG' && (
-              <p>El mensaje supera los {MAX_LENGTH} caracteres. Acortalo y reintentá.</p>
+              <p>El mensaje supera los {MAX_LENGTH} caracteres. Acórtalo e inténtalo de nuevo.</p>
             )}
             {apiError.code !== 'AI_UNAVAILABLE' && apiError.code !== 'AI_MESSAGE_TOO_LONG' && (
               <p>{apiError.message}</p>
@@ -249,7 +251,7 @@ export function ChatPanel({ actorUserId, actorRole, scope, conversationId }: Cha
         <div className="flex items-end gap-2 rounded-2xl border border-hairline-light bg-surface-card p-2 shadow-sm transition-colors focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/30">
           <textarea
             {...register('message')}
-            aria-label="Escribí tu pregunta"
+            aria-label="Escribe tu pregunta"
             placeholder="Pregunta algo sobre tus finanzas…"
             rows={2}
             maxLength={MAX_LENGTH + 50 /* allow brief overflow so Zod handles the message */}

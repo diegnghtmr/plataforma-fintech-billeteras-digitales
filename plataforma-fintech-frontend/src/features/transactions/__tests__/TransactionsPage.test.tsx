@@ -105,7 +105,7 @@ describe('TransactionsPage', () => {
 
     render(<TransactionsPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/selecciona un usuario/i)).toBeInTheDocument();
+    expect(screen.getByText('Selecciona un usuario')).toBeInTheDocument();
   });
 
   it('renders transaction rows when data is available', () => {

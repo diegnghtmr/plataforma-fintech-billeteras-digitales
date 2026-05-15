@@ -26,7 +26,7 @@ export function AiChatPage() {
       <header className="flex flex-col gap-2">
         <h1 className="font-display font-semibold text-2xl text-ink">Asistente IA</h1>
         <p className="text-sm text-mute">
-          Preguntá sobre tu actividad financiera, saldo, puntos, alertas de fraude o programá
+          Pregunta sobre tu actividad financiera, saldo, puntos, alertas de fraude o programa
           operaciones con asistencia inteligente.
         </p>
       </header>

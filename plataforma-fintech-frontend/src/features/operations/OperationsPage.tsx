@@ -51,7 +51,7 @@ export function OperationsPage() {
           Operaciones
         </h1>
         <p className="text-body-md text-charcoal">
-          Primero elegí un usuario en la página de{' '}
+          Primero selecciona un usuario en la página de{' '}
           <InlineLink to="/users">Usuarios</InlineLink>
           .
         </p>

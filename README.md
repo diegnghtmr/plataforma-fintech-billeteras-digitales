@@ -55,7 +55,7 @@ El backend incluye un asistente conversacional opcional sobre la analítica del 
 
 ### Variables de entorno
 
-Plantilla committeable: `plataforma-fintech-backend/env.example`. Para habilitarlo localmente, creá `plataforma-fintech-backend/.env` (gitignored) con tu key real:
+Plantilla committeable: `plataforma-fintech-backend/env.example`. Para habilitarlo localmente, crea `plataforma-fintech-backend/.env` (gitignored) con tu key real:
 
 | Variable | Default | Notas |
 | --- | --- | --- |

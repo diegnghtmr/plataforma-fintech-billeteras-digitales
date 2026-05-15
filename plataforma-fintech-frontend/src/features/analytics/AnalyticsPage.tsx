@@ -506,7 +506,7 @@ export function AnalyticsPage() {
             {/* KPI result card */}
             {!rangeFrom || !rangeTo ? (
               <p className="text-stone text-sm">
-                Seleccioná un rango de fechas para ver el total movido.
+                Selecciona un rango de fechas para ver el total movido.
               </p>
             ) : totalMovedLoading ? (
               <p className="text-stone text-sm">Calculando...</p>

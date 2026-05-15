@@ -59,7 +59,7 @@ export function WalletsPage() {
           Billeteras
         </h1>
         <p className="text-body-md text-charcoal">
-          Primero seleccioná un usuario en la página de{' '}
+          Primero selecciona un usuario en la página de{' '}
           <InlineLink to="/users">Usuarios</InlineLink>
           .
         </p>

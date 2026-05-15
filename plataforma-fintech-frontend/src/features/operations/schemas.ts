@@ -31,7 +31,7 @@ export const externalTransferSchema = z
     description: z.string().optional(),
   })
   .refine((d) => d.sourceUserId !== d.targetUserId, {
-    message: 'El usuario de destino debe ser distinto al de origen. Usá Transferencia interna si querés mover entre billeteras propias.',
+    message: 'El usuario de destino debe ser distinto al de origen. Usa "Transferencia interna" si quieres mover entre billeteras propias.',
     path: ['targetUserId'],
   });
 

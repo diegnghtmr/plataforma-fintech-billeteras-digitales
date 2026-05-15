@@ -54,7 +54,7 @@ const FEATURES = [
   {
     icon: CalendarClock,
     title: 'Operaciones programadas',
-    description: 'Programá transferencias y recargas para ejecutarse de forma automática.',
+    description: 'Programa transferencias y recargas para ejecutarse de forma automática.',
   },
   {
     icon: BarChart3,
@@ -64,7 +64,7 @@ const FEATURES = [
   {
     icon: Globe,
     title: 'Transferencias externas',
-    description: 'Enviá fondos hacia billeteras externas con trazabilidad completa.',
+    description: 'Envía fondos hacia billeteras externas con trazabilidad completa.',
   },
 ] as const;
 
@@ -159,7 +159,7 @@ export function HomePage() {
             Empezá a operar hoy mismo.
           </h2>
           <p className="text-body-lg text-on-dark-mute max-w-[50ch]">
-            Creá tu primer usuario, configurá billeteras y comenzá a mover fondos
+            Crea tu primer usuario, configura billeteras y comienza a mover fondos
             en minutos.
           </p>
           <div>

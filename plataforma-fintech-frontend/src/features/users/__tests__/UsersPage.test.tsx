@@ -177,7 +177,7 @@ describe('UsersPage', () => {
     await user.type(screen.getByRole('textbox', { name: /buscar/i }), 'zzz');
 
     expect(screen.getByText('Sin resultados')).toBeInTheDocument();
-    expect(screen.getByText(/probá con otro id o nombre/i)).toBeInTheDocument();
+    expect(screen.getByText(/prueba con otro id o nombre/i)).toBeInTheDocument();
   });
 
   it('clicking a user card selects it and shows Editar / Eliminar buttons', () => {

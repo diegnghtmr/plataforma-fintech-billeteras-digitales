@@ -76,7 +76,7 @@ export function InternalTransferForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
       {noWallets && (
         <p className="text-stone text-sm" role="status">
-          Este usuario no tiene billeteras. Creá al menos dos en la sección de Billeteras
+          Este usuario no tiene billeteras. Crea al menos dos en la sección de Billeteras
           para poder transferir.
         </p>
       )}

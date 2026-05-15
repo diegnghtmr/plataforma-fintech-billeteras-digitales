@@ -255,7 +255,7 @@ export function ScheduledOperationsPage() {
           open={cancelTarget !== null}
           onClose={() => setCancelTarget(null)}
           title="Cancelar operación"
-          description="¿Estás seguro que querés cancelar esta operación programada?"
+          description="¿Estás seguro de que quieres cancelar esta operación programada?"
           confirmLabel="Sí, cancelar"
           tone="danger"
           onConfirm={handleCancelConfirm}

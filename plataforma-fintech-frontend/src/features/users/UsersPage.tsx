@@ -193,8 +193,8 @@ export function UsersPage() {
               title={search ? 'Sin resultados' : 'No hay usuarios'}
               description={
                 search
-                  ? 'Probá con otro id o nombre.'
-                  : 'Creá el primer usuario con el formulario.'
+                  ? 'Prueba con otro id o nombre.'
+                  : 'Crea el primer usuario con el formulario.'
               }
             />
           ) : (

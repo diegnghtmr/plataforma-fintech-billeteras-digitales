@@ -185,10 +185,10 @@ describe('AnalyticsPage', () => {
     expect(screen.getByText(/^hasta$/i)).toBeInTheDocument();
   });
 
-  it('renders "Seleccioná un rango" prompt when dates are empty', () => {
+  it('renders "Selecciona un rango" prompt when dates are empty', () => {
     render(<AnalyticsPage />, { wrapper: makeWrapper() });
 
-    expect(screen.getByText(/seleccioná un rango/i)).toBeInTheDocument();
+    expect(screen.getByText(/selecciona un rango/i)).toBeInTheDocument();
   });
 
   it('renders totalMoved KPI card when dates are set and data is present', () => {

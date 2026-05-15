@@ -4,10 +4,10 @@ Archivo: `Plataforma-Fintech.postman_collection.json` (Postman Collection v2.1).
 
 ## Importar
 
-1. Abrí Postman → **Import** → arrastrá **los dos archivos** del directorio `docs/postman/`:
+1. Abre Postman → **Import** → arrastra **los dos archivos** del directorio `docs/postman/`:
    - `Plataforma-Fintech.postman_collection.json` (colección con 32 endpoints)
    - `Plataforma-Fintech-Local.postman_environment.json` (environment con las variables)
-2. En la esquina superior derecha, seleccioná el environment **"Plataforma Fintech — Local"** del dropdown.
+2. En la esquina superior derecha, selecciona el environment **"Plataforma Fintech — Local"** del dropdown.
 3. La colección aparece como **"Plataforma Fintech — Billeteras Digitales"** con 10 carpetas y las variables ya cargadas.
 
 > Postman prioriza Environment sobre Collection variables. Con el environment seleccionado las variables se aplican automáticamente sin necesidad de tocar la colección.
@@ -29,7 +29,7 @@ Archivo: `Plataforma-Fintech.postman_collection.json` (Postman Collection v2.1).
 | `scheduledOpId` | *(vacío)* | Se autocompleta tras "POST scheduled-operations" |
 | `notificationId` | *(vacío)* | Se autocompleta tras "GET notifications" |
 
-Los IDs se capturan automáticamente vía test scripts en cada request relevante, así podés correr la cadena entera sin pegar valores a mano.
+Los IDs se capturan automáticamente vía test scripts en cada request relevante, así puedes correr la cadena entera sin pegar valores a mano.
 
 ## Orden recomendado para la demo end-to-end
 
@@ -46,11 +46,11 @@ Los IDs se capturan automáticamente vía test scripts en cada request relevante
 
 ## Gatillar la regla HIGH_VELOCITY
 
-En **03 — Operaciones**, ejecutá la request **"POST recharge x4 rápido"** cuatro veces seguidas en menos de un minuto. A la cuarta, `GET /fraud/events` devuelve un evento `HIGH_VELOCITY` severity HIGH.
+En **03 — Operaciones**, ejecuta la solicitud **"POST recharge x4 rápido"** cuatro veces seguidas en menos de un minuto. A la cuarta, `GET /fraud/events` devuelve un evento `HIGH_VELOCITY` severity HIGH.
 
 ## Tip: Collection Runner
 
-Postman → tres puntos junto a la colección → **Run collection** → seleccioná las carpetas en orden y dale "Run". Corre todo el flujo encadenado en ~5 segundos, con asserts de status y captura de IDs incluidos.
+Postman → tres puntos junto a la colección → **Run collection** → selecciona las carpetas en orden y haz clic en "Run". Corre todo el flujo encadenado en ~5 segundos, con asserts de status y captura de IDs incluidos.
 
 ## Si cambia el base URL
 

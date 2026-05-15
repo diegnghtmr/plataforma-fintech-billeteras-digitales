@@ -46,7 +46,7 @@ export function WalletList({ wallets, onSelect, onRename, onToggleActive, isUpda
           <Info size={14} className="mt-0.5 shrink-0 text-stone" strokeWidth={2} />
           <span>
             Al seleccionar una billetera, se usa como <strong>origen predeterminado</strong>{' '}
-            en Operaciones (Recarga, Retiro y Transferencia interna). Podés{' '}
+            en Operaciones (Recarga, Retiro y Transferencia interna). Puedes{' '}
             <strong>renombrar</strong> o <strong>cerrar/reabrir</strong> cualquier billetera con
             los botones de cada tarjeta.
           </span>

@@ -187,7 +187,7 @@ public class NotificationEmitter {
         String message = "Detectamos un movimiento sospechoso en tu cuenta. "
                 + event.getDescription() + "."
                 + txRef
-                + " Revisalo y confirmá si fuiste vos.";
+                + " Revísalo y confirma si fuiste tú.";
         notificationRepository.save(new Notificacion(
                 idGenerator.next(),
                 userId,

@@ -147,7 +147,7 @@ describe('ChatPanel', () => {
     const mockMutateAsync = vi.fn().mockResolvedValue({
       conversationId: 'conv-test-1',
       intent: 'DRAFT_TRANSFER',
-      answer: 'Podés hacer la transferencia.',
+      answer: 'Puedes hacer la transferencia.',
       suggestedAction: {
         type: 'DRAFT_TRANSFER',
         label: 'Confirmar transferencia',

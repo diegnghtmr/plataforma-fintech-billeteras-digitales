@@ -662,7 +662,7 @@ export interface components {
             /** @example DAILY_EXPENSES */
             type: string;
         };
-        /** @description Partial update; envía sólo los campos que querés cambiar. */
+        /** @description Partial update; envía solo los campos que quieras cambiar. */
         UpdateWalletRequest: {
             /** @example Gastos del mes */
             name?: string;
