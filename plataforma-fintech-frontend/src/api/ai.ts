@@ -1,4 +1,4 @@
-import { apiClient, extractApiError } from './index';
+import { apiClient, parseApiError } from './index';
 import type { components } from './generated/schema';
 
 export type AiChatRequest = components['schemas']['AiChatRequest'];
@@ -12,10 +12,10 @@ export type AiIntent = components['schemas']['AiIntent'];
 export type AiUnavailableError = components['schemas']['AiUnavailableError'];
 
 export async function aiChat(body: AiChatRequest): Promise<AiChatResponse> {
-  const { data, error, response } = await apiClient.POST('/ai/chat', { body });
+  const { data, error } = await apiClient.POST('/ai/chat', { body });
 
   if (error !== undefined || !data) {
-    const apiError = await extractApiError(response);
+    const apiError = parseApiError(error);
     throw apiError ?? new Error('Unknown error in AI chat');
   }
 
@@ -27,7 +27,7 @@ export async function explainFraud(
   actorRole: 'USER' | 'ADMIN',
   actorUserId: string,
 ): Promise<AiFraudExplanationResponse> {
-  const { data, error, response } = await apiClient.GET(
+  const { data, error } = await apiClient.GET(
     '/ai/fraud-events/{fraudEventId}/explain',
     {
       params: {
@@ -38,7 +38,7 @@ export async function explainFraud(
   );
 
   if (error !== undefined || !data) {
-    const apiError = await extractApiError(response);
+    const apiError = parseApiError(error);
     throw apiError ?? new Error('Unknown error explaining fraud event');
   }
 
@@ -46,10 +46,10 @@ export async function explainFraud(
 }
 
 export async function aiActionDraft(body: AiActionDraftRequest): Promise<AiActionDraftResponse> {
-  const { data, error, response } = await apiClient.POST('/ai/action-draft', { body });
+  const { data, error } = await apiClient.POST('/ai/action-draft', { body });
 
   if (error !== undefined || !data) {
-    const apiError = await extractApiError(response);
+    const apiError = parseApiError(error);
     throw apiError ?? new Error('Unknown error in AI action draft');
   }
 

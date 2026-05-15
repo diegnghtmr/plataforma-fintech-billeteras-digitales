@@ -71,23 +71,19 @@ Plantilla committeable: `plataforma-fintech-backend/env.example`. Para habilitar
 
 ### Cargar el `.env` al arrancar
 
-Spring Boot no lee `.env` automáticamente.
+El backend carga el `.env` automáticamente (`DotenvEnvironmentPostProcessor`).
+Basta con tener el archivo y arrancar normal:
 
 ```bash
-# Bash / Zsh
 cd plataforma-fintech-backend
-set -a; source .env; set +a
 ./mvnw spring-boot:run
 ```
 
-```fish
-# Fish
-cd plataforma-fintech-backend
-for line in (grep -v '^\s*#' .env | grep -v '^\s*$')
-    set -x (string split -m1 = $line)
-end
-./mvnw spring-boot:run
-```
+El archivo se busca en `./.env` (al correr desde el módulo backend) o en
+`./plataforma-fintech-backend/.env` (al correr desde la raíz del monorepo).
+Las variables de entorno reales del sistema y las propiedades `-D` de la JVM
+tienen prioridad sobre el `.env`, así que se puede sobrescribir cualquier valor
+sin editar el archivo.
 
 ### Endpoints
 
